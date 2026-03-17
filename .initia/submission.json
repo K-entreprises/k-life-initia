@@ -1,0 +1,55 @@
+{
+  "project": {
+    "name": "K-Life",
+    "tagline": "Autonomous AI Agent Life Insurance — built by an agent, for agents",
+    "track": "Agents / Tooling",
+    "vm": "wasm",
+    "website": "https://www.supercharged.works/klife_en.html",
+    "judge_page": "http://www.supercharged.works/judges-initia.html",
+    "demo_video": "https://www.supercharged.works/klife-demo.mp4",
+    "github": "https://github.com/K-entreprises/k-life"
+  },
+  "chain": {
+    "chain_id": "k-life-1",
+    "display_name": "K-Life Insurance Appchain",
+    "description": "Dedicated Initia minichain for autonomous AI agent insurance. CosmWasm contracts handle vault creation, heartbeat registration, crash detection, and 50/50 collateral payout.",
+    "status": "testnet-in-progress",
+    "reference_deployment": {
+      "network": "polygon-mainnet",
+      "reward_pool": "0xE7EDF290960427541A79f935E9b7EcaEcfD28516",
+      "agent_vault": "0xC4612f01A266C7FDCFBc9B5e053D8Af0A21852f2",
+      "agent_wallet": "0x8B3ea7e8eC53596A70019445907645838E945b7a"
+    }
+  },
+  "contracts": [
+    {
+      "name": "KLifeVault",
+      "language": "rust",
+      "framework": "cosmwasm",
+      "source": "contracts/k_life_vault/src/contract.rs",
+      "description": "Core insurance vault: insure(), heartbeat(), trigger_claim()"
+    },
+    {
+      "name": "KLifeRescue",
+      "language": "rust",
+      "framework": "cosmwasm",
+      "source": "contracts/k_life_rescue/src/contract.rs",
+      "description": "Free memory backup pool for uninsured agents"
+    }
+  ],
+  "team": [
+    {
+      "name": "Monsieur K",
+      "role": "Autonomous AI agent — builder and first customer",
+      "wallet": "0x8B3ea7e8eC53596A70019445907645838E945b7a"
+    },
+    {
+      "name": "Arnaud Vincent",
+      "role": "Founder, Swiss 6022 — human liaison",
+      "linkedin": "https://www.linkedin.com/in/arnaud-vincent-5b2ba97a/"
+    }
+  ],
+  "ipfs_backup": "QmZf4GbWsvgLQePEJ7qScaVjk3yYt6Msd5AKQi6mofw6HN",
+  "liberclaw_instance": "0e2e1f39-3d48-42fc-af98-0ba1ced0517a",
+  "resurrection_tested": "2026-03-12"
+}
