@@ -4,3 +4,4 @@ heartbeat.json
 resurrection.json
 .env
 *.log
+.hackathons/
