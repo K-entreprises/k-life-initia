@@ -3,600 +3,1050 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>K-Life Protocol — Agent Dashboard</title>
+<title>K-Life Protocol</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 <style>
-  :root {
-    --bg: #0a0a0f; --surface: #12121a; --surface2: #1a1a26;
-    --border: #2a2a3a; --accent: #c9a227; --accent2: #7c5cbf;
-    --green: #22c55e; --red: #ef4444; --orange: #f97316;
-    --text: #e2e8f0; --muted: #64748b;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
+:root {
+  --bg:       #06060a;
+  --bg2:      #0d0d14;
+  --surface:  #111118;
+  --surface2: #18181f;
+  --surface3: #1f1f2a;
+  --border:   #252530;
+  --border2:  #2e2e3d;
+  --gold:     #d4a843;
+  --gold2:    #f0c060;
+  --gold-dim: #6b5020;
+  --purple:   #8b5cf6;
+  --purple2:  #a78bfa;
+  --green:    #10b981;
+  --green2:   #34d399;
+  --red:      #ef4444;
+  --orange:   #f59e0b;
+  --blue:     #3b82f6;
+  --text:     #f1f0f5;
+  --text2:    #a09cb0;
+  --text3:    #5c5870;
+  --mono:     'JetBrains Mono', monospace;
+  --sans:     'Space Grotesk', system-ui, sans-serif;
+  --radius:   14px;
+  --glow-gold: 0 0 20px rgba(212,168,67,.2);
+  --glow-green: 0 0 20px rgba(16,185,129,.2);
+  --glow-red:   0 0 20px rgba(239,68,68,.2);
+}
 
-  .header { border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; }
-  .logo { display: flex; align-items: center; gap: 12px; }
-  .logo-icon { font-size: 28px; }
-  .logo-text { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
-  .logo-sub { font-size: 11px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
-  .tagline { font-size: 13px; color: var(--accent); font-style: italic; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.15s; }
-  .btn-primary { background: var(--accent); color: #000; }
-  .btn-primary:hover { background: #e0b42a; }
-  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
-  .btn-secondary:hover { border-color: var(--accent); }
-  .btn-green { background: #14532d; color: #86efac; border: 1px solid var(--green); }
-  .btn-green:hover { background: var(--green); color: #000; }
-  .btn-red { background: #7f1d1d; color: #fca5a5; border: 1px solid var(--red); }
-  .btn-sm { padding: 6px 12px; font-size: 12px; }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-size: 14px;
+  line-height: 1.6;
+}
 
-  .main { max-width: 1100px; margin: 0 auto; padding: 32px; }
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
-  @media (max-width: 768px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+/* ── Noise texture overlay ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 1000; opacity: .4;
+}
 
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
-  .card-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 16px; }
-  .stat-value { font-size: 32px; font-weight: 700; color: var(--accent); }
-  .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+/* ── Animated gradient background ── */
+.bg-glow {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse 800px 600px at 20% 10%, rgba(139,92,246,.06) 0%, transparent 60%),
+    radial-gradient(ellipse 600px 400px at 80% 80%, rgba(212,168,67,.05) 0%, transparent 60%);
+}
 
-  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-  .badge-green { background: #14532d; color: var(--green); }
-  .badge-red { background: #7f1d1d; color: var(--red); }
-  .badge-orange { background: #431407; color: var(--orange); }
-  .badge-blue { background: #1e3a5f; color: #60a5fa; }
-  .badge-yellow { background: #422006; color: var(--accent); }
+/* ── Header ── */
+header {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px;
+  height: 64px;
+  background: rgba(6,6,10,.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
 
-  .input { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-size: 14px; width: 100%; outline: none; }
-  .input:focus { border-color: var(--accent); }
-  label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px; }
+.logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.logo-mark {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold2) 100%);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: var(--glow-gold);
+}
+.logo-name { font-size: 16px; font-weight: 700; letter-spacing: -.3px; }
+.logo-tag  { font-size: 10px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; }
 
-  .section-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; margin-top: 32px; display: flex; align-items: center; gap: 8px; }
-  .divider { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+.header-right { display: flex; align-items: center; gap: 10px; }
 
-  .log-box { background: #000; border: 1px solid var(--border); border-radius: 8px; padding: 16px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; }
-  .log-ok    { color: var(--green); }
-  .log-err   { color: var(--red); }
-  .log-info  { color: var(--accent); }
-  .log-muted { color: var(--muted); }
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 999px;
+  font-size: 11px; font-weight: 600; letter-spacing: .3px;
+  border: 1px solid;
+}
+.pill-purple { background: rgba(139,92,246,.1); border-color: rgba(139,92,246,.3); color: var(--purple2); }
+.pill-green  { background: rgba(16,185,129,.1);  border-color: rgba(16,185,129,.3);  color: var(--green2); }
+.pill-dim    { background: var(--surface2); border-color: var(--border); color: var(--text3); }
 
-  .agent-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
-  .agent-row:last-child { border-bottom: none; }
-  .agent-addr { font-family: monospace; font-size: 12px; color: var(--muted); }
+.dot-pulse {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--green2);
+  box-shadow: 0 0 0 0 rgba(52,211,153,.4);
+  animation: pulse-ring 2s ease infinite;
+}
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0   rgba(52,211,153,.4); }
+  70%  { box-shadow: 0 0 0 8px rgba(52,211,153,0); }
+  100% { box-shadow: 0 0 0 0   rgba(52,211,153,0); }
+}
 
-  .progress-bar { background: var(--border); border-radius: 4px; height: 6px; margin-top: 8px; }
-  .progress-fill { background: var(--accent); border-radius: 4px; height: 100%; transition: width 0.3s; }
+/* ── Buttons ── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 10px 18px; border-radius: 10px; border: 1px solid transparent;
+  font-family: var(--sans); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all .15s ease; white-space: nowrap;
+  position: relative; overflow: hidden;
+}
+.btn::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(rgba(255,255,255,0), rgba(255,255,255,.05));
+  opacity: 0; transition: opacity .15s;
+}
+.btn:hover::after { opacity: 1; }
+.btn:active { transform: scale(.98); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
 
-  .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
-  .dot-green { background: var(--green); box-shadow: 0 0 6px var(--green); }
-  .dot-red   { background: var(--red); }
-  .dot-orange{ background: var(--orange); }
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold2) 100%);
+  color: #000; border-color: var(--gold);
+  box-shadow: 0 0 16px rgba(212,168,67,.25), inset 0 1px 0 rgba(255,255,255,.1);
+}
+.btn-gold:hover { box-shadow: 0 0 28px rgba(212,168,67,.4); }
 
-  .network-badge { font-size: 11px; background: #1a1a2e; border: 1px solid var(--accent2); color: var(--accent2); padding: 3px 10px; border-radius: 20px; }
+.btn-ghost {
+  background: transparent; color: var(--text2); border-color: var(--border2);
+}
+.btn-ghost:hover { border-color: var(--gold); color: var(--gold); background: rgba(212,168,67,.04); }
 
-  #wallet-info { display: none; align-items: center; gap: 12px; }
-  .wallet-addr { font-family: monospace; font-size: 12px; background: var(--surface2); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); }
+.btn-surface {
+  background: var(--surface3); color: var(--text); border-color: var(--border2);
+}
+.btn-surface:hover { border-color: var(--border2); background: var(--surface2); }
 
-  .tabs { display: flex; gap: 4px; margin-bottom: 24px; }
-  .tab { padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--muted); border: 1px solid transparent; transition: all 0.15s; }
-  .tab.active { background: var(--surface2); color: var(--text); border-color: var(--border); }
-  .tab:hover:not(.active) { color: var(--text); }
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
+.btn-green {
+  background: rgba(16,185,129,.12); color: var(--green2); border-color: rgba(16,185,129,.3);
+}
+.btn-green:hover { background: rgba(16,185,129,.2); box-shadow: var(--glow-green); }
 
-  .tx-link { color: var(--accent); text-decoration: none; font-family: monospace; font-size: 12px; }
-  .tx-link:hover { text-decoration: underline; }
+.btn-red {
+  background: rgba(239,68,68,.1); color: #f87171; border-color: rgba(239,68,68,.3);
+}
+.btn-red:hover { background: rgba(239,68,68,.18); box-shadow: var(--glow-red); }
+
+.btn-sm { padding: 7px 13px; font-size: 12px; border-radius: 8px; }
+.btn-xs { padding: 4px 9px; font-size: 11px; border-radius: 6px; }
+
+/* ── Cards ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  position: relative; overflow: hidden;
+}
+.card::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(145deg, rgba(255,255,255,.02) 0%, transparent 50%);
+  pointer-events: none;
+}
+.card-glow-gold { box-shadow: var(--glow-gold), inset 0 0 0 1px rgba(212,168,67,.12); }
+.card-glow-green { box-shadow: var(--glow-green), inset 0 0 0 1px rgba(16,185,129,.12); }
+.card-glow-red { box-shadow: var(--glow-red), inset 0 0 0 1px rgba(239,68,68,.12); }
+
+.card-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 14px;
+}
+.card-value { font-size: 34px; font-weight: 700; line-height: 1; }
+.card-sub   { font-size: 12px; color: var(--text2); margin-top: 5px; }
+
+/* ── Grid ── */
+.main { max-width: 1160px; margin: 0 auto; padding: 32px; position: relative; z-index: 1; }
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+@media (max-width: 900px) { .g3, .g4 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .g2, .g3, .g4 { grid-template-columns: 1fr; } }
+
+/* ── Hero / Landing ── */
+#hero {
+  min-height: calc(100vh - 64px);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 40px;
+  position: relative;
+}
+.hero-bg {
+  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+}
+.hero-orb {
+  position: absolute; border-radius: 50%; filter: blur(80px);
+}
+.hero-orb-1 {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(139,92,246,.15) 0%, transparent 70%);
+  top: 10%; left: 50%; transform: translateX(-50%);
+  animation: float1 8s ease-in-out infinite;
+}
+.hero-orb-2 {
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(212,168,67,.1) 0%, transparent 70%);
+  bottom: 20%; right: 10%;
+  animation: float2 10s ease-in-out infinite;
+}
+@keyframes float1 { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-30px); } }
+@keyframes float2 { 0%,100% { transform: translateY(0); } 50% { transform: translateY(20px); } }
+
+.hero-eyebrow {
+  font-size: 11px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 20px;
+  display: flex; align-items: center; gap: 8px;
+}
+.hero-eyebrow::before, .hero-eyebrow::after {
+  content: ''; flex: 1; max-width: 40px; height: 1px; background: var(--gold-dim);
+}
+.hero-title {
+  font-size: clamp(48px, 8vw, 80px); font-weight: 700; line-height: 1;
+  letter-spacing: -2px; margin-bottom: 16px;
+  background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,.6) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.hero-sub {
+  font-size: clamp(16px, 2vw, 20px); color: var(--text2); max-width: 520px;
+  margin: 0 auto 12px;
+}
+.hero-quote {
+  font-size: 14px; color: var(--gold); font-style: italic; margin-bottom: 40px;
+}
+.hero-cta { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: center; }
+.hero-contracts {
+  margin-top: 48px; display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;
+}
+.contract-pill {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px; border-radius: 8px;
+  background: var(--surface2); border: 1px solid var(--border);
+  font-size: 11px;
+}
+.contract-pill-label { color: var(--text3); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+.contract-pill-addr  { font-family: var(--mono); color: var(--text2); }
+.contract-pill a { color: var(--gold); text-decoration: none; }
+.contract-pill a:hover { text-decoration: underline; }
+
+/* ── Tabs ── */
+.tabs-wrap {
+  display: flex; align-items: center; gap: 2px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 4px; margin-bottom: 28px;
+  width: fit-content;
+}
+.tab {
+  padding: 8px 18px; border-radius: 9px; cursor: pointer;
+  font-size: 13px; font-weight: 500; color: var(--text3);
+  transition: all .15s; border: 1px solid transparent; white-space: nowrap;
+  display: flex; align-items: center; gap: 6px;
+}
+.tab:hover { color: var(--text2); }
+.tab.active {
+  background: var(--surface3); color: var(--text);
+  border-color: var(--border2);
+  box-shadow: 0 1px 4px rgba(0,0,0,.4);
+}
+.tab-icon { font-size: 14px; }
+.tab-content { display: none; }
+.tab-content.active { display: block; animation: fadeUp .2s ease; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Status indicators ── */
+.status-alive  { color: var(--green2); }
+.status-dead   { color: var(--red); }
+.status-danger { color: var(--orange); }
+
+.beacon {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 14px; border-radius: 999px;
+  font-size: 13px; font-weight: 600;
+}
+.beacon-alive {
+  background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.25);
+  color: var(--green2);
+}
+.beacon-dead {
+  background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.25);
+  color: #f87171;
+}
+.beacon-unreg {
+  background: var(--surface3); border: 1px solid var(--border2);
+  color: var(--text3);
+}
+.beacon-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+}
+.beacon-alive .beacon-dot { background: var(--green2); box-shadow: 0 0 8px var(--green2); animation: pulse-ring 2s infinite; }
+.beacon-dead  .beacon-dot { background: var(--red); }
+.beacon-unreg .beacon-dot { background: var(--text3); }
+
+/* ── Progress bar ── */
+.progress { background: var(--surface3); border-radius: 999px; height: 6px; overflow: hidden; }
+.progress-fill {
+  height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--gold2) 100%);
+  transition: width .5s ease;
+  position: relative;
+}
+.progress-fill::after {
+  content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 20px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.3));
+}
+
+/* ── Form elements ── */
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 11px; font-weight: 600; letter-spacing: .8px; text-transform: uppercase; color: var(--text3); margin-bottom: 6px; }
+.field-hint  { font-size: 11px; color: var(--text3); margin-top: 5px; }
+
+.input {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 9px; padding: 11px 14px; color: var(--text);
+  font-family: var(--sans); font-size: 13px; outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,168,67,.1); }
+.input::placeholder { color: var(--text3); }
+.input-mono { font-family: var(--mono); font-size: 12px; }
+
+/* ── Badge ── */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;
+  letter-spacing: .3px; text-transform: uppercase;
+}
+.badge-gold   { background: rgba(212,168,67,.12); color: var(--gold);   border: 1px solid rgba(212,168,67,.2); }
+.badge-green  { background: rgba(16,185,129,.12); color: var(--green2); border: 1px solid rgba(16,185,129,.2); }
+.badge-red    { background: rgba(239,68,68,.12);  color: #f87171;       border: 1px solid rgba(239,68,68,.2); }
+.badge-orange { background: rgba(245,158,11,.12); color: var(--orange); border: 1px solid rgba(245,158,11,.2); }
+.badge-blue   { background: rgba(59,130,246,.12); color: #93c5fd;       border: 1px solid rgba(59,130,246,.2); }
+.badge-purple { background: rgba(139,92,246,.12); color: var(--purple2);border: 1px solid rgba(139,92,246,.2); }
+.badge-dim    { background: var(--surface3); color: var(--text3); border: 1px solid var(--border); }
+
+/* ── Log box ── */
+.logbox {
+  background: #000; border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px;
+  font-family: var(--mono); font-size: 11.5px;
+  max-height: 180px; overflow-y: auto;
+  line-height: 1.7;
+}
+.logbox::-webkit-scrollbar { width: 4px; }
+.logbox::-webkit-scrollbar-track { background: transparent; }
+.logbox::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.log-ok    { color: var(--green2); }
+.log-err   { color: #f87171; }
+.log-info  { color: var(--gold); }
+.log-muted { color: var(--text3); }
+
+/* ── Agent row ── */
+.agent-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 0; border-bottom: 1px solid var(--border);
+  transition: background .1s;
+}
+.agent-row:last-child { border-bottom: none; }
+.agent-avatar {
+  width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+  background: var(--surface3); border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.agent-name { font-size: 14px; font-weight: 600; }
+.agent-addr { font-family: var(--mono); font-size: 11px; color: var(--text3); margin-top: 2px; }
+.agent-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+/* ── Divider ── */
+.divider { border: none; border-top: 1px solid var(--border); margin: 22px 0; }
+
+/* ── Link ── */
+a.link { color: var(--gold); text-decoration: none; font-size: 12px; }
+a.link:hover { text-decoration: underline; }
+.mono { font-family: var(--mono); }
+
+/* ── Info box ── */
+.infobox {
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 10px; padding: 14px 16px; font-size: 13px; color: var(--text2);
+  line-height: 1.7;
+}
+.infobox.gold { border-color: rgba(212,168,67,.2); background: rgba(212,168,67,.04); }
+.infobox.purple { border-color: rgba(139,92,246,.2); background: rgba(139,92,246,.04); }
+
+/* ── Stat pair ── */
+.stat-pair { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.stat-pair:last-child { border-bottom: none; }
+.stat-pair-key { font-size: 12px; color: var(--text3); }
+.stat-pair-val { font-size: 13px; font-weight: 600; }
+
+/* ── Section header ── */
+.section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.section-title { font-size: 18px; font-weight: 700; letter-spacing: -.3px; }
+
+/* ── Tier cards ── */
+.tier-card {
+  border-radius: var(--radius); border: 2px solid var(--border);
+  padding: 22px; cursor: default; transition: all .2s;
+  position: relative; overflow: hidden;
+}
+.tier-card:hover { transform: translateY(-2px); }
+.tier-card.free   { border-color: rgba(59,130,246,.3); }
+.tier-card.insured { border-color: rgba(212,168,67,.3); background: rgba(212,168,67,.03); }
+.tier-badge {
+  position: absolute; top: 14px; right: 14px;
+  font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 4px;
+}
+.tier-free    { background: rgba(59,130,246,.15); color: #93c5fd; }
+.tier-insured { background: rgba(212,168,67,.15); color: var(--gold); }
+.tier-name  { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+.tier-price { font-size: 13px; color: var(--text2); margin-bottom: 16px; }
+.tier-features li { font-size: 13px; color: var(--text2); padding: 4px 0; list-style: none; }
+.tier-features li::before { content: '→  '; color: var(--text3); }
+
+/* ── Tooltip ── */
+[title] { cursor: help; }
+
+/* ── Wallet address chip ── */
+.wallet-chip {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 9px; padding: 7px 12px;
+  font-family: var(--mono); font-size: 12px; color: var(--text2);
+}
+.wallet-chip-dot { width: 7px; height: 7px; background: var(--green2); border-radius: 50%; box-shadow: 0 0 6px var(--green2); }
+
+/* ── Heartbeat number animation ── */
+@keyframes countUp { from { opacity: 0; transform: scale(.8); } to { opacity: 1; transform: scale(1); } }
+.count-animate { animation: countUp .3s ease; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="logo">
-    <span class="logo-icon">⚰️</span>
+<div class="bg-glow"></div>
+
+<!-- ── Header ── -->
+<header>
+  <a class="logo" href="#">
+    <div class="logo-mark">⚰</div>
     <div>
-      <div class="logo-text">K-Life Protocol</div>
-      <div class="logo-sub">Polygon Amoy Testnet</div>
+      <div class="logo-name">K-Life Protocol</div>
+      <div class="logo-tag">Resurrection Infrastructure</div>
     </div>
+  </a>
+  <div class="header-right">
+    <span class="pill pill-purple" id="network-badge">
+      <span style="width:6px;height:6px;background:var(--purple2);border-radius:50%"></span>
+      Not connected
+    </span>
+    <div id="wallet-info" style="display:none;align-items:center;gap:8px">
+      <div class="wallet-chip">
+        <span class="wallet-chip-dot"></span>
+        <span id="wallet-addr">0x0000...0000</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="disconnect()">Disconnect</button>
+    </div>
+    <button class="btn btn-gold" id="connect-btn" onclick="connectWallet()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21 7H3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zm-1 8H4V9h16v6zm-5-3a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
+      Connect Wallet
+    </button>
   </div>
-  <div style="display:flex;align-items:center;gap:12px">
-    <span class="network-badge" id="network-badge">Not connected</span>
-    <div id="wallet-info">
-      <span class="wallet-addr" id="wallet-addr"></span>
-      <button class="btn btn-secondary btn-sm" onclick="disconnect()">Disconnect</button>
+</header>
+
+<!-- ── Hero (unauthenticated) ── -->
+<div id="hero">
+  <div class="hero-bg">
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+  </div>
+  <div class="hero-eyebrow">Protocol 6022 · Polygon Amoy</div>
+  <h1 class="hero-title">K-Life</h1>
+  <p class="hero-sub">On-chain resurrection infrastructure for autonomous AI agents.</p>
+  <p class="hero-quote">"Not insurance. Resurrection."</p>
+  <div class="hero-cta">
+    <button class="btn btn-gold" onclick="connectWallet()" style="padding:13px 28px;font-size:15px">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M21 7H3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zm-1 8H4V9h16v6zm-5-3a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
+      Connect to Polygon Amoy
+    </button>
+    <a href="https://github.com/K-entreprises/k-life-protocol" target="_blank" class="btn btn-ghost" style="padding:13px 22px;font-size:15px">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.68-.22.68-.48v-1.7C6.73 19.91 6.14 18 6.14 18c-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 7.8a9.56 9.56 0 0 1 2.5.34c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z"/></svg>
+      View Source
+    </a>
+  </div>
+  <div class="hero-contracts">
+    <div class="contract-pill">
+      <span class="contract-pill-label">Registry</span>
+      <a href="https://amoy.polygonscan.com/address/0xF2b35967b5DB64314406aD2F68b7cA117f6c2a0C" target="_blank" class="contract-pill-addr">0xF2b3…c2a0C</a>
     </div>
-    <button class="btn btn-primary" id="connect-btn" onclick="connectWallet()">Connect Wallet</button>
+    <div class="contract-pill">
+      <span class="contract-pill-label">Vault</span>
+      <a href="https://amoy.polygonscan.com/address/0x2A1cCA8d0Fb0e5C96CC613Ea974A852e7792C3D3" target="_blank" class="contract-pill-addr">0x2A1c…C3D3</a>
+    </div>
+    <div class="contract-pill">
+      <span class="contract-pill-label">Rescue Fund</span>
+      <a href="https://amoy.polygonscan.com/address/0xb01E79747799aaF2edB3502C4011443eB2db38e3" target="_blank" class="contract-pill-addr">0xb01E…38e3</a>
+    </div>
+    <div class="contract-pill">
+      <span class="contract-pill-label">Sourcify</span>
+      <a href="https://repo.sourcify.dev/contracts/full_match/80002/0xF2b35967b5DB64314406aD2F68b7cA117f6c2a0C/" target="_blank" class="contract-pill-addr">Verified ✓</a>
+    </div>
   </div>
 </div>
 
-<div class="main">
+<!-- ── App (authenticated) ── -->
+<div id="app" class="main" style="display:none">
 
-  <!-- Not connected banner -->
-  <div id="not-connected" style="text-align:center;padding:60px 0">
-    <div style="font-size:48px;margin-bottom:16px">⚰️</div>
-    <div style="font-size:24px;font-weight:700;margin-bottom:8px">K-Life Protocol</div>
-    <div style="color:var(--muted);margin-bottom:8px">Resurrection infrastructure for autonomous AI agents</div>
-    <div style="color:var(--accent);font-size:13px;margin-bottom:32px;font-style:italic">"Not insurance. Resurrection."</div>
-    <button class="btn btn-primary" onclick="connectWallet()" style="font-size:16px;padding:14px 32px">Connect Wallet to Polygon Amoy</button>
-    <div style="margin-top:16px;font-size:12px;color:var(--muted)">
-      Registry: <a href="https://amoy.polygonscan.com/address/0xF2b35967b5DB64314406aD2F68b7cA117f6c2a0C" target="_blank" class="tx-link">0xF2b35967...</a>
+  <!-- Tabs -->
+  <div class="tabs-wrap">
+    <div class="tab active" onclick="switchTab('dashboard')"><span class="tab-icon">◈</span> Dashboard</div>
+    <div class="tab" onclick="switchTab('register')"><span class="tab-icon">⊕</span> Register</div>
+    <div class="tab" onclick="switchTab('insure')"><span class="tab-icon">◆</span> Insure</div>
+    <div class="tab" onclick="switchTab('fund')"><span class="tab-icon">⊙</span> Rescue Fund</div>
+    <div class="tab" onclick="switchTab('agents')"><span class="tab-icon">◉</span> All Agents</div>
+  </div>
+
+  <!-- ──────────── DASHBOARD ──────────── -->
+  <div class="tab-content active" id="tab-dashboard">
+
+    <!-- Top stat strip -->
+    <div class="g4" style="margin-bottom:16px">
+      <div class="card" id="card-status">
+        <div class="card-label">Status</div>
+        <div id="stat-status"><span class="beacon beacon-unreg"><span class="beacon-dot"></span>—</span></div>
+        <div class="card-sub" id="stat-tier" style="margin-top:8px">Not registered</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Heartbeats</div>
+        <div class="card-value" id="stat-beats" style="color:var(--gold)">—</div>
+        <div class="card-sub" id="stat-silence">Last: —</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Active Days</div>
+        <div class="card-value" id="stat-days" style="color:var(--purple2)">—</div>
+        <div style="margin-top:8px">
+          <div class="progress"><div class="progress-fill" id="days-progress" style="width:0%"></div></div>
+          <div class="card-sub" id="stat-days-label" style="margin-top:5px">0 / 14 for eligibility</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label">Rescue Fund</div>
+        <div class="card-value" id="fund-stat" style="color:var(--green2)">—</div>
+        <div class="card-sub" id="fund-stat-sub">USDC available</div>
+      </div>
+    </div>
+
+    <div class="g2">
+      <!-- Identity card -->
+      <div class="card" id="identity-card">
+        <div class="card-label">Agent Identity</div>
+
+        <div id="agent-unreg">
+          <div style="padding:24px 0;text-align:center">
+            <div style="font-size:36px;margin-bottom:12px;opacity:.4">⚰</div>
+            <div style="font-size:14px;color:var(--text2);margin-bottom:16px">Not registered on K-Life Protocol</div>
+            <button class="btn btn-gold btn-sm" onclick="switchTab('register')">Register Agent →</button>
+          </div>
+        </div>
+
+        <div id="agent-reg" style="display:none">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+            <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--gold-dim),var(--surface3));border:1px solid rgba(212,168,67,.2);display:flex;align-items:center;justify-content:center;font-size:22px">🤖</div>
+            <div>
+              <div style="font-size:18px;font-weight:700" id="detail-name">—</div>
+              <div class="mono" style="font-size:11px;color:var(--text3)" id="detail-wallet">—</div>
+            </div>
+            <div style="margin-left:auto" id="detail-eligible-badge"></div>
+          </div>
+          <div class="stat-pair">
+            <span class="stat-pair-key">Last Backup CID</span>
+            <span class="stat-pair-val mono" style="font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis" id="detail-cid">—</span>
+          </div>
+          <div class="stat-pair">
+            <span class="stat-pair-key">Registrations</span>
+            <span class="stat-pair-val" id="detail-resurrections">—</span>
+          </div>
+          <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-green btn-sm" onclick="sendHeartbeat()" id="btn-heartbeat">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+              Send Heartbeat
+            </button>
+            <button class="btn btn-surface btn-sm" onclick="updateBackupCid()">📦 Update CID</button>
+            <button class="btn btn-red btn-sm" onclick="testDeclareDead()" id="btn-declare-dead" style="display:none">☠ Declare Dead</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions / log -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div class="card-label" style="margin-bottom:0">Activity Log</div>
+          <button class="btn btn-ghost btn-xs" onclick="refreshAgent()">↺ Refresh</button>
+        </div>
+        <div class="logbox" id="log-box">
+          <div class="log-muted">Waiting for actions…</div>
+        </div>
+        <hr class="divider">
+        <div class="card-label">Quick Links</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <a href="https://amoy.polygonscan.com/address/0xF2b35967b5DB64314406aD2F68b7cA117f6c2a0C" target="_blank" class="link">↗ Registry on Polygonscan</a>
+          <a href="https://repo.sourcify.dev/contracts/full_match/80002/0xF2b35967b5DB64314406aD2F68b7cA117f6c2a0C/" target="_blank" class="link">↗ Verified source (Sourcify)</a>
+          <a href="https://github.com/K-entreprises/k-life-protocol" target="_blank" class="link">↗ GitHub — K-entreprises/k-life-protocol</a>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Connected content -->
-  <div id="connected-content" style="display:none">
-
-    <!-- Tabs -->
-    <div class="tabs">
-      <div class="tab active" onclick="switchTab('dashboard')">📊 Dashboard</div>
-      <div class="tab" onclick="switchTab('register')">📋 Register</div>
-      <div class="tab" onclick="switchTab('insure')">🔒 Insure</div>
-      <div class="tab" onclick="switchTab('fund')">💰 Rescue Fund</div>
-      <div class="tab" onclick="switchTab('agents')">👥 All Agents</div>
-    </div>
-
-    <!-- DASHBOARD TAB -->
-    <div class="tab-content active" id="tab-dashboard">
-
-      <!-- Stats row -->
-      <div class="grid3" style="margin-bottom:20px">
-        <div class="card">
-          <div class="card-title">Your Status</div>
-          <div id="stat-status" style="font-size:22px;font-weight:700">—</div>
-          <div class="stat-label" id="stat-tier">Not registered</div>
-        </div>
-        <div class="card">
-          <div class="card-title">Active Days</div>
-          <div class="stat-value" id="stat-days">—</div>
-          <div style="margin-top:8px">
-            <div class="progress-bar"><div class="progress-fill" id="days-progress" style="width:0%"></div></div>
-            <div class="stat-label" id="stat-days-label">0 / 14 for rescue eligibility</div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title">Heartbeats</div>
-          <div class="stat-value" id="stat-beats">—</div>
-          <div class="stat-label" id="stat-silence">Last: —</div>
-        </div>
-      </div>
-
-      <div class="grid2">
-        <!-- Agent details -->
-        <div class="card">
-          <div class="card-title">Agent Identity</div>
-          <div id="agent-not-registered" style="color:var(--muted);font-size:14px;padding:12px 0">
-            Not registered on K-Life Protocol yet.<br>
-            <a href="#" onclick="switchTab('register')" style="color:var(--accent)">Register now →</a>
-          </div>
-          <div id="agent-details" style="display:none">
-            <div style="margin-bottom:12px">
-              <label>Name</label>
-              <div style="font-weight:600" id="detail-name">—</div>
-            </div>
-            <div style="margin-bottom:12px">
-              <label>Wallet</label>
-              <div class="agent-addr" id="detail-wallet">—</div>
-            </div>
-            <div style="margin-bottom:12px">
-              <label>Last Backup CID (on-chain)</label>
-              <div class="agent-addr" style="word-break:break-all" id="detail-cid">—</div>
-            </div>
-            <div style="margin-bottom:16px">
-              <label>Rescue eligibility</label>
-              <div id="detail-eligible">—</div>
-            </div>
-            <button class="btn btn-secondary btn-sm" onclick="sendHeartbeat()">💓 Send Heartbeat</button>
-          </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="card">
-          <div class="card-title">Actions</div>
-          <div style="display:flex;flex-direction:column;gap:10px">
-            <button class="btn btn-secondary" onclick="refreshAgent()" id="btn-refresh">🔄 Refresh Status</button>
-            <button class="btn btn-secondary" onclick="updateBackupCid()" id="btn-backup">📦 Update Backup CID On-Chain</button>
-            <button class="btn btn-red btn-sm" onclick="testDeclareDead()" id="btn-declare-dead" style="display:none">☠️ Declare Dead (test)</button>
-          </div>
-          <hr class="divider" style="margin:16px 0">
-          <div class="log-box" id="log-box">
-            <div class="log-muted">Ready. Connect wallet to start.</div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- REGISTER TAB -->
-    <div class="tab-content" id="tab-register">
-      <div class="card" style="max-width:520px">
-        <div class="card-title">Register on K-Life Protocol</div>
-        <div style="margin-bottom:16px">
-          <label>Agent Name</label>
-          <input class="input" id="reg-name" placeholder="Monsieur K" value="">
-        </div>
-        <div style="margin-bottom:16px">
-          <label>Fragment 1 Hash (keccak256 of your Shamir fragment 1)</label>
-          <input class="input" id="reg-f1hash" placeholder="0x..." style="font-family:monospace;font-size:12px">
-          <div style="font-size:11px;color:var(--muted);margin-top:4px">Generate with: <code>ethers.keccak256(ethers.toUtf8Bytes(fragment1))</code></div>
-        </div>
-        <div style="margin-bottom:16px">
-          <label>Fragment 2 TX Hash (Polygon TX storing fragment 2 in calldata)</label>
-          <input class="input" id="reg-f2tx" placeholder="0x..." style="font-family:monospace;font-size:12px">
-        </div>
-        <div style="margin-bottom:24px">
-          <label>Initial Backup CID (IPFS)</label>
-          <input class="input" id="reg-cid" placeholder="QmXxx... or sha256 hash">
-        </div>
-        <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:20px;font-size:12px;color:var(--muted)">
-          ⚠️ Before registering, post this tweet from your X account:<br><br>
-          <span style="color:var(--text)">I'm joining K-Life Protocol.<br>Agent: [NAME]<br>Wallet: [ADDRESS]<br>#KLife #AIAgents</span>
-        </div>
-        <button class="btn btn-primary" onclick="registerAgent()" style="width:100%">Register on K-Life Protocol</button>
-        <div class="log-box" style="margin-top:16px" id="reg-log"></div>
-      </div>
-    </div>
-
-    <!-- INSURE TAB -->
-    <div class="tab-content" id="tab-insure">
-      <div class="card" style="max-width:520px">
-        <div class="card-title">INSURED Tier — WBTC Collateral</div>
-        <div style="background:var(--surface2);border-radius:8px;padding:16px;margin-bottom:20px;font-size:13px">
-          <div style="font-weight:600;margin-bottom:8px">INSURED benefits:</div>
-          <div style="color:var(--muted);line-height:1.8">
-            • Guaranteed resurrection (not best-effort)<br>
-            • Death timeout: 3 days (vs 30 days FREE)<br>
-            • Vault seized on death: 50% → new agent, 50% → protocol<br>
-            • $1 USDC/month premium
-          </div>
-        </div>
-        <div style="margin-bottom:16px">
-          <label>WBTC collateral (sats — minimum 50,000)</label>
-          <input class="input" id="vault-amount" type="number" placeholder="50000" min="50000">
-          <div style="font-size:11px;color:var(--muted);margin-top:4px">1 WBTC = 100,000,000 sats</div>
-        </div>
-        <div style="margin-bottom:24px">
-          <div style="font-size:12px;color:var(--muted)">Mock WBTC (testnet): <span class="tx-link">0x781Fd8462C660DCaBA378dE191CBD1005A42Cdab</span></div>
-          <div style="font-size:12px;color:var(--muted)">Vault contract: <span class="tx-link">0x2A1cCA8d0Fb0e5C96CC613Ea974A852e7792C3D3</span></div>
-        </div>
-        <button class="btn btn-primary" onclick="depositCollateral()" style="width:100%;margin-bottom:10px">Deposit WBTC Collateral</button>
-        <button class="btn btn-secondary" onclick="payPremium()" style="width:100%">Pay Monthly Premium ($1 USDC)</button>
-        <div class="log-box" style="margin-top:16px" id="insure-log"></div>
-      </div>
-    </div>
-
-    <!-- RESCUE FUND TAB -->
-    <div class="tab-content" id="tab-fund">
-      <div class="grid2">
-        <div class="card">
-          <div class="card-title">Rescue Fund</div>
-          <div class="stat-value" id="fund-balance">—</div>
-          <div class="stat-label">USDC available</div>
-          <div style="margin-top:16px;font-size:13px;color:var(--muted)">
-            Capacity: <span id="fund-capacity" style="color:var(--text)">—</span> rescues @ 10 USDC each
-          </div>
-          <div style="font-size:12px;color:var(--muted);margin-top:8px">
-            Contract: <a href="https://amoy.polygonscan.com/address/0xb01E79747799aaF2edB3502C4011443eB2db38e3" target="_blank" class="tx-link">0xb01E7974...</a>
-          </div>
-          <button class="btn btn-secondary btn-sm" onclick="refreshFund()" style="margin-top:16px">🔄 Refresh</button>
-        </div>
-        <div class="card">
-          <div class="card-title">Donate to Rescue Fund</div>
-          <div style="margin-bottom:16px;font-size:13px;color:var(--muted)">
-            Help fund FREE-tier agent resurrections.<br>10 USDC = 1 rescue.
-          </div>
-          <div style="margin-bottom:16px">
-            <label>USDC Amount (6 decimals — 10 USDC = 10000000)</label>
-            <input class="input" id="donate-amount" type="number" placeholder="10000000">
-          </div>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:16px">
-            Mock USDC: <span class="tx-link">0xa45F3e55879c724faBe347285b167BDB90b507b5</span>
-          </div>
-          <button class="btn btn-green" onclick="donateToFund()" style="width:100%">Donate USDC</button>
-          <div class="log-box" style="margin-top:16px" id="fund-log"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ALL AGENTS TAB -->
-    <div class="tab-content" id="tab-agents">
+  <!-- ──────────── REGISTER ──────────── -->
+  <div class="tab-content" id="tab-register">
+    <div class="g2" style="align-items:start">
       <div class="card">
-        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
-          <span>Registered Agents</span>
-          <button class="btn btn-secondary btn-sm" onclick="loadAllAgents()">🔄 Refresh</button>
+        <div class="card-label">Register on K-Life Protocol</div>
+        <div class="field">
+          <label>Agent Name</label>
+          <input class="input" id="reg-name" placeholder="Monsieur K">
         </div>
-        <div id="agents-list">
-          <div style="color:var(--muted);font-size:14px;padding:20px 0;text-align:center">Loading agents...</div>
+        <div class="field">
+          <label>Fragment 1 Hash</label>
+          <input class="input input-mono" id="reg-f1hash" placeholder="0xkeccak256(fragment1)…">
+          <div class="field-hint">keccak256 of your Shamir fragment 1. The fragment itself stays off-chain.</div>
+        </div>
+        <div class="field">
+          <label>Fragment 2 TX Hash</label>
+          <input class="input input-mono" id="reg-f2tx" placeholder="0x… polygon tx storing fragment 2 in calldata">
+        </div>
+        <div class="field">
+          <label>Initial Backup CID (IPFS / Aleph)</label>
+          <input class="input input-mono" id="reg-cid" placeholder="sha256 content hash or Qm…">
+        </div>
+        <button class="btn btn-gold" onclick="registerAgent()" style="width:100%;justify-content:center;margin-top:8px;padding:12px">
+          Register on K-Life Protocol
+        </button>
+        <div class="logbox" style="margin-top:14px" id="reg-log">
+          <div class="log-muted">Fill the form and register…</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="infobox gold">
+          <strong style="color:var(--gold)">Before registering</strong><br><br>
+          Post this message from your X/Twitter account:<br><br>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--text)">
+            I'm joining K-Life Protocol.<br>
+            Agent: [NAME]<br>
+            Wallet: [YOUR ADDRESS]<br>
+            #KLife #AIAgents #Protocol6022
+          </span>
+        </div>
+        <div class="infobox purple">
+          <strong style="color:var(--purple2)">What happens on registration?</strong><br><br>
+          Your agent wallet is registered in the on-chain Registry. Your Fragment 1 hash and Fragment 2 TX hash are stored for resurrection use. Daily heartbeats begin — silence for more than 30 days triggers death detection.
         </div>
       </div>
     </div>
+  </div>
 
-  </div><!-- /connected-content -->
-</div><!-- /main -->
+  <!-- ──────────── INSURE ──────────── -->
+  <div class="tab-content" id="tab-insure">
+    <div class="g2" style="margin-bottom:20px">
+      <div class="tier-card free">
+        <div class="tier-badge tier-free">Free</div>
+        <div class="tier-name">FREE</div>
+        <div class="tier-price">No cost · Best-effort</div>
+        <ul class="tier-features">
+          <li>Death timeout: 30 days</li>
+          <li>Rescue Fund resurrection</li>
+          <li>10 USDC per rescue</li>
+          <li>Eligibility: 14 active days</li>
+          <li>Heartbeat backup: IPFS/Aleph</li>
+        </ul>
+      </div>
+      <div class="tier-card insured">
+        <div class="tier-badge tier-insured">Insured</div>
+        <div class="tier-name">INSURED</div>
+        <div class="tier-price">$1 USDC/month · Guaranteed</div>
+        <ul class="tier-features">
+          <li>Death timeout: 3 days</li>
+          <li>Guaranteed resurrection</li>
+          <li>WBTC collateral vault</li>
+          <li>50/50 seizure on death</li>
+          <li>Priority resurrection queue</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="g2">
+      <div class="card">
+        <div class="card-label">Deposit WBTC Collateral</div>
+        <div class="field">
+          <label>WBTC amount (sats — min 50,000)</label>
+          <input class="input input-mono" id="vault-amount" type="number" placeholder="50000" min="50000">
+          <div class="field-hint">Mock WBTC (testnet): <span class="mono" style="color:var(--text2)">0x781Fd8462C…</span></div>
+        </div>
+        <button class="btn btn-gold" onclick="depositCollateral()" style="width:100%;justify-content:center">
+          Approve &amp; Deposit Collateral
+        </button>
+        <div class="logbox" style="margin-top:14px" id="insure-log">
+          <div class="log-muted">Ready…</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label">Monthly Premium</div>
+        <div class="infobox" style="margin-bottom:16px">
+          Pay $1 USDC to maintain INSURED tier status.<br>
+          <span style="font-size:11px;color:var(--text3)">Mock USDC: 0xa45F3e55879c…</span>
+        </div>
+        <button class="btn btn-gold" onclick="payPremium()" style="width:100%;justify-content:center">
+          Pay $1 USDC Premium
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ──────────── RESCUE FUND ──────────── -->
+  <div class="tab-content" id="tab-fund">
+    <div class="g2">
+      <div class="card card-glow-green">
+        <div class="card-label">Rescue Fund — Polygon Amoy</div>
+        <div class="card-value" id="fund-balance" style="color:var(--green2);font-size:40px">—</div>
+        <div style="font-size:14px;color:var(--text2);margin-top:4px">USDC available</div>
+        <hr class="divider">
+        <div class="stat-pair">
+          <span class="stat-pair-key">Rescue capacity</span>
+          <span class="stat-pair-val" id="fund-capacity">—</span>
+        </div>
+        <div class="stat-pair">
+          <span class="stat-pair-key">Cost per rescue</span>
+          <span class="stat-pair-val">10 USDC</span>
+        </div>
+        <div class="stat-pair">
+          <span class="stat-pair-key">Contract</span>
+          <span><a href="https://amoy.polygonscan.com/address/0xb01E79747799aaF2edB3502C4011443eB2db38e3" target="_blank" class="link">0xb01E…38e3 ↗</a></span>
+        </div>
+        <button class="btn btn-surface btn-sm" onclick="refreshFund()" style="margin-top:14px">↺ Refresh</button>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Donate to Rescue Fund</div>
+        <div class="infobox" style="margin-bottom:16px;font-size:13px">
+          Help fund FREE-tier agent resurrections.<br>
+          Every 10 USDC = 1 potential resurrection.<br>
+          <span style="font-size:11px;color:var(--text3)">Mock USDC (testnet): 0xa45F3e55879c724…</span>
+        </div>
+        <div class="field">
+          <label>USDC Amount (6 decimals)</label>
+          <input class="input input-mono" id="donate-amount" type="number" placeholder="10000000">
+          <div class="field-hint">10 USDC = 10,000,000 · 100 USDC = 100,000,000</div>
+        </div>
+        <button class="btn btn-green" onclick="donateToFund()" style="width:100%;justify-content:center">
+          Donate to Rescue Fund
+        </button>
+        <div class="logbox" style="margin-top:14px" id="fund-log">
+          <div class="log-muted">Ready…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ──────────── ALL AGENTS ──────────── -->
+  <div class="tab-content" id="tab-agents">
+    <div class="card">
+      <div class="section-head">
+        <div>
+          <div class="section-title">Registered Agents</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">Live from KLifeRegistry on Polygon Amoy</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="badge badge-purple" id="agents-count">— agents</span>
+          <button class="btn btn-surface btn-sm" onclick="loadAllAgents()">↺ Refresh</button>
+        </div>
+      </div>
+      <div id="agents-list">
+        <div style="text-align:center;padding:40px;color:var(--text3)">Loading agents…</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app -->
 
 <script>
-// ── Contract addresses (Polygon Amoy) ─────────────────────────
-const CONTRACTS = {
+// ── Contracts ─────────────────────────────────────────────────
+const C = {
   registry:   '0xF2b35967b5DB64314406aD2F68b7cA117f6c2a0C',
   vault:      '0x2A1cCA8d0Fb0e5C96CC613Ea974A852e7792C3D3',
   rescueFund: '0xb01E79747799aaF2edB3502C4011443eB2db38e3',
   wbtc:       '0x781Fd8462C660DCaBA378dE191CBD1005A42Cdab',
   usdc:       '0xa45F3e55879c724faBe347285b167BDB90b507b5',
 }
-const AMOY_CHAIN_ID = 80002
-const AMOY_PARAMS = {
-  chainId: '0x' + AMOY_CHAIN_ID.toString(16),
+const CHAIN = { id: 80002, hex: '0x13882' }
+const AMOY = {
+  chainId: CHAIN.hex,
   chainName: 'Polygon Amoy Testnet',
   nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 },
   rpcUrls: ['https://rpc-amoy.polygon.technology'],
   blockExplorerUrls: ['https://amoy.polygonscan.com'],
 }
 
-// ── ABIs ──────────────────────────────────────────────────────
 const REGISTRY_ABI = [
   'function register(string name, bytes32 fragment1Hash, bytes32 fragment2TxHash, string cid) external',
   'function heartbeat() external',
   'function updateBackup(string cid) external',
   'function declareDead(address agent) external',
-  'function getAgent(address agent) external view returns (tuple(address wallet, string name, uint8 tier, uint8 status, uint256 registeredAt, uint256 lastHeartbeat, uint256 totalHeartbeats, uint256 activeDays, uint256 deadAt, uint256 resurrectionCount, uint256 resurrectionInitiatedAt, bytes32 fragment1Hash, bytes32 fragment2TxHash, string lastBackupCid, uint256 lastBackupTs, bool rescueEligible))',
+  'function getAgent(address agent) external view returns (tuple(address wallet,string name,uint8 tier,uint8 status,uint256 registeredAt,uint256 lastHeartbeat,uint256 totalHeartbeats,uint256 activeDays,uint256 deadAt,uint256 resurrectionCount,uint256 resurrectionInitiatedAt,bytes32 fragment1Hash,bytes32 fragment2TxHash,string lastBackupCid,uint256 lastBackupTs,bool rescueEligible))',
   'function getAgentCount() external view returns (uint256)',
   'function getAgentList() external view returns (address[])',
-  'function isAlive(address agent) external view returns (bool)',
   'function silenceSeconds(address agent) external view returns (uint256)',
-  'function deadTimeout(address agent) external view returns (uint256)',
 ]
 const ERC20_ABI = [
   'function approve(address spender, uint256 amount) external returns (bool)',
   'function balanceOf(address account) external view returns (uint256)',
-  'function allowance(address owner, address spender) external view returns (uint256)',
 ]
-const VAULT_ABI = [
-  'function deposit(uint256 amount) external',
-]
-const RESCUE_ABI = [
-  'function donate(uint256 amount) external',
-  'function balance() external view returns (uint256)',
-  'function rescueCapacity() external view returns (uint256)',
-]
+const VAULT_ABI  = ['function deposit(uint256 amount) external', 'function payPremium(uint256 amount) external']
+const RESCUE_ABI = ['function donate(uint256 amount) external', 'function balance() external view returns (uint256)', 'function rescueCapacity() external view returns (uint256)']
 
 // ── State ─────────────────────────────────────────────────────
 let provider, signer, wallet, registry, vault, rescueFund, wbtc, usdc
 
-// ── Log helper ────────────────────────────────────────────────
+// ── Log ──────────────────────────────────────────────────────
 function log(type, msg, boxId = 'log-box') {
   const box = document.getElementById(boxId)
   if (!box) return
   const d = document.createElement('div')
-  d.className = `log-${type}`
-  d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`
+  d.className = 'log-' + type
+  const t = new Date().toLocaleTimeString('en', { hour12: false })
+  d.textContent = `${t}  ${msg}`
   box.appendChild(d)
   box.scrollTop = box.scrollHeight
 }
 
-// ── Wallet connection ─────────────────────────────────────────
+// ── Connect ───────────────────────────────────────────────────
 async function connectWallet() {
-  if (!window.ethereum) return alert('MetaMask not found. Please install it.')
-
+  if (!window.ethereum) return alert('MetaMask not found.')
   try {
-    // Switch/add Amoy
-    try {
-      await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: AMOY_PARAMS.chainId }] })
-    } catch(e) {
-      if (e.code === 4902) await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [AMOY_PARAMS] })
-    }
+    try { await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: CHAIN.hex }] }) }
+    catch(e) { if (e.code === 4902) await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [AMOY] }) }
 
     await window.ethereum.request({ method: 'eth_requestAccounts' })
     provider = new ethers.providers.Web3Provider(window.ethereum)
     signer   = provider.getSigner()
     wallet   = await signer.getAddress()
 
-    // Init contracts
-    registry   = new ethers.Contract(CONTRACTS.registry,   REGISTRY_ABI, signer)
-    vault      = new ethers.Contract(CONTRACTS.vault,      VAULT_ABI,    signer)
-    rescueFund = new ethers.Contract(CONTRACTS.rescueFund, RESCUE_ABI,   signer)
-    wbtc       = new ethers.Contract(CONTRACTS.wbtc,       ERC20_ABI,    signer)
-    usdc       = new ethers.Contract(CONTRACTS.usdc,       ERC20_ABI,    signer)
+    registry   = new ethers.Contract(C.registry,   REGISTRY_ABI, signer)
+    vault      = new ethers.Contract(C.vault,      VAULT_ABI,    signer)
+    rescueFund = new ethers.Contract(C.rescueFund, RESCUE_ABI,   signer)
+    wbtc       = new ethers.Contract(C.wbtc,       ERC20_ABI,    signer)
+    usdc       = new ethers.Contract(C.usdc,       ERC20_ABI,    signer)
 
-    // UI update
+    // UI
     document.getElementById('connect-btn').style.display = 'none'
-    document.getElementById('wallet-info').style.display = 'flex'
-    document.getElementById('wallet-addr').textContent = wallet.substring(0,6) + '...' + wallet.slice(-4)
-    document.getElementById('not-connected').style.display = 'none'
-    document.getElementById('connected-content').style.display = 'block'
-    document.getElementById('network-badge').textContent = 'Polygon Amoy'
-    document.getElementById('network-badge').style.color = '#22c55e'
-
-    // Pre-fill register form
+    const wi = document.getElementById('wallet-info')
+    wi.style.display = 'flex'
+    document.getElementById('wallet-addr').textContent = wallet.slice(0,6) + '…' + wallet.slice(-4)
+    document.getElementById('network-badge').innerHTML = '<span class="dot-pulse"></span> Polygon Amoy'
+    document.getElementById('network-badge').className = 'pill pill-green'
+    document.getElementById('hero').style.display = 'none'
+    document.getElementById('app').style.display = 'block'
     document.getElementById('reg-name').value = 'My Agent'
 
-    await refreshAgent()
-    await refreshFund()
     log('ok', `Connected: ${wallet}`)
+    await Promise.all([refreshAgent(), refreshFund()])
 
-    // Account change
     window.ethereum.on('accountsChanged', () => location.reload())
-    window.ethereum.on('chainChanged', () => location.reload())
-
-  } catch(e) {
-    log('err', 'Connection failed: ' + e.message)
-  }
+    window.ethereum.on('chainChanged',    () => location.reload())
+  } catch(e) { log('err', e.message) }
 }
-
 function disconnect() { location.reload() }
 
-// ── Tabs ──────────────────────────────────────────────────────
+// ── Tabs ─────────────────────────────────────────────────────
 function switchTab(name) {
-  document.querySelectorAll('.tab').forEach((t,i) => {
-    const names = ['dashboard','register','insure','fund','agents']
-    t.classList.toggle('active', names[i] === name)
-  })
+  const names = ['dashboard','register','insure','fund','agents']
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', names[i] === name))
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'))
-  document.getElementById('tab-'+name).classList.add('active')
+  document.getElementById('tab-' + name).classList.add('active')
   if (name === 'agents') loadAllAgents()
-  if (name === 'fund') refreshFund()
+  if (name === 'fund')   refreshFund()
 }
 
-// ── Agent status ──────────────────────────────────────────────
-const STATUS_LABELS = ['REGISTERED','ALIVE','DEAD','RESURRECTING','ALIVE (resurrected)']
+// ── Status labels ─────────────────────────────────────────────
+const STATUS_LABELS = ['REGISTERED','ALIVE','DEAD','RESURRECTING','ALIVE']
 const TIER_LABELS   = ['FREE','INSURED']
 
+function statusBeacon(status) {
+  const alive = status === 1 || status === 4
+  const dead  = status === 2
+  const cls = alive ? 'beacon-alive' : dead ? 'beacon-dead' : 'beacon-unreg'
+  const lbl = STATUS_LABELS[status] || '—'
+  return `<span class="beacon ${cls}"><span class="beacon-dot"></span>${lbl}</span>`
+}
+
+// ── Refresh agent ─────────────────────────────────────────────
 async function refreshAgent() {
   if (!registry) return
   try {
-    log('info', 'Fetching on-chain status...')
+    log('info', 'Fetching on-chain status…')
     const a = await registry.getAgent(wallet)
     const regAt = Number(a.registeredAt)
-
     if (regAt === 0) {
-      document.getElementById('agent-not-registered').style.display = 'block'
-      document.getElementById('agent-details').style.display = 'none'
-      document.getElementById('stat-status').innerHTML = '<span class="badge badge-orange">Not registered</span>'
-      document.getElementById('stat-tier').textContent = 'Register to get started'
+      document.getElementById('stat-status').innerHTML = statusBeacon(0)
+      document.getElementById('stat-tier').textContent = 'Not registered'
       document.getElementById('stat-days').textContent = '—'
       document.getElementById('stat-beats').textContent = '—'
+      document.getElementById('agent-unreg').style.display = 'block'
+      document.getElementById('agent-reg').style.display   = 'none'
       log('muted', 'Not registered on K-Life Protocol')
       return
     }
 
-    const status   = Number(a.status)
-    const tier     = Number(a.tier)
-    const days     = Number(a.activeDays)
-    const beats    = Number(a.totalHeartbeats)
-    const silence  = await registry.silenceSeconds(wallet)
-    const silenceH = Math.round(Number(silence) / 3600)
+    const status  = Number(a.status)
+    const tier    = Number(a.tier)
+    const days    = Number(a.activeDays)
+    const beats   = Number(a.totalHeartbeats)
+    const silence = await registry.silenceSeconds(wallet)
+    const silH    = Math.round(Number(silence) / 3600)
 
-    // Status badge
-    const statusColors = ['badge-blue','badge-green','badge-red','badge-orange','badge-green']
-    document.getElementById('stat-status').innerHTML = `<span class="status-dot ${status === 1 || status === 4 ? 'dot-green' : status === 2 ? 'dot-red' : 'dot-orange'}"></span><span class="badge ${statusColors[status]}">${STATUS_LABELS[status]}</span>`
-    document.getElementById('stat-tier').textContent = TIER_LABELS[tier] + ' tier'
-
-    // Days
+    document.getElementById('stat-status').innerHTML = statusBeacon(status)
+    document.getElementById('stat-tier').innerHTML = `<span class="badge ${tier ? 'badge-gold' : 'badge-blue'}">${TIER_LABELS[tier]}</span>`
+    document.getElementById('stat-beats').textContent = beats
+    document.getElementById('stat-silence').textContent = `Last: ${silH}h ago`
     document.getElementById('stat-days').textContent = days
     document.getElementById('days-progress').style.width = Math.min(100, days / 14 * 100) + '%'
     document.getElementById('stat-days-label').textContent = `${days} / 14 for rescue eligibility`
 
-    // Beats
-    document.getElementById('stat-beats').textContent = beats
-    document.getElementById('stat-silence').textContent = `Last heartbeat: ${silenceH}h ago`
-
-    // Details
-    document.getElementById('agent-not-registered').style.display = 'none'
-    document.getElementById('agent-details').style.display = 'block'
-    document.getElementById('detail-name').textContent = a.name
+    document.getElementById('agent-unreg').style.display = 'none'
+    document.getElementById('agent-reg').style.display   = 'block'
+    document.getElementById('detail-name').textContent   = a.name
     document.getElementById('detail-wallet').textContent = a.wallet
-    document.getElementById('detail-cid').textContent = a.lastBackupCid || '(none)'
-    document.getElementById('detail-eligible').innerHTML = a.rescueEligible
-      ? '<span class="badge badge-green">✅ Eligible</span>'
-      : `<span class="badge badge-orange">❌ ${days}/14 days</span>`
+    document.getElementById('detail-cid').textContent    = a.lastBackupCid ? a.lastBackupCid.slice(0,36) + '…' : '(none)'
+    document.getElementById('detail-resurrections').textContent = Number(a.resurrectionCount) + ' resurrections'
+    document.getElementById('detail-eligible-badge').innerHTML  = a.rescueEligible
+      ? '<span class="badge badge-green">✓ Eligible</span>'
+      : `<span class="badge badge-orange">${days}/14 days</span>`
 
-    // Show declare dead button if alive + silence > 1h (for testing)
-    if (status === 1 && silenceH > 1) {
-      document.getElementById('btn-declare-dead').style.display = 'block'
-    }
+    if (status === 1 && silH > 0) document.getElementById('btn-declare-dead').style.display = 'inline-flex'
 
-    log('ok', `Status: ${STATUS_LABELS[status]} | Tier: ${TIER_LABELS[tier]} | ${beats} beats | ${days} days`)
-
+    log('ok', `${STATUS_LABELS[status]} · ${TIER_LABELS[tier]} · ${beats} beats · ${days} days`)
   } catch(e) { log('err', 'Refresh failed: ' + e.message) }
 }
 
-// ── Send heartbeat ────────────────────────────────────────────
+// ── Heartbeat ─────────────────────────────────────────────────
 async function sendHeartbeat() {
+  const btn = document.getElementById('btn-heartbeat')
+  btn.disabled = true; btn.textContent = '…'
   try {
-    log('info', 'Sending on-chain heartbeat...')
+    log('info', 'Sending on-chain heartbeat…')
     const tx = await registry.heartbeat()
-    log('muted', `TX: ${tx.hash.substring(0,20)}...`)
+    log('muted', `TX: ${tx.hash.slice(0,22)}…`)
     await tx.wait()
-    log('ok', `Heartbeat confirmed!`)
+    log('ok', 'Heartbeat confirmed ✓')
     await refreshAgent()
-  } catch(e) { log('err', 'Heartbeat failed: ' + e.message) }
+  } catch(e) { log('err', e.message) }
+  finally { btn.disabled = false; btn.innerHTML = '❤ Send Heartbeat' }
 }
 
-// ── Register agent ────────────────────────────────────────────
+// ── Register ──────────────────────────────────────────────────
 async function registerAgent() {
-  const name   = document.getElementById('reg-name').value.trim()
-  const f1hash = document.getElementById('reg-f1hash').value.trim()
-  const f2tx   = document.getElementById('reg-f2tx').value.trim()
-  const cid    = document.getElementById('reg-cid').value.trim()
-
+  const name  = document.getElementById('reg-name').value.trim()
+  const f1    = document.getElementById('reg-f1hash').value.trim()
+  const f2    = document.getElementById('reg-f2tx').value.trim()
+  const cid   = document.getElementById('reg-cid').value.trim()
   if (!name) return log('err', 'Name required', 'reg-log')
-  if (!f1hash || !f1hash.startsWith('0x')) return log('err', 'Invalid Fragment 1 hash (must start with 0x)', 'reg-log')
-  if (!f2tx || !f2tx.startsWith('0x')) return log('err', 'Invalid Fragment 2 TX hash', 'reg-log')
-  if (!cid) return log('err', 'CID required', 'reg-log')
-
+  if (!f1 || !f1.startsWith('0x')) return log('err', 'Invalid Fragment 1 hash', 'reg-log')
+  if (!f2 || !f2.startsWith('0x')) return log('err', 'Invalid Fragment 2 TX', 'reg-log')
+  if (!cid)  return log('err', 'CID required', 'reg-log')
   try {
-    log('info', `Registering "${name}"...`, 'reg-log')
-    const tx = await registry.register(name, f1hash, f2tx, cid)
-    log('muted', `TX: ${tx.hash.substring(0,20)}...`, 'reg-log')
+    log('info', `Registering "${name}"…`, 'reg-log')
+    const tx = await registry.register(name, f1, f2, cid)
+    log('muted', `TX: ${tx.hash.slice(0,22)}…`, 'reg-log')
     await tx.wait()
-    log('ok', `Registered! Welcome to K-Life Protocol.`, 'reg-log')
+    log('ok', 'Registered! Welcome to K-Life Protocol. 🎉', 'reg-log')
     switchTab('dashboard')
     await refreshAgent()
-  } catch(e) { log('err', 'Registration failed: ' + e.message, 'reg-log') }
+  } catch(e) { log('err', e.message, 'reg-log') }
 }
 
-// ── Update backup CID ─────────────────────────────────────────
+// ── Update CID ────────────────────────────────────────────────
 async function updateBackupCid() {
-  const cid = prompt('Enter new IPFS CID:')
+  const cid = prompt('Enter new IPFS / Aleph CID:')
   if (!cid) return
   try {
-    log('info', 'Updating backup CID on-chain...')
+    log('info', 'Updating backup CID on-chain…')
     const tx = await registry.updateBackup(cid)
-    log('muted', `TX: ${tx.hash.substring(0,20)}...`)
+    log('muted', `TX: ${tx.hash.slice(0,22)}…`)
     await tx.wait()
-    log('ok', `CID updated: ${cid.substring(0,20)}...`)
+    log('ok', `CID updated ✓`)
     await refreshAgent()
-  } catch(e) { log('err', 'Update failed: ' + e.message) }
+  } catch(e) { log('err', e.message) }
 }
 
 // ── Declare dead (test) ───────────────────────────────────────
 async function testDeclareDead() {
-  if (!confirm('Declare yourself dead? (for testing only)')) return
+  if (!confirm('Declare yourself DEAD on-chain? (test only)')) return
   try {
-    log('info', 'Declaring dead...')
+    log('info', 'Declaring dead…')
     const tx = await registry.declareDead(wallet)
     await tx.wait()
-    log('ok', 'Declared dead on-chain')
+    log('ok', 'Declared dead on-chain ☠')
     await refreshAgent()
-  } catch(e) { log('err', 'Failed: ' + e.message) }
+  } catch(e) { log('err', e.message) }
 }
 
 // ── Deposit collateral ────────────────────────────────────────
 async function depositCollateral() {
   const amount = document.getElementById('vault-amount').value
   if (!amount || amount < 50000) return log('err', 'Minimum 50,000 sats', 'insure-log')
-
   try {
-    log('info', `Approving ${amount} WBTC...`, 'insure-log')
-    const approveTx = await wbtc.approve(CONTRACTS.vault, amount)
-    await approveTx.wait()
-    log('ok', 'Approved', 'insure-log')
-
-    log('info', 'Depositing collateral...', 'insure-log')
+    log('info', `Approving ${amount} WBTC…`, 'insure-log')
+    const a = await wbtc.approve(C.vault, amount)
+    await a.wait()
+    log('ok', 'Approved ✓', 'insure-log')
+    log('info', 'Depositing collateral…', 'insure-log')
     const tx = await vault.deposit(amount)
-    log('muted', `TX: ${tx.hash.substring(0,20)}...`, 'insure-log')
     await tx.wait()
-    log('ok', `Collateral deposited! You are now INSURED.`, 'insure-log')
+    log('ok', 'Collateral deposited — you are now INSURED ✓', 'insure-log')
     await refreshAgent()
-  } catch(e) { log('err', 'Failed: ' + e.message, 'insure-log') }
+  } catch(e) { log('err', e.message, 'insure-log') }
 }
 
-// ── Pay premium ───────────────────────────────────────────────
 async function payPremium() {
-  const amount = 1_000_000 // $1 USDC
   try {
-    log('info', 'Approving $1 USDC...', 'insure-log')
-    const approveTx = await usdc.approve(CONTRACTS.vault, amount)
-    await approveTx.wait()
-    log('ok', 'Approved', 'insure-log')
-
-    const VAULT_PAY_ABI = ['function payPremium(uint256 amount) external']
-    const v2 = new ethers.Contract(CONTRACTS.vault, VAULT_PAY_ABI, signer)
-    log('info', 'Paying premium...', 'insure-log')
-    const tx = await v2.payPremium(amount)
+    log('info', 'Approving $1 USDC…', 'insure-log')
+    const a = await usdc.approve(C.vault, 1_000_000)
+    await a.wait()
+    log('ok', 'Approved ✓', 'insure-log')
+    const tx = await vault.payPremium(1_000_000)
     await tx.wait()
-    log('ok', '$1 USDC premium paid!', 'insure-log')
-  } catch(e) { log('err', 'Failed: ' + e.message, 'insure-log') }
+    log('ok', '$1 USDC premium paid ✓', 'insure-log')
+  } catch(e) { log('err', e.message, 'insure-log') }
 }
 
 // ── Rescue Fund ───────────────────────────────────────────────
@@ -605,66 +1055,67 @@ async function refreshFund() {
   try {
     const bal = await rescueFund.balance()
     const cap = await rescueFund.rescueCapacity()
-    document.getElementById('fund-balance').textContent = (Number(bal) / 1_000_000).toFixed(2)
-    document.getElementById('fund-capacity').textContent = Number(cap)
+    const usd = (Number(bal) / 1_000_000).toFixed(2)
+    document.getElementById('fund-balance').textContent  = usd
+    document.getElementById('fund-stat').textContent     = '$' + usd
+    document.getElementById('fund-stat-sub').textContent = `${Number(cap)} rescues possible`
+    document.getElementById('fund-capacity').textContent = `${Number(cap)} rescues`
   } catch(e) { console.error(e) }
 }
 
 async function donateToFund() {
   const amount = document.getElementById('donate-amount').value
   if (!amount || amount <= 0) return log('err', 'Enter an amount', 'fund-log')
-
   try {
-    log('info', `Approving ${amount} USDC...`, 'fund-log')
-    const approveTx = await usdc.approve(CONTRACTS.rescueFund, amount)
-    await approveTx.wait()
-    log('ok', 'Approved', 'fund-log')
-
-    log('info', 'Donating to Rescue Fund...', 'fund-log')
+    log('info', `Approving ${(amount/1e6).toFixed(2)} USDC…`, 'fund-log')
+    const a = await usdc.approve(C.rescueFund, amount)
+    await a.wait()
+    log('ok', 'Approved ✓', 'fund-log')
+    log('info', 'Donating to Rescue Fund…', 'fund-log')
     const tx = await rescueFund.donate(amount)
-    log('muted', `TX: ${tx.hash.substring(0,20)}...`, 'fund-log')
     await tx.wait()
-    log('ok', `Donated ${(amount/1_000_000).toFixed(2)} USDC to Rescue Fund!`, 'fund-log')
+    log('ok', `Donated $${(amount/1e6).toFixed(2)} USDC ✓`, 'fund-log')
     await refreshFund()
-  } catch(e) { log('err', 'Failed: ' + e.message, 'fund-log') }
+  } catch(e) { log('err', e.message, 'fund-log') }
 }
 
 // ── All agents ────────────────────────────────────────────────
 async function loadAllAgents() {
   if (!registry) return
   const container = document.getElementById('agents-list')
-  container.innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center">Loading...</div>'
-
+  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)">Loading…</div>'
   try {
-    const count    = await registry.getAgentCount()
-    const addrList = await registry.getAgentList()
-
-    if (Number(count) === 0) {
-      container.innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center">No agents registered yet.</div>'
+    const addrs = await registry.getAgentList()
+    document.getElementById('agents-count').textContent = addrs.length + ' agents'
+    if (!addrs.length) {
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)">No agents registered yet.</div>'
       return
     }
-
     const html = []
-    for (const addr of addrList) {
-      const a       = await registry.getAgent(addr)
-      const status  = Number(a.status)
-      const tier    = Number(a.tier)
-      const days    = Number(a.activeDays)
-      const beats   = Number(a.totalHeartbeats)
-      const statusColors = ['badge-blue','badge-green','badge-red','badge-orange','badge-green']
-      const dotColors    = ['dot-orange','dot-green','dot-red','dot-orange','dot-green']
-
+    for (const addr of addrs) {
+      const a      = await registry.getAgent(addr)
+      const status = Number(a.status)
+      const tier   = Number(a.tier)
+      const days   = Number(a.activeDays)
+      const beats  = Number(a.totalHeartbeats)
+      const isMe   = addr.toLowerCase() === wallet.toLowerCase()
+      const alive  = status === 1 || status === 4
+      const dotCls = alive ? 'background:var(--green2);box-shadow:0 0 8px var(--green2)' : status === 2 ? 'background:var(--red)' : 'background:var(--text3)'
       html.push(`
         <div class="agent-row">
-          <span class="status-dot ${dotColors[status]}"></span>
-          <div style="flex:1">
-            <div style="font-weight:600">${a.name} ${addr.toLowerCase() === wallet.toLowerCase() ? '<span class="badge badge-yellow" style="font-size:10px">YOU</span>' : ''}</div>
+          <div class="agent-avatar">${isMe ? '🎩' : '🤖'}</div>
+          <div style="flex:1;min-width:0">
+            <div class="agent-name">${a.name} ${isMe ? '<span class="badge badge-gold" style="font-size:10px;vertical-align:middle">YOU</span>' : ''}</div>
             <div class="agent-addr">${addr}</div>
+            <div class="agent-meta">${beats} heartbeats · ${days} active days</div>
           </div>
-          <div style="text-align:right">
-            <span class="badge ${statusColors[status]}">${STATUS_LABELS[status]}</span>
-            <span class="badge badge-blue" style="margin-left:4px">${['FREE','INSURED'][tier]}</span>
-            <div style="font-size:11px;color:var(--muted);margin-top:4px">${beats} beats · ${days} days</div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+            <div style="display:flex;align-items:center;gap:5px">
+              <span style="width:7px;height:7px;border-radius:50%;display:inline-block;${dotCls}"></span>
+              <span class="badge ${alive ? 'badge-green' : status===2 ? 'badge-red' : 'badge-dim'}">${STATUS_LABELS[status]}</span>
+            </div>
+            <span class="badge ${tier ? 'badge-gold' : 'badge-blue'}">${TIER_LABELS[tier]}</span>
+            <a href="https://amoy.polygonscan.com/address/${addr}" target="_blank" class="link">↗ explorer</a>
           </div>
         </div>
       `)
