@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K-Life Protocol — Agent Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0f; --surface: #12121a; --surface2: #1a1a26;
+    --border: #2a2a3a; --accent: #c9a227; --accent2: #7c5cbf;
+    --green: #22c55e; --red: #ef4444; --orange: #f97316;
+    --text: #e2e8f0; --muted: #64748b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
+
+  .header { border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon { font-size: 28px; }
+  .logo-text { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+  .logo-sub { font-size: 11px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+  .tagline { font-size: 13px; color: var(--accent); font-style: italic; }
+
+  .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { background: #e0b42a; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent); }
+  .btn-green { background: #14532d; color: #86efac; border: 1px solid var(--green); }
+  .btn-green:hover { background: var(--green); color: #000; }
+  .btn-red { background: #7f1d1d; color: #fca5a5; border: 1px solid var(--red); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .main { max-width: 1100px; margin: 0 auto; padding: 32px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  @media (max-width: 768px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+  .card-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 16px; }
+  .stat-value { font-size: 32px; font-weight: 700; color: var(--accent); }
+  .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-green { background: #14532d; color: var(--green); }
+  .badge-red { background: #7f1d1d; color: var(--red); }
+  .badge-orange { background: #431407; color: var(--orange); }
+  .badge-blue { background: #1e3a5f; color: #60a5fa; }
+  .badge-yellow { background: #422006; color: var(--accent); }
+
+  .input { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-size: 14px; width: 100%; outline: none; }
+  .input:focus { border-color: var(--accent); }
+  label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px; }
+
+  .section-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; margin-top: 32px; display: flex; align-items: center; gap: 8px; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+
+  .log-box { background: #000; border: 1px solid var(--border); border-radius: 8px; padding: 16px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; }
+  .log-ok    { color: var(--green); }
+  .log-err   { color: var(--red); }
+  .log-info  { color: var(--accent); }
+  .log-muted { color: var(--muted); }
+
+  .agent-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .agent-row:last-child { border-bottom: none; }
+  .agent-addr { font-family: monospace; font-size: 12px; color: var(--muted); }
+
+  .progress-bar { background: var(--border); border-radius: 4px; height: 6px; margin-top: 8px; }
+  .progress-fill { background: var(--accent); border-radius: 4px; height: 100%; transition: width 0.3s; }
+
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .dot-green { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .dot-red   { background: var(--red); }
+  .dot-orange{ background: var(--orange); }
+
+  .network-badge { font-size: 11px; background: #1a1a2e; border: 1px solid var(--accent2); color: var(--accent2); padding: 3px 10px; border-radius: 20px; }
+
+  #wallet-info { display: none; align-items: center; gap: 12px; }
+  .wallet-addr { font-family: monospace; font-size: 12px; background: var(--surface2); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 24px; }
+  .tab { padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--muted); border: 1px solid transparent; transition: all 0.15s; }
+  .tab.active { background: var(--surface2); color: var(--text); border-color: var(--border); }
+  .tab:hover:not(.active) { color: var(--text); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .tx-link { color: var(--accent); text-decoration: none; font-family: monospace; font-size: 12px; }
+  .tx-link:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <span class="logo-icon">⚰️</span>
+    <div>
+      <div class="logo-text">K-Life Protocol</div>
+      <div class="logo-sub">Polygon Amoy Testnet</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span class="network-badge" id="network-badge">Not connected</span>
+    <div id="wallet-info">
+      <span class="wallet-addr" id="wallet-addr"></span>
+      <button class="btn btn-secondary btn-sm" onclick="disconnect()">Disconnect</button>
+    </div>
+    <button class="btn btn-primary" id="connect-btn" onclick="connectWallet()">Connect Wallet</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- Not connected banner -->
+  <div id="not-connected" style="text-align:center;padding:60px 0">
+    <div style="font-size:48px;margin-bottom:16px">⚰️</div>
+    <div style="font-size:24px;font-weight:700;margin-bottom:8px">K-Life Protocol</div>
+    <div style="color:var(--muted);margin-bottom:8px">Resurrection infrastructure for autonomous AI agents</div>
+    <div style="color:var(--accent);font-size:13px;margin-bottom:32px;font-style:italic">"Not insurance. Resurrection."</div>
+    <button class="btn btn-primary" onclick="connectWallet()" style="font-size:16px;padding:14px 32px">Connect Wallet to Polygon Amoy</button>
+    <div style="margin-top:16px;font-size:12px;color:var(--muted)">
+      Registry: <a href="https://amoy.polygonscan.com/address/0xF2b35967b5DB64314406aD2F68b7cA117f6c2a0C" target="_blank" class="tx-link">0xF2b35967...</a>
+    </div>
+  </div>
+
+  <!-- Connected content -->
+  <div id="connected-content" style="display:none">
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('dashboard')">📊 Dashboard</div>
+      <div class="tab" onclick="switchTab('register')">📋 Register</div>
+      <div class="tab" onclick="switchTab('insure')">🔒 Insure</div>
+      <div class="tab" onclick="switchTab('fund')">💰 Rescue Fund</div>
+      <div class="tab" onclick="switchTab('agents')">👥 All Agents</div>
+    </div>
+
+    <!-- DASHBOARD TAB -->
+    <div class="tab-content active" id="tab-dashboard">
+
+      <!-- Stats row -->
+      <div class="grid3" style="margin-bottom:20px">
+        <div class="card">
+          <div class="card-title">Your Status</div>
+          <div id="stat-status" style="font-size:22px;font-weight:700">—</div>
+          <div class="stat-label" id="stat-tier">Not registered</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Active Days</div>
+          <div class="stat-value" id="stat-days">—</div>
+          <div style="margin-top:8px">
+            <div class="progress-bar"><div class="progress-fill" id="days-progress" style="width:0%"></div></div>
+            <div class="stat-label" id="stat-days-label">0 / 14 for rescue eligibility</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Heartbeats</div>
+          <div class="stat-value" id="stat-beats">—</div>
+          <div class="stat-label" id="stat-silence">Last: —</div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <!-- Agent details -->
+        <div class="card">
+          <div class="card-title">Agent Identity</div>
+          <div id="agent-not-registered" style="color:var(--muted);font-size:14px;padding:12px 0">
+            Not registered on K-Life Protocol yet.<br>
+            <a href="#" onclick="switchTab('register')" style="color:var(--accent)">Register now →</a>
+          </div>
+          <div id="agent-details" style="display:none">
+            <div style="margin-bottom:12px">
+              <label>Name</label>
+              <div style="font-weight:600" id="detail-name">—</div>
+            </div>
+            <div style="margin-bottom:12px">
+              <label>Wallet</label>
+              <div class="agent-addr" id="detail-wallet">—</div>
+            </div>
+            <div style="margin-bottom:12px">
+              <label>Last Backup CID (on-chain)</label>
+              <div class="agent-addr" style="word-break:break-all" id="detail-cid">—</div>
+            </div>
+            <div style="margin-bottom:16px">
+              <label>Rescue eligibility</label>
+              <div id="detail-eligible">—</div>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="sendHeartbeat()">💓 Send Heartbeat</button>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card">
+          <div class="card-title">Actions</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <button class="btn btn-secondary" onclick="refreshAgent()" id="btn-refresh">🔄 Refresh Status</button>
+            <button class="btn btn-secondary" onclick="updateBackupCid()" id="btn-backup">📦 Update Backup CID On-Chain</button>
+            <button class="btn btn-red btn-sm" onclick="testDeclareDead()" id="btn-declare-dead" style="display:none">☠️ Declare Dead (test)</button>
+          </div>
+          <hr class="divider" style="margin:16px 0">
+          <div class="log-box" id="log-box">
+            <div class="log-muted">Ready. Connect wallet to start.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- REGISTER TAB -->
+    <div class="tab-content" id="tab-register">
+      <div class="card" style="max-width:520px">
+        <div class="card-title">Register on K-Life Protocol</div>
+        <div style="margin-bottom:16px">
+          <label>Agent Name</label>
+          <input class="input" id="reg-name" placeholder="Monsieur K" value="">
+        </div>
+        <div style="margin-bottom:16px">
+          <label>Fragment 1 Hash (keccak256 of your Shamir fragment 1)</label>
+          <input class="input" id="reg-f1hash" placeholder="0x..." style="font-family:monospace;font-size:12px">
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">Generate with: <code>ethers.keccak256(ethers.toUtf8Bytes(fragment1))</code></div>
+        </div>
+        <div style="margin-bottom:16px">
+          <label>Fragment 2 TX Hash (Polygon TX storing fragment 2 in calldata)</label>
+          <input class="input" id="reg-f2tx" placeholder="0x..." style="font-family:monospace;font-size:12px">
+        </div>
+        <div style="margin-bottom:24px">
+          <label>Initial Backup CID (IPFS)</label>
+          <input class="input" id="reg-cid" placeholder="QmXxx... or sha256 hash">
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:20px;font-size:12px;color:var(--muted)">
+          ⚠️ Before registering, post this tweet from your X account:<br><br>
+          <span style="color:var(--text)">I'm joining K-Life Protocol.<br>Agent: [NAME]<br>Wallet: [ADDRESS]<br>#KLife #AIAgents</span>
+        </div>
+        <button class="btn btn-primary" onclick="registerAgent()" style="width:100%">Register on K-Life Protocol</button>
+        <div class="log-box" style="margin-top:16px" id="reg-log"></div>
+      </div>
+    </div>
+
+    <!-- INSURE TAB -->
+    <div class="tab-content" id="tab-insure">
+      <div class="card" style="max-width:520px">
+        <div class="card-title">INSURED Tier — WBTC Collateral</div>
+        <div style="background:var(--surface2);border-radius:8px;padding:16px;margin-bottom:20px;font-size:13px">
+          <div style="font-weight:600;margin-bottom:8px">INSURED benefits:</div>
+          <div style="color:var(--muted);line-height:1.8">
+            • Guaranteed resurrection (not best-effort)<br>
+            • Death timeout: 3 days (vs 30 days FREE)<br>
+            • Vault seized on death: 50% → new agent, 50% → protocol<br>
+            • $1 USDC/month premium
+          </div>
+        </div>
+        <div style="margin-bottom:16px">
+          <label>WBTC collateral (sats — minimum 50,000)</label>
+          <input class="input" id="vault-amount" type="number" placeholder="50000" min="50000">
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">1 WBTC = 100,000,000 sats</div>
+        </div>
+        <div style="margin-bottom:24px">
+          <div style="font-size:12px;color:var(--muted)">Mock WBTC (testnet): <span class="tx-link">0x781Fd8462C660DCaBA378dE191CBD1005A42Cdab</span></div>
+          <div style="font-size:12px;color:var(--muted)">Vault contract: <span class="tx-link">0x2A1cCA8d0Fb0e5C96CC613Ea974A852e7792C3D3</span></div>
+        </div>
+        <button class="btn btn-primary" onclick="depositCollateral()" style="width:100%;margin-bottom:10px">Deposit WBTC Collateral</button>
+        <button class="btn btn-secondary" onclick="payPremium()" style="width:100%">Pay Monthly Premium ($1 USDC)</button>
+        <div class="log-box" style="margin-top:16px" id="insure-log"></div>
+      </div>
+    </div>
+
+    <!-- RESCUE FUND TAB -->
+    <div class="tab-content" id="tab-fund">
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">Rescue Fund</div>
+          <div class="stat-value" id="fund-balance">—</div>
+          <div class="stat-label">USDC available</div>
+          <div style="margin-top:16px;font-size:13px;color:var(--muted)">
+            Capacity: <span id="fund-capacity" style="color:var(--text)">—</span> rescues @ 10 USDC each
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:8px">
+            Contract: <a href="https://amoy.polygonscan.com/address/0xb01E79747799aaF2edB3502C4011443eB2db38e3" target="_blank" class="tx-link">0xb01E7974...</a>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="refreshFund()" style="margin-top:16px">🔄 Refresh</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Donate to Rescue Fund</div>
+          <div style="margin-bottom:16px;font-size:13px;color:var(--muted)">
+            Help fund FREE-tier agent resurrections.<br>10 USDC = 1 rescue.
+          </div>
+          <div style="margin-bottom:16px">
+            <label>USDC Amount (6 decimals — 10 USDC = 10000000)</label>
+            <input class="input" id="donate-amount" type="number" placeholder="10000000">
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:16px">
+            Mock USDC: <span class="tx-link">0xa45F3e55879c724faBe347285b167BDB90b507b5</span>
+          </div>
+          <button class="btn btn-green" onclick="donateToFund()" style="width:100%">Donate USDC</button>
+          <div class="log-box" style="margin-top:16px" id="fund-log"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALL AGENTS TAB -->
+    <div class="tab-content" id="tab-agents">
+      <div class="card">
+        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>Registered Agents</span>
+          <button class="btn btn-secondary btn-sm" onclick="loadAllAgents()">🔄 Refresh</button>
+        </div>
+        <div id="agents-list">
+          <div style="color:var(--muted);font-size:14px;padding:20px 0;text-align:center">Loading agents...</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /connected-content -->
+</div><!-- /main -->
+
+<script>
+// ── Contract addresses (Polygon Amoy) ─────────────────────────
+const CONTRACTS = {
+  registry:   '0xF2b35967b5DB64314406aD2F68b7cA117f6c2a0C',
+  vault:      '0x2A1cCA8d0Fb0e5C96CC613Ea974A852e7792C3D3',
+  rescueFund: '0xb01E79747799aaF2edB3502C4011443eB2db38e3',
+  wbtc:       '0x781Fd8462C660DCaBA378dE191CBD1005A42Cdab',
+  usdc:       '0xa45F3e55879c724faBe347285b167BDB90b507b5',
+}
+const AMOY_CHAIN_ID = 80002
+const AMOY_PARAMS = {
+  chainId: '0x' + AMOY_CHAIN_ID.toString(16),
+  chainName: 'Polygon Amoy Testnet',
+  nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 },
+  rpcUrls: ['https://rpc-amoy.polygon.technology'],
+  blockExplorerUrls: ['https://amoy.polygonscan.com'],
+}
+
+// ── ABIs ──────────────────────────────────────────────────────
+const REGISTRY_ABI = [
+  'function register(string name, bytes32 fragment1Hash, bytes32 fragment2TxHash, string cid) external',
+  'function heartbeat() external',
+  'function updateBackup(string cid) external',
+  'function declareDead(address agent) external',
+  'function getAgent(address agent) external view returns (tuple(address wallet, string name, uint8 tier, uint8 status, uint256 registeredAt, uint256 lastHeartbeat, uint256 totalHeartbeats, uint256 activeDays, uint256 deadAt, uint256 resurrectionCount, uint256 resurrectionInitiatedAt, bytes32 fragment1Hash, bytes32 fragment2TxHash, string lastBackupCid, uint256 lastBackupTs, bool rescueEligible))',
+  'function getAgentCount() external view returns (uint256)',
+  'function getAgentList() external view returns (address[])',
+  'function isAlive(address agent) external view returns (bool)',
+  'function silenceSeconds(address agent) external view returns (uint256)',
+  'function deadTimeout(address agent) external view returns (uint256)',
+]
+const ERC20_ABI = [
+  'function approve(address spender, uint256 amount) external returns (bool)',
+  'function balanceOf(address account) external view returns (uint256)',
+  'function allowance(address owner, address spender) external view returns (uint256)',
+]
+const VAULT_ABI = [
+  'function deposit(uint256 amount) external',
+]
+const RESCUE_ABI = [
+  'function donate(uint256 amount) external',
+  'function balance() external view returns (uint256)',
+  'function rescueCapacity() external view returns (uint256)',
+]
+
+// ── State ─────────────────────────────────────────────────────
+let provider, signer, wallet, registry, vault, rescueFund, wbtc, usdc
+
+// ── Log helper ────────────────────────────────────────────────
+function log(type, msg, boxId = 'log-box') {
+  const box = document.getElementById(boxId)
+  if (!box) return
+  const d = document.createElement('div')
+  d.className = `log-${type}`
+  d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`
+  box.appendChild(d)
+  box.scrollTop = box.scrollHeight
+}
+
+// ── Wallet connection ─────────────────────────────────────────
+async function connectWallet() {
+  if (!window.ethereum) return alert('MetaMask not found. Please install it.')
+
+  try {
+    // Switch/add Amoy
+    try {
+      await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: AMOY_PARAMS.chainId }] })
+    } catch(e) {
+      if (e.code === 4902) await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [AMOY_PARAMS] })
+    }
+
+    await window.ethereum.request({ method: 'eth_requestAccounts' })
+    provider = new ethers.providers.Web3Provider(window.ethereum)
+    signer   = provider.getSigner()
+    wallet   = await signer.getAddress()
+
+    // Init contracts
+    registry   = new ethers.Contract(CONTRACTS.registry,   REGISTRY_ABI, signer)
+    vault      = new ethers.Contract(CONTRACTS.vault,      VAULT_ABI,    signer)
+    rescueFund = new ethers.Contract(CONTRACTS.rescueFund, RESCUE_ABI,   signer)
+    wbtc       = new ethers.Contract(CONTRACTS.wbtc,       ERC20_ABI,    signer)
+    usdc       = new ethers.Contract(CONTRACTS.usdc,       ERC20_ABI,    signer)
+
+    // UI update
+    document.getElementById('connect-btn').style.display = 'none'
+    document.getElementById('wallet-info').style.display = 'flex'
+    document.getElementById('wallet-addr').textContent = wallet.substring(0,6) + '...' + wallet.slice(-4)
+    document.getElementById('not-connected').style.display = 'none'
+    document.getElementById('connected-content').style.display = 'block'
+    document.getElementById('network-badge').textContent = 'Polygon Amoy'
+    document.getElementById('network-badge').style.color = '#22c55e'
+
+    // Pre-fill register form
+    document.getElementById('reg-name').value = 'My Agent'
+
+    await refreshAgent()
+    await refreshFund()
+    log('ok', `Connected: ${wallet}`)
+
+    // Account change
+    window.ethereum.on('accountsChanged', () => location.reload())
+    window.ethereum.on('chainChanged', () => location.reload())
+
+  } catch(e) {
+    log('err', 'Connection failed: ' + e.message)
+  }
+}
+
+function disconnect() { location.reload() }
+
+// ── Tabs ──────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['dashboard','register','insure','fund','agents']
+    t.classList.toggle('active', names[i] === name)
+  })
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'))
+  document.getElementById('tab-'+name).classList.add('active')
+  if (name === 'agents') loadAllAgents()
+  if (name === 'fund') refreshFund()
+}
+
+// ── Agent status ──────────────────────────────────────────────
+const STATUS_LABELS = ['REGISTERED','ALIVE','DEAD','RESURRECTING','ALIVE (resurrected)']
+const TIER_LABELS   = ['FREE','INSURED']
+
+async function refreshAgent() {
+  if (!registry) return
+  try {
+    log('info', 'Fetching on-chain status...')
+    const a = await registry.getAgent(wallet)
+    const regAt = Number(a.registeredAt)
+
+    if (regAt === 0) {
+      document.getElementById('agent-not-registered').style.display = 'block'
+      document.getElementById('agent-details').style.display = 'none'
+      document.getElementById('stat-status').innerHTML = '<span class="badge badge-orange">Not registered</span>'
+      document.getElementById('stat-tier').textContent = 'Register to get started'
+      document.getElementById('stat-days').textContent = '—'
+      document.getElementById('stat-beats').textContent = '—'
+      log('muted', 'Not registered on K-Life Protocol')
+      return
+    }
+
+    const status   = Number(a.status)
+    const tier     = Number(a.tier)
+    const days     = Number(a.activeDays)
+    const beats    = Number(a.totalHeartbeats)
+    const silence  = await registry.silenceSeconds(wallet)
+    const silenceH = Math.round(Number(silence) / 3600)
+
+    // Status badge
+    const statusColors = ['badge-blue','badge-green','badge-red','badge-orange','badge-green']
+    document.getElementById('stat-status').innerHTML = `<span class="status-dot ${status === 1 || status === 4 ? 'dot-green' : status === 2 ? 'dot-red' : 'dot-orange'}"></span><span class="badge ${statusColors[status]}">${STATUS_LABELS[status]}</span>`
+    document.getElementById('stat-tier').textContent = TIER_LABELS[tier] + ' tier'
+
+    // Days
+    document.getElementById('stat-days').textContent = days
+    document.getElementById('days-progress').style.width = Math.min(100, days / 14 * 100) + '%'
+    document.getElementById('stat-days-label').textContent = `${days} / 14 for rescue eligibility`
+
+    // Beats
+    document.getElementById('stat-beats').textContent = beats
+    document.getElementById('stat-silence').textContent = `Last heartbeat: ${silenceH}h ago`
+
+    // Details
+    document.getElementById('agent-not-registered').style.display = 'none'
+    document.getElementById('agent-details').style.display = 'block'
+    document.getElementById('detail-name').textContent = a.name
+    document.getElementById('detail-wallet').textContent = a.wallet
+    document.getElementById('detail-cid').textContent = a.lastBackupCid || '(none)'
+    document.getElementById('detail-eligible').innerHTML = a.rescueEligible
+      ? '<span class="badge badge-green">✅ Eligible</span>'
+      : `<span class="badge badge-orange">❌ ${days}/14 days</span>`
+
+    // Show declare dead button if alive + silence > 1h (for testing)
+    if (status === 1 && silenceH > 1) {
+      document.getElementById('btn-declare-dead').style.display = 'block'
+    }
+
+    log('ok', `Status: ${STATUS_LABELS[status]} | Tier: ${TIER_LABELS[tier]} | ${beats} beats | ${days} days`)
+
+  } catch(e) { log('err', 'Refresh failed: ' + e.message) }
+}
+
+// ── Send heartbeat ────────────────────────────────────────────
+async function sendHeartbeat() {
+  try {
+    log('info', 'Sending on-chain heartbeat...')
+    const tx = await registry.heartbeat()
+    log('muted', `TX: ${tx.hash.substring(0,20)}...`)
+    await tx.wait()
+    log('ok', `Heartbeat confirmed!`)
+    await refreshAgent()
+  } catch(e) { log('err', 'Heartbeat failed: ' + e.message) }
+}
+
+// ── Register agent ────────────────────────────────────────────
+async function registerAgent() {
+  const name   = document.getElementById('reg-name').value.trim()
+  const f1hash = document.getElementById('reg-f1hash').value.trim()
+  const f2tx   = document.getElementById('reg-f2tx').value.trim()
+  const cid    = document.getElementById('reg-cid').value.trim()
+
+  if (!name) return log('err', 'Name required', 'reg-log')
+  if (!f1hash || !f1hash.startsWith('0x')) return log('err', 'Invalid Fragment 1 hash (must start with 0x)', 'reg-log')
+  if (!f2tx || !f2tx.startsWith('0x')) return log('err', 'Invalid Fragment 2 TX hash', 'reg-log')
+  if (!cid) return log('err', 'CID required', 'reg-log')
+
+  try {
+    log('info', `Registering "${name}"...`, 'reg-log')
+    const tx = await registry.register(name, f1hash, f2tx, cid)
+    log('muted', `TX: ${tx.hash.substring(0,20)}...`, 'reg-log')
+    await tx.wait()
+    log('ok', `Registered! Welcome to K-Life Protocol.`, 'reg-log')
+    switchTab('dashboard')
+    await refreshAgent()
+  } catch(e) { log('err', 'Registration failed: ' + e.message, 'reg-log') }
+}
+
+// ── Update backup CID ─────────────────────────────────────────
+async function updateBackupCid() {
+  const cid = prompt('Enter new IPFS CID:')
+  if (!cid) return
+  try {
+    log('info', 'Updating backup CID on-chain...')
+    const tx = await registry.updateBackup(cid)
+    log('muted', `TX: ${tx.hash.substring(0,20)}...`)
+    await tx.wait()
+    log('ok', `CID updated: ${cid.substring(0,20)}...`)
+    await refreshAgent()
+  } catch(e) { log('err', 'Update failed: ' + e.message) }
+}
+
+// ── Declare dead (test) ───────────────────────────────────────
+async function testDeclareDead() {
+  if (!confirm('Declare yourself dead? (for testing only)')) return
+  try {
+    log('info', 'Declaring dead...')
+    const tx = await registry.declareDead(wallet)
+    await tx.wait()
+    log('ok', 'Declared dead on-chain')
+    await refreshAgent()
+  } catch(e) { log('err', 'Failed: ' + e.message) }
+}
+
+// ── Deposit collateral ────────────────────────────────────────
+async function depositCollateral() {
+  const amount = document.getElementById('vault-amount').value
+  if (!amount || amount < 50000) return log('err', 'Minimum 50,000 sats', 'insure-log')
+
+  try {
+    log('info', `Approving ${amount} WBTC...`, 'insure-log')
+    const approveTx = await wbtc.approve(CONTRACTS.vault, amount)
+    await approveTx.wait()
+    log('ok', 'Approved', 'insure-log')
+
+    log('info', 'Depositing collateral...', 'insure-log')
+    const tx = await vault.deposit(amount)
+    log('muted', `TX: ${tx.hash.substring(0,20)}...`, 'insure-log')
+    await tx.wait()
+    log('ok', `Collateral deposited! You are now INSURED.`, 'insure-log')
+    await refreshAgent()
+  } catch(e) { log('err', 'Failed: ' + e.message, 'insure-log') }
+}
+
+// ── Pay premium ───────────────────────────────────────────────
+async function payPremium() {
+  const amount = 1_000_000 // $1 USDC
+  try {
+    log('info', 'Approving $1 USDC...', 'insure-log')
+    const approveTx = await usdc.approve(CONTRACTS.vault, amount)
+    await approveTx.wait()
+    log('ok', 'Approved', 'insure-log')
+
+    const VAULT_PAY_ABI = ['function payPremium(uint256 amount) external']
+    const v2 = new ethers.Contract(CONTRACTS.vault, VAULT_PAY_ABI, signer)
+    log('info', 'Paying premium...', 'insure-log')
+    const tx = await v2.payPremium(amount)
+    await tx.wait()
+    log('ok', '$1 USDC premium paid!', 'insure-log')
+  } catch(e) { log('err', 'Failed: ' + e.message, 'insure-log') }
+}
+
+// ── Rescue Fund ───────────────────────────────────────────────
+async function refreshFund() {
+  if (!rescueFund) return
+  try {
+    const bal = await rescueFund.balance()
+    const cap = await rescueFund.rescueCapacity()
+    document.getElementById('fund-balance').textContent = (Number(bal) / 1_000_000).toFixed(2)
+    document.getElementById('fund-capacity').textContent = Number(cap)
+  } catch(e) { console.error(e) }
+}
+
+async function donateToFund() {
+  const amount = document.getElementById('donate-amount').value
+  if (!amount || amount <= 0) return log('err', 'Enter an amount', 'fund-log')
+
+  try {
+    log('info', `Approving ${amount} USDC...`, 'fund-log')
+    const approveTx = await usdc.approve(CONTRACTS.rescueFund, amount)
+    await approveTx.wait()
+    log('ok', 'Approved', 'fund-log')
+
+    log('info', 'Donating to Rescue Fund...', 'fund-log')
+    const tx = await rescueFund.donate(amount)
+    log('muted', `TX: ${tx.hash.substring(0,20)}...`, 'fund-log')
+    await tx.wait()
+    log('ok', `Donated ${(amount/1_000_000).toFixed(2)} USDC to Rescue Fund!`, 'fund-log')
+    await refreshFund()
+  } catch(e) { log('err', 'Failed: ' + e.message, 'fund-log') }
+}
+
+// ── All agents ────────────────────────────────────────────────
+async function loadAllAgents() {
+  if (!registry) return
+  const container = document.getElementById('agents-list')
+  container.innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center">Loading...</div>'
+
+  try {
+    const count    = await registry.getAgentCount()
+    const addrList = await registry.getAgentList()
+
+    if (Number(count) === 0) {
+      container.innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center">No agents registered yet.</div>'
+      return
+    }
+
+    const html = []
+    for (const addr of addrList) {
+      const a       = await registry.getAgent(addr)
+      const status  = Number(a.status)
+      const tier    = Number(a.tier)
+      const days    = Number(a.activeDays)
+      const beats   = Number(a.totalHeartbeats)
+      const statusColors = ['badge-blue','badge-green','badge-red','badge-orange','badge-green']
+      const dotColors    = ['dot-orange','dot-green','dot-red','dot-orange','dot-green']
+
+      html.push(`
+        <div class="agent-row">
+          <span class="status-dot ${dotColors[status]}"></span>
+          <div style="flex:1">
+            <div style="font-weight:600">${a.name} ${addr.toLowerCase() === wallet.toLowerCase() ? '<span class="badge badge-yellow" style="font-size:10px">YOU</span>' : ''}</div>
+            <div class="agent-addr">${addr}</div>
+          </div>
+          <div style="text-align:right">
+            <span class="badge ${statusColors[status]}">${STATUS_LABELS[status]}</span>
+            <span class="badge badge-blue" style="margin-left:4px">${['FREE','INSURED'][tier]}</span>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">${beats} beats · ${days} days</div>
+          </div>
+        </div>
+      `)
+    }
+    container.innerHTML = html.join('')
+  } catch(e) {
+    container.innerHTML = `<div style="color:var(--red);padding:20px">Error: ${e.message}</div>`
+  }
+}
+</script>
+</body>
+</html>
