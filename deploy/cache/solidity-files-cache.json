@@ -1,0 +1,41 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "/data/workspace/klife-hackathon/deploy/contracts/KLifeResurrection.sol": {
+      "lastModificationDate": 1774355747838,
+      "contentHash": "2c5f7e79dfd2b887c1269889f9d94a90",
+      "sourceName": "contracts/KLifeResurrection.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "KLifeResurrection"
+      ]
+    }
+  }
+}

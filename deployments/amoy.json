@@ -1,0 +1,16 @@
+{
+  "network": "amoy",
+  "chainId": "80002",
+  "deployedAt": "2026-03-26T08:37:31.502Z",
+  "deployer": "0x8B3ea7e8eC53596A70019445907645838E945b7a",
+  "oracle": "0x8B3ea7e8eC53596A70019445907645838E945b7a",
+  "contracts": {
+    "registry": "0xF2b35967b5DB64314406aD2F68b7cA117f6c2a0C",
+    "vault": "0x2A1cCA8d0Fb0e5C96CC613Ea974A852e7792C3D3",
+    "rescueFund": "0xb01E79747799aaF2edB3502C4011443eB2db38e3"
+  },
+  "tokens": {
+    "wbtc": "0x781Fd8462C660DCaBA378dE191CBD1005A42Cdab",
+    "usdc": "0xa45F3e55879c724faBe347285b167BDB90b507b5"
+  }
+}

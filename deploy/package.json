@@ -1,0 +1,16 @@
+{
+  "name": "k-life-deploy",
+  "version": "1.0.0",
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy:amoy": "hardhat run scripts/deploy-polygon.js --network amoy",
+    "deploy:initia": "hardhat run scripts/deploy-initia.js --network initia-testnet"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.0"
+  }
+}

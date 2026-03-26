@@ -1,7 +1,4 @@
 node_modules/
-.agent-seed
-heartbeat.json
-resurrection.json
+artifacts/
+cache/
 .env
-*.log
-.hackathons/

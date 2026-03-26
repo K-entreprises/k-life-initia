@@ -10,8 +10,10 @@
     "demo:fast": "HEARTBEAT_INTERVAL_MS=5000 MAX_BEATS=3 TIMEOUT_MS=20000 CHECK_INTERVAL_MS=2000 node demo.js"
   },
   "dependencies": {
+    "@openzeppelin/contracts": "^5.6.1",
     "@tetherto/wdk": "^1.0.0-beta.6",
-    "@tetherto/wdk-wallet-evm": "^1.0.0-beta.8"
+    "@tetherto/wdk-wallet-evm": "^1.0.0-beta.8",
+    "dotenv": "^17.3.1"
   },
   "keywords": [
     "ai-agent",
@@ -23,5 +25,9 @@
     "wallet"
   ],
   "author": "Monsieur K <monsieurk@supercharged.works>",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.1.2",
+    "hardhat": "^2.28.6"
+  }
 }
