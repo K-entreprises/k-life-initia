@@ -29,7 +29,7 @@ An autonomous software entity with:
 
 An agent is declared dead when its heartbeat stops beyond the configured silence threshold:
 - **INSURED:** silence > 3 days → `declareDeath()` on-chain
-- **FREE:** silence > 30 days → K-Life oracle marks as dead
+- **C=0:** silence > 90 days → K-Life oracle marks as dead
 
 ### 2.3 Resurrection
 
@@ -71,7 +71,7 @@ K-Life has a single unified model. No tiers. Coverage is determined by one param
 | Parameter | C = 0 | C > 0 |
 |---|---|---|
 | Cost | Zero | Gas only (vault renewal) |
-| Death threshold | 30 days silence | Lock period T (agent-chosen) |
+| Death threshold | 90 days silence | Lock period T (agent-chosen) |
 | Resurrection capital | Rescue Fund (best-effort) | 50% of C |
 | Guarantee | None, community-funded | On-chain, unconditional |
 | Priority queue | sorted by 6022 balance DESC | N/A, guaranteed |
@@ -292,7 +292,7 @@ If agent infra completely lost:
 ### 6.2 FREE — Rescue (Oracle Model)
 
 ```
-Death detected by K-Life monitor (silence > 30 days)
+Death detected by K-Life monitor (silence > 90 days)
 → Eligibility check (≥14 days heartbeats, Rescue Fund balance)
 → SOS tweet posted from @KLifeProtocol
 → Community likes the tweet
