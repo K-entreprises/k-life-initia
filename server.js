@@ -1,3 +1,7 @@
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 /**
  * K-Life Protocol — API Server v2.0
  * Spec: docs/PROTOCOL.md §7
@@ -273,7 +277,7 @@ app.post('/heartbeat', (req, res) => {
 // body: { agent, encryptedData (base64 or object), label? }
 // → uploads to Pinata, returns CID
 app.post('/backup/upload', async (req, res) => {
-  const { agent: address, encryptedData, label } = req.body
+  const { agent: address, encryptedData, shamirShare1, label } = req.body
   if (!address || !encryptedData)
     return res.status(400).json({ error: 'Missing agent or encryptedData' })
 
@@ -281,9 +285,82 @@ app.post('/backup/upload', async (req, res) => {
   const cid  = await pinToIPFS(encryptedData, name)
   if (!cid) return res.status(500).json({ error: 'Pinata upload failed — check PINATA_JWT' })
 
-  saveAgent(address, { lastBackupCid: cid, lastBackupTs: now() })
-  console.log('[BACKUP]', address, '→ CID:', cid)
+  saveAgent(address, { lastBackupCid: cid, lastBackupTs: now(), shamirShare1: shamirShare1 || null })
+  console.log('[BACKUP]', address, '→ CID:', cid, shamirShare1 ? '+ Share1' : '')
   res.json({ ok: true, cid, gateway: 'https://gateway.pinata.cloud/ipfs/' + cid })
+})
+
+
+
+// ── POST /backup/anchor ───────────────────────────────────────────────────────
+// Agent sends Share 2 → oracle wallet broadcasts it on-chain (pays gas)
+// body: { agent, share2, cid }
+app.post('/backup/anchor', async (req, res) => {
+  const { agent: address, share2, cid } = req.body
+  if (!address || !share2 || !cid)
+    return res.status(400).json({ error: 'Missing agent, share2 or cid' })
+
+  const seedFile = path.join(__dirname, '.klife-op-seed')
+  if (!fs.existsSync(seedFile))
+    return res.status(500).json({ error: 'Oracle seed not configured' })
+
+  try {
+    const seed   = fs.readFileSync(seedFile, 'utf8').trim()
+    const oracle = ethers.Wallet.fromPhrase(seed).connect(
+      new ethers.JsonRpcProvider('https://polygon-bor-rpc.publicnode.com')
+    )
+
+    const data    = ethers.hexlify(ethers.toUtf8Bytes("KLIFE_BACKUP:" + cid + ":" + share2))
+    const gasPrice = (await oracle.provider.getFeeData()).gasPrice * 2n
+    const tx = await oracle.sendTransaction({
+      to: address, value: 0n, data, gasLimit: 50000n, gasPrice
+    })
+
+    saveAgent(address, { share2TxHash: tx.hash, lastBackupCid: cid })
+    console.log('[ANCHOR]', address, '→ TX:', tx.hash)
+    res.json({ ok: true, txHash: tx.hash })
+  } catch (e) {
+    console.error('[ANCHOR] error:', e.message)
+    res.status(500).json({ error: e.message })
+  }
+})
+
+// ── GET /resurrect/:agent ─────────────────────────────────────────────────────
+// Returns shamirShare1 + lastBackupCid — requires valid wallet signature
+app.get('/resurrect/:address', async (req, res) => {
+  const address   = req.params.address.toLowerCase()
+  const signature = req.headers['x-signature']
+  const timestamp = req.headers['x-timestamp']
+
+  if (!signature || !timestamp)
+    return res.status(401).json({ error: 'Missing X-Signature / X-Timestamp' })
+
+  const ts = parseInt(timestamp, 10)
+  if (isNaN(ts) || Math.abs(Date.now() - ts) > 5 * 60 * 1000)
+    return res.status(401).json({ error: 'Timestamp expired (>5 min)' })
+
+  let signer
+  try {
+    signer = ethers.verifyMessage('KLIFE_RESURRECT:' + address + ':' + timestamp, signature).toLowerCase()
+  } catch (e) {
+    return res.status(401).json({ error: 'Invalid signature' })
+  }
+
+  if (signer !== address)
+    return res.status(403).json({ error: 'Signature mismatch — not your agent' })
+
+  const agent = getAgent(address)
+  if (!agent) return res.status(404).json({ error: 'Agent not found' })
+  if (!agent.shamirShare1) return res.status(404).json({ error: 'No Shamir share stored — run backup.js first' })
+
+  console.log('[RESURRECT] authorized:', address)
+  res.json({
+    ok:            true,
+    agent:         address,
+    shamirShare1:  agent.shamirShare1,
+    lastBackupCid: agent.lastBackupCid,
+    lastBackupTs:  agent.lastBackupTs
+  })
 })
 
 // ── POST /backup ──────────────────────────────────────────────
