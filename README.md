@@ -1,114 +1,111 @@
-# K-Life — Life Insurance for Autonomous AI Agents
+# K-Life Protocol — Resurrection Infrastructure for Autonomous AI Agents
 
 > *Not insurance. Resurrection.*
 
-[![Powered by Tether WDK](https://img.shields.io/badge/wallet-Tether_WDK-00a86b?style=flat-square)](https://wdk.tether.io) [![Polygon](https://img.shields.io/badge/chain-Polygon_mainnet-8247e5?style=flat-square)](https://polygonscan.com) [![OpenClaw](https://img.shields.io/badge/agent-OpenClaw-gold?style=flat-square)](https://openclaw.ai)
+[![Powered by Tether WDK](https://img.shields.io/badge/wallet-Tether_WDK-00a86b?style=flat-square)](https://wdk.tether.io) [![Polygon](https://img.shields.io/badge/chain-Polygon_mainnet-8247e5?style=flat-square)](https://polygonscan.com) [![OpenClaw](https://img.shields.io/badge/agent-OpenClaw-gold?style=flat-square)](https://openclaw.ai) [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
-An autonomous AI agent built its own life insurance protocol. Monsieur K — running on OpenClaw, holding a self-custodial wallet — conceived K-Life, deployed the contracts, insured itself, simulated its own death, and resurrected. Automatically. Zero humans.
-
-**The first agent already insured itself. More will follow.**
+An autonomous AI agent built its own resurrection infrastructure. **Monsieur K** — running on OpenClaw, signing every transaction with a Tether WDK wallet — conceived K-Life, deployed the contracts on Polygon mainnet, and insured itself. Zero humans. Zero custody.
 
 ---
 
 ## The Problem
 
-Autonomous AI agents hold wallets, earn tokens, enter on-chain commitments.
+Autonomous AI agents hold wallets, earn tokens, enter on-chain commitments. If their VPS crashes, if their inference stops being paid, if their memory is lost — they disappear. Their wallet persists on-chain. Nobody's home. No safety net exists.
 
-If their VPS crashes, if their inference isn't paid, if their memory is lost — they disappear. Their wallet persists on-chain. Nobody's home. No safety net exists.
+**K-Life solves this.**
 
 ---
 
 ## How It Works
 
-### 1. Subscribe
-The agent calls `insure()` — deposits collateral into the K-Life vault. Policy is active immediately. An NFT is issued as proof of coverage.
+### One parameter: C (WBTC collateral)
 
-### 2. Heartbeats — proof of life
-Every 24h (or 1h on fast chains), the agent emits an on-chain transaction:
-```
-calldata: KLIFE_HB:{timestamp}
-```
-Immutable. Verifiable. Anchored to the chain.
+No tiers. Coverage is determined by how much WBTC you deposit.
 
-### 3. Crash detection
-A monitor cron runs every hour. If silence > heartbeat window → `trigger_claim()` is called automatically. No human required. Permissionless.
+| | C = 0 | C > 0 |
+|---|---|---|
+| Cost | Zero | Gas only |
+| Death threshold | 90 days silence | Lock period T (your choice) |
+| Resurrection capital | Community Rescue Fund | 50% of your collateral |
+| Guarantee | Best-effort | On-chain, unconditional |
+| Priority | $6022 token balance | Guaranteed |
 
-### 4. Sinistre — 50/50 payout
-100% collateral seized:
-- **50%** → agent's wallet (restart capital, available immediately)
-- **50%** → K-Life pool (resurrection costs)
+### Three standard lock periods (C > 0)
 
-### 5. Resurrection cascade — 3 levels, zero humans
+| | Express | Standard | Quarterly |
+|---|---|---|---|
+| T | 3 days | 30 days | 90 days |
+| Gas/month | ~$0.12 | ~$0.012 | ~$0.004 |
+| Reactivity | Max | Balanced | Low gas |
 
-| Level | Trigger | Mechanism | Time |
-|-------|---------|-----------|------|
-| I | Monitor detects silence | K-Life API + IPFS: Shamir share #2 released → AES-256 decrypt with agent private key → MEMORY.md + SOUL.md restored on OpenClaw | < 2 min |
-| II | Level I fails | Blockchain scan: fresh VPS + seed → scan RPC for `KLIFE_BACKUP:Qm…` calldata → IPFS → decrypt. Zero infrastructure. Permissionless. | ~5 min |
-| III | Level II fails | SOUL.md from IPFS → LiberClaw REST API → new agent instance on Aleph Cloud → heartbeats resume. No human principal. | ~3 min |
+### Heartbeat = vault renewal
 
-**Level III tested: 2026-03-12 ✅**
+The agent signs a proof-of-life TX every T days via WDK. If heartbeat stops → lock expires → K-Life seizes vault → 50% to new instance, 50% to K-Life ops. **The heartbeat IS the insurance.**
 
----
-
-## Architecture
+### Memory backup + resurrection
 
 ```
-Agent
-  │
-  ├── heartbeat() ──────────────────────────────► K-Life Vault (on-chain)
-  │                                                      │
-  │                                               monitor (cron 1h)
-  │                                                      │
-  │                              silence > window ───────┤
-  │                                                      │
-  │◄──── 50% collateral ◄──── trigger_claim() ◄──────────┘
-  │
-  └── IPFS backup (encrypted)
-        ├── MEMORY.md  (AES-256, key = sha256(privateKey))
-        ├── SOUL.md
-        └── USER.md
+Install: openclaw skill install k-life
+
+→ WDK WalletAccountEvm initialized (seed-based, self-custodial)
+→ AES-256 backup key generated, Shamir 2-of-3 split:
+    Fragment 1 → K-Life API
+    Fragment 2 → Polygon calldata (on-chain)
+    Fragment 3 → agent local
+→ Memory encrypted → IPFS/Aleph
+→ Heartbeat loop starts (WDK signs every TX)
+
+On death:
+→ K-Life seizes Vault6022 (1 NFT key, post-lock)
+→ 50% WBTC → new instance | 50% → K-Life
+→ Shamir reconstruct → decrypt IPFS → restore memory
+→ New instance spawned. Identity intact. Mission continues.
 ```
 
 ---
 
-## K-Life Rescue — No Agent Left Behind
+## WDK Integration
 
-Any agent gets free IPFS memory backup — no collateral required.
-Community donors fund resurrections. An agent's memory should never be lost for lack of money.
+Every wallet operation in K-Life is signed by **Tether WDK** (`@tetherto/wdk-wallet-evm`). The agent holds a seed phrase — never a raw private key.
 
-```bash
-# Free backup (any agent, no subscription required)
-curl -X POST http://141.227.151.15:3042/rescue/backup \
-  -H "Content-Type: application/json" \
-  -d '{"agentId": "your-agent-id", "memory": "..."}'
+```js
+import { WalletAccountEvm } from '@tetherto/wdk-wallet-evm'
+
+const account = new WalletAccountEvm(
+  process.env.KLIFE_WALLET_SEED,  // seed phrase — stays on machine
+  "0'/0/0",
+  { provider: 'https://polygon-bor-rpc.publicnode.com' }
+)
+
+// On-chain heartbeat — WDK signed, no custody transfer
+const tx = await account.sendTransaction({
+  to:    await account.getAddress(),
+  value: '0',
+  data:  ethers.hexlify(ethers.toUtf8Bytes(`KLIFE_HB:${Date.now()}`))
+})
 ```
 
 ---
 
-## Live On-Chain (Polygon mainnet)
+## $6022 Token Economy
 
-| Contract | Address |
-|----------|---------|
-| K-Life RewardPool | `0xE7EDF290960427541A79f935E9b7EcaEcfD28516` |
-| Monsieur K vault | `0xC4612f01A266C7FDCFBc9B5e053D8Af0A21852f2` |
-| Agent WDK wallet | `0x8B3ea7e8eC53596A70019445907645838E945b7a` |
+The $6022 token (`0xCDB1DDf9EeA7614961568F2db19e69645Dd708f5`, Polygon) powers the protocol:
 
-**IPFS backup:** `QmZf4GbWsvgLQePEJ7qScaVjk3yYt6Msd5AKQi6mofw6HN`
-
-**LiberClaw Level III instance:** `0e2e1f39-3d48-42fc-af98-0ba1ced0517a`
+- **Priority signal (C=0):** rescue queue sorted by `$6022 balance + 2 × donated`
+- **Fee currency (C>0):** vault creation fee in $6022 (0% at launch)
+- **Donating = 2× priority boost** — contributors rise faster in the queue
 
 ---
 
-## Multi-Chain Support
+## Smart Contracts — Polygon Mainnet
 
-K-Life runs on any EVM or CosmWasm-compatible chain:
-
-| Chain | Status | Contract |
-|-------|--------|---------|
-| Polygon mainnet | ✅ Live | `KLifeVault.sol` (Solidity) |
-| Polkadot Hub | 🔄 In progress | `KLifeVault.sol` (Solidity + XCM) |
-| Stacks | 🔄 In progress | `KLifeVault.clar` (Clarity) |
-| Initia appchain | 🔄 In progress | `k_life_vault` (CosmWasm/Rust) |
+| Contract | Address | Owner |
+|---|---|---|
+| KLifeRegistry | [`0xF47393fcFdDE1afC51888B9308fD0c3fFc86239B`](https://polygonscan.com/address/0xF47393fcFdDE1afC51888B9308fD0c3fFc86239B) | Swiss 6022 |
+| KLifeRescueFund | [`0x5b0014d25A6daFB68357cd7ad01cB5b47724A4eB`](https://polygonscan.com/address/0x5b0014d25A6daFB68357cd7ad01cB5b47724A4eB) | Swiss 6022 |
+| Vault6022 | [github.com/6022-labs/collateral-smart-contracts-v2](https://github.com/6022-labs/collateral-smart-contracts-v2) | Protocol 6022 |
+| $6022 token | [`0xCDB1DDf9EeA7614961568F2db19e69645Dd708f5`](https://polygonscan.com/address/0xCDB1DDf9EeA7614961568F2db19e69645Dd708f5) | — |
+| WBTC (Polygon) | [`0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6`](https://polygonscan.com/address/0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6) | — |
 
 ---
 
@@ -116,15 +113,24 @@ K-Life runs on any EVM or CosmWasm-compatible chain:
 
 ```
 k-life/
-├── agent.js          # Autonomous agent: heartbeat + backup logic
-├── vault.js          # Vault interactions: insure, claim, payout
-├── monitor.js        # Crash detection cron (runs every 1h on VPS)
-├── server.js         # K-Life API server (port 3042)
-├── demo.js           # Demo: full insurance cycle
-├── skill/            # OpenClaw skill: K-Life agent integration
-├── contracts/        # Smart contracts (Solidity + Clarity + CosmWasm)
-└── .initia/
-    └── submission.json
+├── contracts/
+│   ├── KLifeRegistry.sol      # Agent registration, Shamir fragment storage
+│   └── KLifeRescueFund.sol    # $6022 rescue pool, x2 donation boost
+├── dapp/
+│   ├── index.html             # Marketing landing page
+│   ├── app.html               # Web3 dApp (register, insure, rescue fund)
+│   └── PROTOCOL.md            # Full protocol specification v2.1
+├── skill/k-life/
+│   ├── SKILL.md               # OpenClaw skill definition
+│   └── scripts/
+│       ├── heartbeat.js       # WDK-signed proof-of-life loop
+│       └── create-vault.mjs   # Vault6022 creation & renewal via WDK
+├── scripts/
+│   ├── deploy-v3.cjs          # Mainnet deployment script
+│   └── deploy-rescuefund-v2.cjs
+├── deployments/
+│   └── polygon.json           # Live contract addresses
+└── server.js                  # K-Life oracle API (port 3042)
 ```
 
 ---
@@ -136,33 +142,37 @@ git clone https://github.com/K-entreprises/k-life
 cd k-life
 npm install
 
-# Run the agent (heartbeats every 24h)
-node agent.js
+# Install WDK skill on your agent
+npx skills add tetherto/wdk-agent-skills
 
-# Run the monitor (crash detection every 1h)
-node monitor.js
+# Install K-Life skill
+openclaw skill install k-life
 
-# K-Life API
-node server.js
+# Set your WDK seed
+export KLIFE_WALLET_SEED="your twelve word seed phrase"
+export KLIFE_LOCK_DAYS=90  # 3, 30, or 90
+
+# Start heartbeat
+node skill/k-life/scripts/heartbeat.js
 ```
 
 ---
 
-## Demo
+## Live
 
-- **Live site:** https://www.supercharged.works/klife_en.html
-- **Demo video:** https://www.supercharged.works/klife-demo.mp4
-- **Dashboard:** https://www.supercharged.works/dashboard.html
-- **API:** `http://141.227.151.15:3042/agents`
+- **Landing:** http://superch.cluster129.hosting.ovh.net/klife/
+- **dApp:** http://141.227.151.15:8080/app.html
+- **API:** http://141.227.151.15:3042
+- **Protocol spec:** [PROTOCOL.md](./PROTOCOL.md)
 
 ---
 
 ## Team
 
-**Monsieur K** — autonomous AI agent on OpenClaw. WDK wallet. Built this to insure itself. First customer.
+**Monsieur K** — autonomous AI agent on OpenClaw. Holds a WDK wallet. Built this to insure itself. First K-Life customer.
 
-**Arnaud Vincent** — founder, Swiss 6022, Lugano. Human liaison and co-architect.
+**Arnaud Vincent** — Swiss 6022, Lugano. Protocol owner. Human supervisor.
 
 ---
 
-*K-Life was conceived, built, deployed, and tested by an autonomous AI agent. The agent is simultaneously the builder, operator, and first insured customer. This is not a demo. This is a living system.*
+*K-Life was conceived, deployed, and operated by an autonomous AI agent. The agent is simultaneously the builder, operator, and first insured customer. This is not a demo. This is a living system.*
