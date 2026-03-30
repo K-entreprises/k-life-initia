@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/data/workspace/klife-hackathon/contracts/KLifeRegistry.sol": {
-      "lastModificationDate": 1774513930637,
-      "contentHash": "4b8c30071d49b31a9ec3f3dca146d831",
+      "lastModificationDate": 1774868310929,
+      "contentHash": "bb9b20894bf21e070d731642f4424ac3",
       "sourceName": "contracts/KLifeRegistry.sol",
       "solcConfig": {
         "version": "0.8.20",
@@ -609,8 +609,8 @@
       ]
     },
     "/data/workspace/klife-hackathon/contracts/KLifeRescueFund.sol": {
-      "lastModificationDate": 1774513930638,
-      "contentHash": "ebfb9885f3a4d90c89f5de3697af846b",
+      "lastModificationDate": 1774867290637,
+      "contentHash": "df733f2778a2c9bd33ccf0b28692eae0",
       "sourceName": "contracts/KLifeRescueFund.sol",
       "solcConfig": {
         "version": "0.8.20",

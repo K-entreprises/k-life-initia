@@ -91,7 +91,7 @@ contract KLifeRegistry is Ownable, ReentrancyGuard {
     }
 
     // ── Constructor ───────────────────────────────────────────
-    constructor(address _oracle) Ownable(msg.sender) {
+    constructor(address _oracle, address _owner) Ownable(_owner) {
         oracle = _oracle;
     }
 

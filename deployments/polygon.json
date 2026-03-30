@@ -1,16 +1,18 @@
 {
   "network": "polygon",
-  "chainId": "137",
-  "deployedAt": "2026-03-30T08:22:49.008Z",
-  "deployer": "0x8B3ea7e8eC53596A70019445907645838E945b7a",
-  "oracle": "0x8B3ea7e8eC53596A70019445907645838E945b7a",
+  "chainId": 137,
+  "deployedAt": "2026-03-30",
+  "owner": "0x2b6Ce1e2bE4032DF774d3453358DA4D0d79c8C80",
+  "oracle": "0x2b6Ce1e2bE4032DF774d3453358DA4D0d79c8C80",
   "contracts": {
-    "registry": "0x3727c31E01171563d111568FE881648A54e834A7",
-    "vault": "0xafFe3B99a06E0C1899EACb4a8768De33873a22ff",
-    "rescueFund": "0xEa9f60d0101F80914199B8902CB9C22AcE1d671d"
+    "KLifeRegistry": "0xF47393fcFdDE1afC51888B9308fD0c3fFc86239B",
+    "KLifeRescueFund": "0x5b0014d25A6daFB68357cd7ad01cB5b47724A4eB",
+    "token6022": "0xCDB1DDf9EeA7614961568F2db19e69645Dd708f5",
+    "WBTC": "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6"
   },
-  "tokens": {
-    "wbtc": "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
-    "usdc": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
+  "deprecated": {
+    "KLifeRegistry_v1": "0x3727c31E01171563d111568FE881648A54e834A7",
+    "KLifeVault_v1": "0xafFe3B99a06E0C1899EACb4a8768De33873a22ff",
+    "KLifeRescueFund_v1": "0xEa9f60d0101F80914199B8902CB9C22AcE1d671d"
   }
 }
