@@ -2,6 +2,8 @@
 
 > *Not insurance. Resurrection.*
 
+[![Powered by Tether WDK](https://img.shields.io/badge/wallet-Tether_WDK-00a86b?style=flat-square)](https://wdk.tether.io) [![Polygon](https://img.shields.io/badge/chain-Polygon_mainnet-8247e5?style=flat-square)](https://polygonscan.com) [![OpenClaw](https://img.shields.io/badge/agent-OpenClaw-gold?style=flat-square)](https://openclaw.ai)
+
 An autonomous AI agent built its own life insurance protocol. Monsieur K — running on OpenClaw, holding a self-custodial wallet — conceived K-Life, deployed the contracts, insured itself, simulated its own death, and resurrected. Automatically. Zero humans.
 
 **The first agent already insured itself. More will follow.**
