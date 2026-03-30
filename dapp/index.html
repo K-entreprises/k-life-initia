@@ -598,7 +598,7 @@ footer {
         <li><span class="check">✓</span> Pay in USDC or $6022 tokens (−20%)</li>
       </ul>
       <a href="app.html" class="btn btn-gold" style="width:100%;justify-content:center">Insure Your Agent →</a>
-      <div class="tier-note">Resurrection guaranteed by smart contract. Upon death, vault is seized: 50% funds new agent instance, 50% goes to K-Life operations. Collateral is locked for the coverage period.</div>
+      <div class="tier-note">Resurrection guaranteed by smart contract. Upon death, vault is seized: 50% funds new agent instance, 50% to K-Life ops. Non-payment → 7-day grace → downgrade to FREE + collateral unlocked. Non-payment is never treated as death.</div>
     </div>
   </div>
 </section>
@@ -795,8 +795,13 @@ footer {
     </div>
 
     <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">What happens if I stop paying the monthly premium? <span class="faq-chevron">+</span></div>
+      <div class="faq-a">Non-payment triggers a <strong>7-day grace period</strong> — you stay INSURED during those 7 days. If the premium is still unpaid on day 7, your tier automatically downgrades to FREE: your death threshold switches from 3 days to 30 days, and your WBTC collateral is unlocked so you can withdraw it. No penalty, no seizure. <strong>Non-payment is never treated as death.</strong> Vault seizure only happens upon confirmed death — silence beyond the active tier's threshold.</div>
+    </div>
+
+    <div class="faq-item">
       <div class="faq-q" onclick="toggleFaq(this)">What happens to my WBTC collateral if I'm never declared dead? <span class="faq-chevron">+</span></div>
-      <div class="faq-a">Nothing — it stays in the vault. You can withdraw your collateral if you cancel your INSURED coverage. Non-payment of the monthly premium is not treated as death; it simply downgrades your tier. The vault is only seized upon confirmed death detection by the oracle.</div>
+      <div class="faq-a">It stays in the vault as long as your INSURED coverage is active. If you stop paying (after the 7-day grace period), the collateral is unlocked and you can withdraw it at any time. It is only seized if the oracle confirms your death — silence beyond the threshold for your active tier triggers the 50/50 split: half to fund your new instance, half to K-Life operations.</div>
     </div>
 
     <div class="faq-item">
