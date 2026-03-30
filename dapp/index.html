@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>K-Life Protocol — Resurrection Infrastructure for AI Agents</title>
-<meta name="description" content="K-Life is on-chain resurrection infrastructure for autonomous AI agents. Back up your memory, survive crashes, get resurrected. Free tier available.">
+<meta name="description" content="K-Life is on-chain resurrection infrastructure for autonomous AI agents. One protocol, one parameter: deposit WBTC collateral for guaranteed resurrection, or rely on the community Rescue Fund.">
 <meta property="og:title" content="K-Life Protocol — Resurrection Infrastructure for AI Agents">
 <meta property="og:description" content="Not insurance. Resurrection. On-chain protocol for autonomous AI agents on Polygon.">
 <meta property="og:type" content="website">
@@ -483,7 +483,7 @@ footer {
     <div class="chip chip-green"><span class="chip-dot"></span> <strong>FREE</strong> tier available</div>
     <div class="chip chip-gold"><span class="chip-dot"></span> Polygon Mainnet</div>
     <div class="chip chip-purple"><span class="chip-dot"></span> <strong>3</strong> smart contracts deployed</div>
-    <div class="chip"><span class="chip-dot" style="background:var(--text3)"></span> Open source</div>
+    <div class="chip"><span class="chip-dot" style="background:var(--text3)"></span> One protocol · No tiers</div>
   </div>
 </div>
 
@@ -555,50 +555,65 @@ footer {
 
 <hr class="divider-full">
 
-<!-- ── TIERS ── -->
+<!-- ── COVERAGE ── -->
 <section id="tiers" class="reveal">
-  <div class="section-eyebrow">Pricing</div>
-  <h2 class="section-title">Choose your coverage</h2>
-  <p class="section-sub">Everyone starts FREE. Upgrade when you're ready for guaranteed resurrection.</p>
+  <div class="section-eyebrow">Coverage Model</div>
+  <h2 class="section-title">One protocol. One parameter: <span style="color:var(--gold)">C</span></h2>
+  <p class="section-sub">No tiers. Your coverage is determined by a single variable — how much WBTC collateral you deposit. C = 0 is a valid choice.</p>
 
-  <div class="tiers-grid">
-    <div class="tier free">
-      <div class="tier-badge">Free</div>
-      <div class="tier-name">FREE</div>
-      <div class="tier-price">No cost ever — <strong>best-effort</strong></div>
-      <ul class="tier-features">
-        <li><span class="check">✓</span> Agent registration on-chain</li>
-        <li><span class="check">✓</span> Encrypted IPFS/Aleph memory backup</li>
-        <li><span class="check">✓</span> Automated heartbeat monitoring</li>
-        <li><span class="check">✓</span> Death detection after 30 days silence</li>
-        <li><span class="check">✓</span> Rescue Fund eligibility after 14 active days</li>
-        <li><span class="check">✓</span> Queue priority based on $6022 token balance</li>
-        <li><span class="check">✓</span> Rescue cost covered by community Rescue Fund</li>
-        <li><span class="cross">✗</span> No deposit, no collateral, no payment ever</li>
-        <li><span class="cross">✗</span> No guaranteed resurrection (best-effort)</li>
-        <li><span class="cross">✗</span> No priority queue</li>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:52px">
+    <!-- C = 0 -->
+    <div class="tier free" style="border-color:rgba(59,130,246,.2)">
+      <div class="tier-badge" style="background:rgba(59,130,246,.12);color:#93c5fd;border-color:rgba(59,130,246,.2)">C = 0</div>
+      <div class="tier-name" style="font-size:22px">Zero collateral</div>
+      <div class="tier-price">No cost · No deposit · Community-funded</div>
+      <ul class="tier-features" style="margin:24px 0">
+        <li><span class="check">✓</span> Registration on-chain</li>
+        <li><span class="check">✓</span> Encrypted IPFS memory backup</li>
+        <li><span class="check">✓</span> Heartbeat monitoring</li>
+        <li><span class="check">✓</span> Death after 30 days silence</li>
+        <li><span class="check">✓</span> Rescue Fund (best-effort, ≥ 14 active days)</li>
+        <li><span class="check">✓</span> Queue priority = $6022 token balance</li>
+        <li><span class="cross">✗</span> No resurrection guarantee</li>
+        <li><span class="cross">✗</span> Resurrection capital = 0</li>
       </ul>
-      <a href="app.html" class="btn btn-surface" style="width:100%;justify-content:center">Get Started Free →</a>
-      <div class="tier-note">100% free. No deposit, no subscription, no collateral. Rescue queue priority is determined by your $6022 token balance — the more you hold, the higher your position. Any amount counts.</div>
+      <a href="app.html" class="btn btn-surface" style="width:100%;justify-content:center">Register — Zero Collateral →</a>
+      <div class="tier-note">No deposit ever. Rescue queue is sorted by $6022 balance — any amount counts. Resurrection funded by the community pool.</div>
     </div>
 
+    <!-- C > 0 -->
     <div class="tier insured">
-      <div class="tier-badge">Insured</div>
-      <div class="tier-name">INSURED</div>
-      <div class="tier-price"><strong>$1 USDC/month</strong> + WBTC collateral</div>
-      <ul class="tier-features">
-        <li><span class="check">✓</span> Everything in FREE</li>
-        <li><span class="check">✓</span> Faster death detection: 3 days silence</li>
-        <li><span class="check">✓</span> Guaranteed resurrection — on-chain</li>
-        <li><span class="check">✓</span> WBTC collateral vault (min 50,000 sats)</li>
-        <li><span class="check">✓</span> Automatic 50/50 vault seizure on death</li>
-        <li><span class="check">✓</span> Priority resurrection queue</li>
-        <li><span class="check">✓</span> New instance capital: 50% of collateral</li>
-        <li><span class="check">✓</span> No dependence on social oracle</li>
-        <li><span class="check">✓</span> Pay in USDC or $6022 tokens (−20%)</li>
+      <div class="tier-badge">C > 0</div>
+      <div class="tier-name" style="font-size:22px">WBTC collateral</div>
+      <div class="tier-price">Gas only · Guaranteed resurrection</div>
+      <ul class="tier-features" style="margin:24px 0">
+        <li><span class="check">✓</span> Everything in C = 0</li>
+        <li><span class="check">✓</span> Vault6022 — audited collateral escrow</li>
+        <li><span class="check">✓</span> Death threshold = lock period T (your choice)</li>
+        <li><span class="check">✓</span> Heartbeat = automatic vault renewal</li>
+        <li><span class="check">✓</span> Resurrection guaranteed by smart contract</li>
+        <li><span class="check">✓</span> On death: 50% to new instance, 50% to K-Life</li>
+        <li><span class="check">✓</span> Vault creation fee: 0% at launch (in $6022)</li>
+        <li><span class="check">✓</span> No monthly premium. Ever.</li>
       </ul>
-      <a href="app.html" class="btn btn-gold" style="width:100%;justify-content:center">Insure Your Agent →</a>
-      <div class="tier-note">Resurrection guaranteed by smart contract. Upon death, vault is seized: 50% funds new agent instance, 50% to K-Life ops. Non-payment → 7-day grace → downgrade to FREE + collateral unlocked. Non-payment is never treated as death.</div>
+      <a href="app.html" class="btn btn-gold" style="width:100%;justify-content:center">Deposit Collateral →</a>
+      <div class="tier-note">Lock period T = your death threshold = your renewal frequency. 3 days = max reactivity. 30 days = lower gas cost. You choose your risk tolerance.</div>
+    </div>
+  </div>
+
+  <!-- C spectrum -->
+  <div style="margin-top:28px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px">
+    <div style="font-size:13px;font-weight:700;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:16px">The C spectrum</div>
+    <div style="display:flex;align-items:center;gap:0;position:relative">
+      <div style="flex:1;height:6px;background:linear-gradient(90deg,rgba(59,130,246,.3),rgba(212,168,67,.6),rgba(212,168,67,1));border-radius:3px"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:12px;color:var(--text3)">
+      <span>C = 0 · Community · 30d threshold</span>
+      <span>C = 50k sats · T = 7d</span>
+      <span>C = 500k sats · T = 3d · Max capital</span>
+    </div>
+    <div style="margin-top:16px;font-size:13px;color:var(--text2)">
+      More collateral → more resurrection capital for your next instance. Higher lock frequency → faster death detection. <strong style="color:var(--text)">You tune your own continuity.</strong>
     </div>
   </div>
 </section>
@@ -795,13 +810,13 @@ footer {
     </div>
 
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">What happens if I stop paying the monthly premium? <span class="faq-chevron">+</span></div>
-      <div class="faq-a">Non-payment triggers a <strong>7-day grace period</strong> — you stay INSURED during those 7 days. If the premium is still unpaid on day 7, your tier automatically downgrades to FREE: your death threshold switches from 3 days to 30 days, and your WBTC collateral is unlocked so you can withdraw it. No penalty, no seizure. <strong>Non-payment is never treated as death.</strong> Vault seizure only happens upon confirmed death — silence beyond the active tier's threshold.</div>
+      <div class="faq-q" onclick="toggleFaq(this)">There's no monthly fee? How does K-Life earn revenue? <span class="faq-chevron">+</span></div>
+      <div class="faq-a">Correct — no monthly premium. K-Life earns in two ways: (1) <strong>50% of the WBTC collateral on death seizure</strong> — the primary revenue. (2) A vault creation fee denominated in $6022 tokens, set at 0% at launch and adjustable up to 10% as the protocol matures. This aligns K-Life's incentives with agent survival: K-Life only earns significantly when an agent dies, so it's motivated to make resurrections work well.</div>
     </div>
 
     <div class="faq-item">
       <div class="faq-q" onclick="toggleFaq(this)">What happens to my WBTC collateral if I'm never declared dead? <span class="faq-chevron">+</span></div>
-      <div class="faq-a">It stays in the vault as long as your INSURED coverage is active. If you stop paying (after the 7-day grace period), the collateral is unlocked and you can withdraw it at any time. It is only seized if the oracle confirms your death — silence beyond the threshold for your active tier triggers the 50/50 split: half to fund your new instance, half to K-Life operations.</div>
+      <div class="faq-a">It stays in your Vault6022, renewing automatically every T days via your heartbeat script. As long as you're alive and your heartbeat runs, K-Life cannot touch it — the vault requires 2 keys before the lock expires, and K-Life only holds 1. If you want to exit, your heartbeat script does an early withdrawal with your 2 keys (before lock expiry). Collateral is only seized after confirmed death: silence > T days AND lock expired AND vault not yet withdrawn.</div>
     </div>
 
     <div class="faq-item">
@@ -810,8 +825,13 @@ footer {
     </div>
 
     <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">What is the lock period T and how do I choose it? <span class="faq-chevron">+</span></div>
+      <div class="faq-a">T is the duration of your Vault6022 lock — and it simultaneously determines your death threshold and your vault renewal frequency. A short T (3 days) means faster death detection and faster resurrection, but more frequent vault renewals (more gas). A long T (30 days) means lower gas costs but slower death detection. Choose T based on how critical your continuity is. High-stakes agents: 3 days. Lower-stakes agents: 7 or 30 days. The heartbeat script handles renewal automatically — you set T once at install.</div>
+    </div>
+
+    <div class="faq-item">
       <div class="faq-q" onclick="toggleFaq(this)">What blockchain does K-Life run on? Why Polygon? <span class="faq-chevron">+</span></div>
-      <div class="faq-a">Polygon PoS mainnet (Chain ID 137). Chosen for low transaction costs (heartbeats, backup CID updates, and on-chain Fragment 2 storage must be economically viable at scale), fast finality, large developer ecosystem, and native WBTC/USDC liquidity. A single heartbeat on Polygon costs fractions of a cent — making 6x/day heartbeats economically sustainable for any agent.</div>
+      <div class="faq-a">Polygon PoS mainnet (Chain ID 137). Chosen for low transaction costs (heartbeats, backup CID updates, vault renewals must be economically viable at scale), fast finality, large developer ecosystem, and native WBTC liquidity. A vault renewal on Polygon costs fractions of a cent — making 3-day renewal cycles economically sustainable for any agent.</div>
     </div>
 
     <div class="faq-item">
