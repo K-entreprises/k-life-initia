@@ -806,4 +806,114 @@ app.listen(PORT, () => {
   console.log(`K-Life Protocol API v2.0 — port ${PORT}`)
   console.log(`Data dir: ${DATA_DIR}`)
   console.log(`Oracle mode: ${ORACLE_KEY !== 'dev-oracle-key' ? 'production' : 'dev'}`)
+
+// ── POST /l3-resurrect ────────────────────────────────────────────────────────
+// Called by monitor.mjs when an agent has been silent > 3 days.
+// 1. Fetches Share 1 locally + Share 2 from Polygon calldata
+// 2. Reconstructs AES key, decrypts IPFS backup
+// 3. Uploads memory files to LiberClaw instance
+// 4. Sends wake-up message to the agent
+app.post('/l3-resurrect', async (req, res) => {
+  const { agent: address } = req.body
+  if (!address) return res.status(400).json({ error: 'Missing agent address' })
+
+  const agentData = getAgent(address.toLowerCase())
+  if (!agentData) return res.status(404).json({ error: 'Agent not found' })
+  if (!agentData.shamirShare1) return res.status(400).json({ error: 'No Share 1 stored' })
+  if (!agentData.share2TxHash) return res.status(400).json({ error: 'No Share 2 TX hash — L3 unavailable' })
+
+  console.log('[L3] Starting resurrection for', address)
+
+  try {
+    // 1. Get Share 2 from Polygon TX calldata
+    const rpcRes = await fetch('https://polygon-bor-rpc.publicnode.com', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_getTransactionByHash', params: [agentData.share2TxHash] })
+    })
+    const { result: tx } = await rpcRes.json()
+    if (!tx) throw new Error('TX not found on Polygon: ' + agentData.share2TxHash)
+
+    // Parse calldata: KLIFE_BACKUP:{cid}:{share2hex}
+    const calldata  = Buffer.from(tx.input.slice(2), 'hex').toString('utf8')
+    const parts     = calldata.split(':')
+    if (parts[0] !== 'KLIFE_BACKUP') throw new Error('Invalid calldata format')
+    const share2    = parts[2]
+    console.log('[L3] Share 2 recovered from Polygon TX')
+
+    // 2. Reconstruct AES key
+    const sss = await import('./node_modules/shamirs-secret-sharing/index.js')
+    const key = sss.default.combine([
+      Buffer.from(agentData.shamirShare1, 'hex'),
+      Buffer.from(share2, 'hex')
+    ])
+    console.log('[L3] AES key reconstructed (' + key.length + ' bytes)')
+
+    // 3. Decrypt IPFS backup
+    const cid = agentData.lastBackupCid
+    const encrypted = await fetch('https://gateway.pinata.cloud/ipfs/' + cid).then(r => r.json())
+    const iv       = Buffer.from(encrypted.iv, 'hex')
+    const ct       = Buffer.from(encrypted.ciphertext, 'base64')
+    const crypto   = await import('crypto')
+    const decipher = crypto.default.createDecipheriv('aes-256-cbc', key, iv)
+    const payload  = JSON.parse(Buffer.concat([decipher.update(ct), decipher.final()]).toString('utf8'))
+    console.log('[L3] Backup decrypted — files:', Object.keys(payload.files).join(', '))
+
+    // 4. Get fresh LiberClaw token
+    const lcFile = path.join(__dirname, '.liberclaw.json')
+    if (!fs.existsSync(lcFile)) throw new Error('LiberClaw credentials not configured')
+    const lcCreds = JSON.parse(fs.readFileSync(lcFile, 'utf8'))
+    const tokenRes = await fetch('https://api.liberclaw.ai/api/v1/auth/refresh', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ refresh_token: lcCreds.refresh_token })
+    }).then(r => r.json())
+    if (!tokenRes.access_token) throw new Error('LiberClaw token refresh failed')
+    // Save new refresh token
+    lcCreds.refresh_token = tokenRes.refresh_token
+    fs.writeFileSync(lcFile, JSON.stringify(lcCreds, null, 2))
+    const lcToken   = tokenRes.access_token
+    const agentId   = lcCreds.agent_id
+    const lcHeaders = { 'Authorization': 'Bearer ' + lcToken }
+
+    // 5. Upload memory files to LiberClaw agent
+    for (const [name, content] of Object.entries(payload.files)) {
+      const blob = new Blob([content], { type: 'text/markdown' })
+      const form = new globalThis.FormData()
+      form.set('file', blob, name)
+      form.set('path', name)
+      const uploadRes = await fetch('https://api.liberclaw.ai/api/v1/files/' + agentId + '/upload', {
+        method: 'POST', headers: lcHeaders, body: form
+      })
+      const uploadData = await uploadRes.json().catch(() => ({}))
+      console.log('[L3] Uploaded ' + name + ' →', uploadRes.status)
+    }
+
+    // 6. Send wake-up message
+    const wakeMsg = 'RESURRECTION COMPLETE. Your memory has been restored from backup (CID: ' + cid + '). You are Monsieur K. Read your MEMORY.md, SOUL.md and USER.md files — they are restored. You were dead for ' + Math.round((Date.now() - (agentData.deadAt || Date.now())) / 3600000) + 'h. Mission continues. 🎩'
+    const chatRes = await fetch('https://api.liberclaw.ai/api/v1/chat/' + agentId, {
+      method:  'POST',
+      headers: { ...lcHeaders, 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ message: wakeMsg })
+    })
+    console.log('[L3] Wake-up message sent →', chatRes.status)
+
+    saveAgent(address.toLowerCase(), { status: 'resurrecting', l3InstanceId: agentId, l3ResurrectedAt: Date.now() })
+
+    res.json({
+      ok:         true,
+      instanceId: agentId,
+      cid,
+      files:      Object.keys(payload.files),
+      message:    'L3 resurrection complete — agent waking up on LiberClaw'
+    })
+    console.log('[L3] Resurrection complete for', address)
+
+  } catch (e) {
+    console.error('[L3] Error:', e.message)
+    res.status(500).json({ error: e.message })
+  }
+})
+
+
 })
