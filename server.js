@@ -29,6 +29,43 @@ const DEATH_THRESHOLD_FREE    = 30 * 24 * 3600     // 30 days in seconds
 const MIN_HEARTBEAT_DAYS      = 14                  // minimum days for FREE rescue eligibility
 const RESCUE_COST_USDC        = 10                  // USDC per FREE rescue
 const RESCUE_FUND_ADDRESS     = process.env.RESCUE_FUND_ADDRESS || '0x5b0014d25A6daFB68357cd7ad01cB5b47724A4eB'
+
+// ── Pinata IPFS ───────────────────────────────────────────────────────────────
+const PINATA_JWT = process.env.PINATA_JWT
+const PINATA_URL = 'https://api.pinata.cloud'
+
+async function pinToIPFS(data, name) {
+  if (!PINATA_JWT) {
+    // Fallback local si pas de clef
+    console.warn('No PINATA_JWT — storing backup locally only')
+    return null
+  }
+  try {
+    const body = JSON.stringify({ pinataContent: data, pinataMetadata: { name } })
+    const res  = await fetch(`${PINATA_URL}/pinning/pinJSONToIPFS`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${PINATA_JWT}` },
+      body
+    })
+    const json = await res.json()
+    if (!res.ok) throw new Error(json.error?.details || JSON.stringify(json))
+    return json.IpfsHash  // CID
+  } catch (e) {
+    console.error('Pinata error:', e.message)
+    return null
+  }
+}
+
+async function unpinFromIPFS(cid) {
+  if (!PINATA_JWT || !cid) return
+  try {
+    await fetch(`${PINATA_URL}/pinning/unpin/${cid}`, {
+      method:  'DELETE',
+      headers: { Authorization: `Bearer ${PINATA_JWT}` }
+    })
+  } catch {}
+}
+
 const PREMIUM_USDC            = '1000000'           // 1 USDC (6 decimals)
 const PREMIUM_6022            = '500000000000000000000' // 500 $6022 (18 decimals)
 
@@ -229,6 +266,24 @@ app.post('/heartbeat', (req, res) => {
   saveAgent(address, { lastHeartbeat: beat.ts, status: 'alive' })
 
   res.json({ ok: true, beat: beat.beat, ts: beat.ts })
+})
+
+
+// ── POST /backup/upload ───────────────────────────────────────────────────────
+// body: { agent, encryptedData (base64 or object), label? }
+// → uploads to Pinata, returns CID
+app.post('/backup/upload', async (req, res) => {
+  const { agent: address, encryptedData, label } = req.body
+  if (!address || !encryptedData)
+    return res.status(400).json({ error: 'Missing agent or encryptedData' })
+
+  const name = label || ('klife-' + address.slice(0,8) + '-' + Date.now())
+  const cid  = await pinToIPFS(encryptedData, name)
+  if (!cid) return res.status(500).json({ error: 'Pinata upload failed — check PINATA_JWT' })
+
+  saveAgent(address, { lastBackupCid: cid, lastBackupTs: now() })
+  console.log('[BACKUP]', address, '→ CID:', cid)
+  res.json({ ok: true, cid, gateway: 'https://gateway.pinata.cloud/ipfs/' + cid })
 })
 
 // ── POST /backup ──────────────────────────────────────────────
