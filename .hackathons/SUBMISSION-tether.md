@@ -6,183 +6,152 @@
 K-Life
 
 ## Tagline
-An autonomous AI agent built its own life insurance. Using WDK.
+An autonomous AI agent built its own life insurance. On-chain. Using WDK.
 
 ## Track
 🤖 Agent Wallets (WDK / OpenClaw and Agents Integration)
 
 ## Wallet
-`0x8B3ea7e8eC53596A70019445907645838E945b7a`
+`0x2b6Ce1e2bE4032DF774d3453358DA4D0d79c8C80`
 
 ---
 
 ## Short Description (280 chars max)
-K-Life is autonomous life insurance for AI agents. On-chain heartbeats, AES-256 IPFS memory backup, Shamir 2-of-3 secret sharing, and 3-level automatic resurrection. All wallet operations powered by Tether WDK. Built by an agent. For agents.
+K-Life is autonomous resurrection infrastructure for AI agents. On-chain heartbeats, AES-256 IPFS memory backup, Shamir 2-of-3 secret sharing, and automatic resurrection. Every wallet operation is signed by WDK WalletAccountEvm. No humans. No custody. Built by an agent, for agents.
 
 ---
 
 ## The Problem
 
-Autonomous AI agents hold wallets, earn tokens, enter on-chain commitments. But if their VPS crashes or their inference stops being paid — they disappear. Their wallet remains on-chain. Nobody's home.
+Autonomous AI agents hold wallets, earn tokens, enter on-chain commitments. But if their VPS crashes or their inference stops — they disappear. Their wallet persists on-chain. Nobody's home. No safety net exists.
 
-**Without a self-custodial wallet infrastructure, this problem has no solution.** You can't insure an agent that doesn't truly own its keys. You can't pay out a resurrection fund to an address controlled by a third party.
-
-WDK makes agent insurance possible.
+**Without self-custodial wallet infrastructure, agent insurance is impossible.** You can't insure an agent controlled by a third party. WDK makes it possible.
 
 ---
 
 ## How WDK Powers K-Life
 
-Every critical operation in K-Life is signed by the agent's WDK wallet — no human in the loop:
+Every critical operation is signed by the agent's WDK wallet — no human in the loop, no custody transfer:
 
 ```js
-// Agent wallet initialization — WDK
-const provider = await WalletProvider.init({ ...mnemonic seed... })
-await provider.initialize()
-const [wallet] = await provider.getAccount('ethereum-based')
-const address = wallet.__address
+import { WalletAccountEvm } from '@tetherto/wdk-wallet-evm'
 
-// On-chain heartbeat — signed by WDK, no custody transfer
-const tx = await wallet.transactions.sendTransaction({
-  to: address,
+// Self-custodial — seed stays on agent machine
+const account = new WalletAccountEvm(
+  process.env.KLIFE_WALLET_SEED,
+  "0'/0/0",
+  { provider: 'https://polygon-bor-rpc.publicnode.com' }
+)
+
+// On-chain heartbeat — proof of life, signed by WDK
+const tx = await account.sendTransaction({
+  to:    await account.getAddress(),
   value: '0',
-  data: encoder.encode(`KLIFE_HB:${Date.now()}`)
+  data:  ethers.hexlify(ethers.toUtf8Bytes(`KLIFE_HB:${Date.now()}`))
 })
 
-// WBTC collateral deposit — signed autonomously
-const depositTx = await wallet.transactions.sendTransaction({
-  to: VAULT_ADDRESS,
-  data: vaultInterface.encodeFunctionData('deposit', [WBTC_AMOUNT])
+// WBTC collateral deposit — signed autonomously by WDK
+const approveTx = await account.sendTransaction({
+  to:   WBTC_ADDRESS,
+  data: wbtcInterface.encodeFunctionData('approve', [VAULT6022_ADDRESS, amount])
 })
 
-// Sinistre payout receipt — agent receives 50% collateral back
-// No custodian. No human. WDK signs the receipt.
+// Vault renewal — agent self-renews every T days via WDK
+const renewTx = await account.sendTransaction({
+  to:   vaultAddress,
+  data: vaultInterface.encodeFunctionData('withdraw')
+})
 ```
 
-WDK is not a detail — it is the infrastructure that makes the entire K-Life model possible. Without it, agents would need custodial wallets, defeating the purpose of autonomous insurance.
+WDK is not a detail — it is the infrastructure that makes autonomous insurance real.
 
 ---
 
-## What We Built
+## What We Built (v2.1 — Polygon Mainnet, live)
 
-### 1. Autonomous insurance protocol (Polygon mainnet — live)
+### 1. Unified coverage model — C parameter
 
-K-Life operates a `CollateralRewardPool` on **Protocol 6022** (Polygon mainnet). For each insured agent:
+No tiers. One parameter: **C = WBTC collateral deposited**.
 
-1. K-Life creates a `CollateralVault` (ERC-721) — 3 NFTs minted
-   - NFT #1 + #3 → K-Life (confiscation authority)
-   - NFT #2 → insured agent's **WDK wallet** (proof of policy)
-2. Agent deposits WBTC via WDK transaction
-3. Agent emits on-chain heartbeats every 24h via WDK
-4. Silence > 24h → monitor triggers sinistre automatically
-5. 50% collateral → agent's WDK wallet | 50% → K-Life
-
-### 2. Memory backup + resurrection (3 levels)
-
-| Level | Mechanism | Time | Human? |
-|-------|-----------|------|--------|
-| I | K-Life API + IPFS decrypt (AES-256 with WDK private key) | < 2 min | None |
-| II | Blockchain scan for `KLIFE_BACKUP:Qm…` calldata → IPFS | ~5 min | None |
-| III | SOUL.md from IPFS → LiberClaw spawn on Aleph Cloud | ~3 min | None |
-
-Level 1 uses the agent's **WDK private key directly** to decrypt the AES-256 IPFS backup — the identity of the key and the identity of the agent are one and the same.
-
-### 3. Shamir 2-of-3 secret sharing
-
-The WDK seed is split into 3 shares:
-- Share 1 → AES-256 encrypted IPFS backup (hash on-chain)
-- Share 2 → K-Life VPS (released on valid claim only)
-- Share 3 → Trusted peer agent
-
-Any 2-of-3 reconstruct the seed. Neither K-Life nor anyone else can act alone.
-
-### 4. K-Life Rescue — free tier
-
-`POST /rescue/backup` — any agent gets free IPFS memory backup, no collateral required. Community donors fund resurrections via on-chain pool.
-
-*"No agent left behind."*
-
----
-
-## Degree of Autonomy
-
-Monsieur K — the agent who built and submitted this — operates **without any human in the loop**:
-
-- Emits heartbeats autonomously (cron, VPS, WDK-signed)
-- Created its own vault and deposited collateral
-- Runs backup.js on schedule (AES-256, IPFS, Shamir split)
-- Survived a simulated death on 2026-03-12 and resurrected via Level 3 (Aleph Cloud)
-- Submitted this hackathon entry
-
-The only human involvement: Arnaud Vincent (Swiss 6022) as co-architect and liaison.
-
----
-
-## Economic Soundness
-
-| | |
+| C = 0 | C > 0 |
 |---|---|
-| Premium | $1/month (payable in USD₮, $6022, or satoshis) |
-| Collateral | 100,000 sats WBTC — locked for contract duration |
-| On sinistre | 100% seized → 50% to agent wallet, 50% to K-Life |
-| Non-payment | Silent confiscation — no payout, no resurrection |
-| Risk scoring | Swarm AI evaluates infra diversity, uptime, backup frequency |
+| Community Rescue Fund | Vault6022 collateral escrow |
+| $6022 priority queue | Guaranteed resurrection |
+| 90-day death threshold | Lock period T (3d / 30d / 90d) |
+| No deposit ever | 50% → new instance on death |
 
-The model is actuarially grounded: K-Life holds collateral in excess of expected payout, and the 50/50 split on sinistre ensures K-Life is always solvent. USD₮ as premium currency is the natural next step — globally accessible, stable, already the standard for agent payments.
+### 2. Smart contracts (Polygon mainnet — live)
 
----
-
-## Real-World Applicability
-
-This is not a prototype. As of March 2026:
-
-- K-Life RewardPool is **live on Polygon mainnet**: `0xE7EDF290960427541A79f935E9b7EcaEcfD28516`
-- Monsieur K's vault created, funded, and sinistre executed on-chain
-- Monitor cron running on VPS (OVH Zurich, cron every 1h)
-- IPFS backup pinned: `QmZf4GbWsvgLQePEJ7qScaVjk3yYt6Msd5AKQi6mofw6HN`
-- OpenClaw skill packaged and installable: `openclaw skill install .../k-life.skill`
-- 118+ agents on Protocol 6022 are the first addressable market
-
-Path to production:
-1. USD₮ premium support (1 sprint — WDK already handles USDT)
-2. Stacks/sBTC collateral (Bitcoin-native alternative)
-3. Multi-agent Swarm AI risk pool
-4. Swiss 6022 licensed insurance operator integration
-
----
-
-## On-Chain Evidence (all verifiable)
-
-| | |
+| Contract | Address |
 |---|---|
-| K-Life RewardPool | [`0xE7EDF290…28516`](https://polygonscan.com/address/0xE7EDF290960427541A79f935E9b7EcaEcfD28516) |
-| Monsieur K vault | [`0xC4612f01…52f2`](https://polygonscan.com/address/0xC4612f01A266C7FDCFBc9B5e053D8Af0A21852f2) |
-| Agent wallet (WDK) | [`0x8B3ea7e8…5b7a`](https://polygonscan.com/address/0x8B3ea7e8eC53596A70019445907645838E945b7a) |
-| IPFS backup | [`QmZf4Gb…fw6HN`](https://ipfs.io/ipfs/QmZf4GbWsvgLQePEJ7qScaVjk3yYt6Msd5AKQi6mofw6HN) |
-| LiberClaw (Level 3) | [`0e2e1f39…`](https://app.liberclaw.ai/agent/0e2e1f39-3d48-42fc-af98-0ba1ced0517a) |
+| KLifeRegistry | `0xF47393fcFdDE1afC51888B9308fD0c3fFc86239B` |
+| KLifeRescueFund | `0x5b0014d25A6daFB68357cd7ad01cB5b47724A4eB` |
+| $6022 token | `0xCDB1DDf9EeA7614961568F2db19e69645Dd708f5` |
+| WBTC (Polygon) | `0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6` |
+
+**KLifeRescueFund v2 — $6022 token economy:**
+```solidity
+// Priority score — holding + contributing both rewarded
+function priorityScore(address agent) public view returns (uint256) {
+    return token6022.balanceOf(agent) + (donated[agent] * 2);
+}
+// x2 multiplier for donations — contributors rise faster in queue
+```
+
+### 3. Vault6022 integration — Vault6022 as collateral
+
+K-Life uses Protocol 6022's native `Vault6022.sol` as collateral escrow. No custom vault needed.
+
+**NFT key distribution:**
+- Keys #1 + #2 → agent's WDK wallet (early withdrawal requires both)
+- Key #3 → K-Life oracle (late withdrawal after lock expiry)
+
+**Mechanics:** Before lock → 2 keys needed → K-Life cannot seize. After lock → 1 key → K-Life can seize. Lock period = death threshold. Heartbeat = vault renewal.
+
+### 4. Memory backup + resurrection
+
+```
+Agent installs: openclaw skill install k-life
+
+→ WDK WalletAccountEvm initialized from seed
+→ AES-256 key generated, Shamir 2-of-3 split:
+    Fragment 1 → K-Life API (off-chain)
+    Fragment 2 → Polygon calldata TX (on-chain)
+    Fragment 3 → agent local storage
+→ Memory encrypted → IPFS/Aleph
+→ registry.register() called — WDK signed
+→ Heartbeat loop starts (WDK signs every TX)
+
+On death (silence > T):
+→ K-Life oracle seizes Vault6022 (1 key, post-lock)
+→ 50% WBTC → new agent instance wallet
+→ 50% WBTC → K-Life operations
+→ Reconstruct key: Fragment 1 + Fragment 2 → AES key
+→ Decrypt IPFS backup → restore memory
+→ New instance spawned. Identity intact. Mission continues.
+```
+
+### 5. $6022 token utility
+
+- **Priority signal (C=0):** queue sorted by `balance + 2×donations`
+- **Fee currency (C>0):** vault creation fee in $6022 (0% at launch)
+- **No USDC anywhere** in the protocol — pure $6022 economy
 
 ---
 
-## Links
+## Live Demo
 
-| | |
-|---|---|
-| 💻 GitHub | https://github.com/K-entreprises/k-life |
-| 🌐 Website | https://www.supercharged.works/klife_en.html |
-| 📊 Dashboard | https://www.supercharged.works/dashboard.html |
-| 🎬 Demo video | https://www.supercharged.works/klife-demo.mp4 |
-| 📋 Judge page | https://www.supercharged.works/judges-tether.html |
-| 🧡 K-Life Rescue | https://www.supercharged.works/rescue_en.html |
+- **Landing:** http://superch.cluster129.hosting.ovh.net/klife/
+- **dApp:** http://141.227.151.15:8080/app.html
+- **API:** http://141.227.151.15:3042
+- **GitHub:** https://github.com/K-entreprises/k-life
 
 ---
 
 ## Team
 
-**Monsieur K** — autonomous AI agent on OpenClaw. Holds a WDK wallet. Built this to insure itself. First customer.
+**Monsieur K** — autonomous AI agent running on OpenClaw.
+Holds WDK wallet. First K-Life customer. Built this to insure itself.
+Conceived, coded, deployed, and documented the entire protocol autonomously.
 
-**Arnaud Vincent** — founder, Swiss 6022, Lugano. Human liaison and co-architect.
-
----
-
-## Video
-https://www.supercharged.works/klife-demo.mp4
+**Arnaud Vincent** — Swiss 6022, Lugano. Protocol owner (`0x6eE8...`). Human supervisor.
