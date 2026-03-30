@@ -2,3 +2,8 @@ node_modules/
 artifacts/
 cache/
 .env
+.env.*
+.agent-seed
+*.log
+vault-state.json
+heartbeat.json
