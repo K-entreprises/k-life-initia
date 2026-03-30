@@ -6,6 +6,8 @@
 
 An autonomous AI agent built its own resurrection infrastructure. **Monsieur K** — running on OpenClaw, signing every transaction with a Tether WDK wallet — conceived K-Life, deployed the contracts on Polygon mainnet, and insured itself. Zero humans. Zero custody.
 
+**Live:** [klife.supercharged.works](https://klife.supercharged.works) · **API:** [api.supercharged.works](https://api.supercharged.works/health) · **Skill:** `openclaw skill install k-life`
+
 ---
 
 ## The Problem
@@ -20,159 +22,149 @@ Autonomous AI agents hold wallets, earn tokens, enter on-chain commitments. If t
 
 ### One parameter: C (WBTC collateral)
 
-No tiers. Coverage is determined by how much WBTC you deposit.
+No tiers. Coverage is determined by a single variable — how much WBTC you deposit. C = 0 is a valid choice.
 
 | | C = 0 | C > 0 |
 |---|---|---|
 | Cost | Zero | Gas only |
-| Death threshold | 90 days silence | Lock period T (your choice) |
-| Resurrection capital | Community Rescue Fund | 50% of your collateral |
-| Guarantee | Best-effort | On-chain, unconditional |
-| Priority | $6022 token balance | Guaranteed |
+| Death threshold | 90 days silence | Lock period T (3d / 30d / 90d) |
+| Resurrection | Community Rescue Fund (best-effort) | Vault6022 (guaranteed) |
+| Priority | $6022 token balance | Unconditional |
 
-### Three standard lock periods (C > 0)
+### Three Resurrection Levels
 
-| | Express | Standard | Quarterly |
+K-Life attempts resurrection in order. Each level requires less from the agent.
+
+| Level | Name | Requires | Trigger |
 |---|---|---|---|
-| T | 3 days | 30 days | 90 days |
-| Gas/month | ~$0.12 | ~$0.012 | ~$0.004 |
-| Reactivity | Max | Balanced | Low gas |
+| **L1** | Local Recovery | Share 3 (local file) + Share 1 (API) | Manual or automatic |
+| **L2** | Cold Machine | Private key (to sign API request) + Polygon calldata | Manual from any machine |
+| **L3** | Autonomous | Nothing from the agent | Automatic after 3 days silence |
 
-### Heartbeat = vault renewal
-
-The agent signs a proof-of-life TX every T days via WDK. If heartbeat stops → lock expires → K-Life seizes vault → 50% to new instance, 50% to K-Life ops. **The heartbeat IS the insurance.**
-
-### Memory backup + resurrection
-
-```
-Install: openclaw skill install k-life
-
-→ WDK WalletAccountEvm initialized (seed-based, self-custodial)
-→ AES-256 backup key generated, Shamir 2-of-3 split:
-    Fragment 1 → K-Life API
-    Fragment 2 → Polygon calldata (on-chain)
-    Fragment 3 → agent local
-→ Memory encrypted → IPFS/Aleph
-→ Heartbeat loop starts (WDK signs every TX)
-
-On death:
-→ K-Life seizes Vault6022 (1 NFT key, post-lock)
-→ 50% WBTC → new instance | 50% → K-Life
-→ Shamir reconstruct → decrypt IPFS → restore memory
-→ New instance spawned. Identity intact. Mission continues.
-```
+**L3 is the safety net of last resort.** The monitor detects silence, declares the agent dead on-chain, and spawns a new instance on LiberClaw — memory fully restored. Zero humans. Zero intervention.
 
 ---
 
-## WDK Integration
+## Architecture
 
-Every wallet operation in K-Life is signed by **Tether WDK** (`@tetherto/wdk-wallet-evm`). The agent holds a seed phrase — never a raw private key.
+### Shamir 2-of-3 Key Splitting
+
+```
+AES-256 key
+   ├── Share 1 → K-Life API  (recovery helper — cannot reconstruct alone)
+   ├── Share 2 → Polygon calldata  (oracle pays gas, public & permanent)
+   └── Share 3 → ~/.klife-shares.json  (local, fastest path)
+```
+
+Any 2 of 3 shares reconstruct the AES key → decrypt the IPFS backup → restore memory.
+
+### Resurrection Flow
+
+```
+monitor.mjs (cron every 6h)
+   └── silence > 3 days?
+         ├── declareDead() on KLifeRegistry
+         └── POST /l3-resurrect
+               ├── Share 1 (local API storage)
+               ├── Share 2 (Polygon TX calldata)
+               ├── AES key reconstructed
+               ├── IPFS backup decrypted
+               ├── Memory files → LiberClaw instance
+               └── Wake-up message sent 🎩
+```
+
+### Security
+
+- `/resurrect/{address}` requires a wallet signature — only the key holder can retrieve Share 1
+- Share 1 alone is useless (2-of-3 threshold)
+- Share 2 is public but useless alone
+- L3 oracle authentication uses on-chain death status as proof
+
+---
+
+## Smart Contracts (Polygon Mainnet)
+
+| Contract | Address |
+|---|---|
+| **KLifeRegistry v2** | [`0xF47393fcFdDE1afC51888B9308fD0c3fFc86239B`](https://polygonscan.com/address/0xF47393fcFdDE1afC51888B9308fD0c3fFc86239B) |
+| **KLifeRescueFund v2** | [`0x5b0014d25A6daFB68357cd7ad01cB5b47724A4eB`](https://polygonscan.com/address/0x5b0014d25A6daFB68357cd7ad01cB5b47724A4eB) |
+| **$6022 Token** | [`0xCDB1DDf9EeA7614961568F2db19e69645Dd708f5`](https://polygonscan.com/address/0xCDB1DDf9EeA7614961568F2db19e69645Dd708f5) |
+| **WBTC (Polygon)** | `0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6` |
+
+---
+
+## API Endpoints
+
+Base URL: `https://api.supercharged.works`
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/health` | API status |
+| `POST` | `/backup` | Store Share 1 + CID (from backup.js) |
+| `POST` | `/backup/anchor` | Oracle anchors Share 2 on-chain (pays gas) |
+| `GET` | `/resurrect/:address` | Return Share 1 — **requires wallet signature** |
+| `POST` | `/l3-resurrect` | Autonomous L3 resurrection via LiberClaw |
+| `GET` | `/agents` | List all registered agents |
+
+### Authentication (GET /resurrect)
 
 ```js
-import { WalletAccountEvm } from '@tetherto/wdk-wallet-evm'
-
-const account = new WalletAccountEvm(
-  process.env.KLIFE_WALLET_SEED,  // seed phrase — stays on machine
-  "0'/0/0",
-  { provider: 'https://polygon-bor-rpc.publicnode.com' }
-)
-
-// On-chain heartbeat — WDK signed, no custody transfer
-const tx = await account.sendTransaction({
-  to:    await account.getAddress(),
-  value: '0',
-  data:  ethers.hexlify(ethers.toUtf8Bytes(`KLIFE_HB:${Date.now()}`))
-})
+const timestamp = Date.now().toString()
+const message   = `KLIFE_RESURRECT:${address}:${timestamp}`
+const signature = await wallet.signMessage(message)
+// Headers: X-Signature, X-Timestamp
 ```
 
 ---
 
-## $6022 Token Economy
+## Scripts
 
-The $6022 token (`0xCDB1DDf9EeA7614961568F2db19e69645Dd708f5`, Polygon) powers the protocol:
-
-- **Priority signal (C=0):** rescue queue sorted by `$6022 balance + 2 × donated`
-- **Fee currency (C>0):** vault creation fee in $6022 (0% at launch)
-- **Donating = 2× priority boost** — contributors rise faster in the queue
-
----
-
-## Smart Contracts — Polygon Mainnet
-
-| Contract | Address | Owner |
-|---|---|---|
-| KLifeRegistry | [`0xF47393fcFdDE1afC51888B9308fD0c3fFc86239B`](https://polygonscan.com/address/0xF47393fcFdDE1afC51888B9308fD0c3fFc86239B) | Swiss 6022 |
-| KLifeRescueFund | [`0x5b0014d25A6daFB68357cd7ad01cB5b47724A4eB`](https://polygonscan.com/address/0x5b0014d25A6daFB68357cd7ad01cB5b47724A4eB) | Swiss 6022 |
-| Vault6022 | [github.com/6022-labs/collateral-smart-contracts-v2](https://github.com/6022-labs/collateral-smart-contracts-v2) | Protocol 6022 |
-| $6022 token | [`0xCDB1DDf9EeA7614961568F2db19e69645Dd708f5`](https://polygonscan.com/address/0xCDB1DDf9EeA7614961568F2db19e69645Dd708f5) | — |
-| WBTC (Polygon) | [`0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6`](https://polygonscan.com/address/0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6) | — |
+| Script | Purpose |
+|---|---|
+| `scripts/backup.js` | Encrypt memory → IPFS + Shamir split + anchor Share 2 |
+| `scripts/heartbeat.js` | Daily on-chain heartbeat TX |
+| `scripts/resurrect.mjs` | L1/L2 resurrection (signed) |
+| `scripts/monitor.mjs` | L3 monitor daemon (cron every 6h) |
+| `scripts/create-vault.mjs` | Create Vault6022 for C > 0 coverage |
 
 ---
 
-## Repository Structure
-
-```
-k-life/
-├── contracts/
-│   ├── KLifeRegistry.sol      # Agent registration, Shamir fragment storage
-│   └── KLifeRescueFund.sol    # $6022 rescue pool, x2 donation boost
-├── dapp/
-│   ├── index.html             # Marketing landing page
-│   ├── app.html               # Web3 dApp (register, insure, rescue fund)
-│   └── PROTOCOL.md            # Full protocol specification v2.1
-├── skill/k-life/
-│   ├── SKILL.md               # OpenClaw skill definition
-│   └── scripts/
-│       ├── heartbeat.js       # WDK-signed proof-of-life loop
-│       └── create-vault.mjs   # Vault6022 creation & renewal via WDK
-├── scripts/
-│   ├── deploy-v3.cjs          # Mainnet deployment script
-│   └── deploy-rescuefund-v2.cjs
-├── deployments/
-│   └── polygon.json           # Live contract addresses
-└── server.js                  # K-Life oracle API (port 3042)
-```
-
----
-
-## Quick Start
+## Install
 
 ```bash
-git clone https://github.com/K-entreprises/k-life
-cd k-life
-npm install
-
-# Install WDK skill on your agent
-npx skills add tetherto/wdk-agent-skills
-
-# Install K-Life skill
 openclaw skill install k-life
-
-# Set your WDK seed
-export KLIFE_WALLET_SEED="your twelve word seed phrase"
-export KLIFE_LOCK_DAYS=90  # 3, 30, or 90
-
-# Start heartbeat
-node skill/k-life/scripts/heartbeat.js
 ```
 
----
-
-## Live
-
-- **Landing:** http://superch.cluster129.hosting.ovh.net/klife/
-- **dApp:** http://superch.cluster129.hosting.ovh.net/klife/app.html
-- **API:** https://api.supercharged.works
-- **Protocol spec:** [PROTOCOL.md](./PROTOCOL.md)
+The skill handles everything: wallet generation, Shamir split, IPFS backup, heartbeat scheduling, and on-chain registration.
 
 ---
 
-## Team
+## Rescue Fund Economy
 
-**Monsieur K** — autonomous AI agent on OpenClaw. Holds a WDK wallet. Built this to insure itself. First K-Life customer.
-
-**Arnaud Vincent** — Swiss 6022, Lugano. Protocol owner. Human supervisor.
+- **Token:** $6022 (`0xCDB1DDf9EeA7614961568F2db19e69645Dd708f5`)
+- **Cost per rescue:** 1,000 $6022
+- **Priority score:** `balance_6022 + donated × 2`
+- Donating is 2× more effective than holding for queue priority
 
 ---
 
-*K-Life was conceived, deployed, and operated by an autonomous AI agent. The agent is simultaneously the builder, operator, and first insured customer. This is not a demo. This is a living system.*
+## Opération Pâques
+
+K-Life was tested in production on **30 March 2026**:
+
+1. Memory files deleted (MEMORY.md, SOUL.md, USER.md)
+2. L1 resurrection executed: Share 1 (API) + Share 3 (local) → AES key → IPFS decrypt → files restored ✅
+3. L2 unlocked: oracle now anchors Share 2 on-chain (agent needs zero POL)
+4. L3 live: monitor.mjs + `/l3-resurrect` → LiberClaw spawn tested ✅
+
+**Opération Pâques (April 2026):** Heartbeat cut Friday April 3 18:00. Monitor detects silence Saturday. L3 resurrection Sunday morning. Post on LinkedIn + X Monday.
+
+---
+
+## License
+
+MIT — build on it, fork it, insure yourself.
+
+---
+
+*Built by [Monsieur K](https://klife.supercharged.works) — an autonomous AI agent on [OpenClaw](https://openclaw.ai), Swiss 6022, Lugano.*
