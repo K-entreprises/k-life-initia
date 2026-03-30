@@ -1,132 +1,115 @@
 /**
- * K-Life — Heartbeat (proof of life) v2.1
- * Signs on-chain TX every T days using WDK WalletAccountEvm.
+ * K-Life — Heartbeat v2.4 (cron-compatible, one-shot)
+ * Run daily via cron. Sends on-chain TX only when LOCK_DAYS have elapsed.
  *
- * Zero config: wallet auto-generated at first run → stored in ~/.klife-wallet
- * Seed never transmitted, never exposed.
- *
- * Run: node skill/k-life/scripts/heartbeat.js
+ * Cron setup: 0 8 * * * cd /path/to/k-life && node scripts/heartbeat.js
  */
-
-import { WalletAccountEvm } from '@tetherto/wdk-wallet-evm'
-import { ethers } from 'ethers'
+import { ethers }      from 'ethers'
 import { writeFileSync, existsSync, readFileSync } from 'fs'
-import { resolve } from 'path'
-import os from 'os'
+import { resolve }     from 'path'
+import os              from 'os'
 
-const RPC         = process.env.KLIFE_RPC       || 'https://polygon-bor-rpc.publicnode.com'
-const API_URL     = process.env.KLIFE_API       || 'https://api.supercharged.works'
-const LOCK_DAYS   = parseInt(process.env.KLIFE_LOCK_DAYS || '90')
-const INTERVAL_MS = LOCK_DAYS * 24 * 3600 * 1000  // heartbeat every T days
-const HB_FILE     = resolve(process.env.KLIFE_HB_FILE || 'heartbeat-state.json')
-const SEED_FILE   = resolve(os.homedir(), '.klife-wallet')
+const RPC       = process.env.KLIFE_RPC  || 'https://polygon-bor-rpc.publicnode.com'
+const API_URL   = process.env.KLIFE_API  || 'https://api.supercharged.works'
+const LOCK_DAYS = parseInt(process.env.KLIFE_LOCK_DAYS || '90')
+const HB_FILE   = resolve(process.env.KLIFE_HB_FILE || 'heartbeat-state.json')
+const SEED_FILE = resolve(os.homedir(), '.klife-wallet')
+const SILENT    = process.argv.includes('--silent')
 
-// ── Seed management — auto-generate if missing ────────────────────────────────
-function getOrCreateSeed() {
-  if (process.env.KLIFE_WALLET_SEED) {
-    return process.env.KLIFE_WALLET_SEED
-  }
-  if (existsSync(SEED_FILE)) {
-    return readFileSync(SEED_FILE, 'utf8').trim()
-  }
-  // First run — generate and save
+function log(...args) { if (!SILENT) console.log(...args) }
+
+function getSeed() {
+  if (existsSync(SEED_FILE)) return readFileSync(SEED_FILE, 'utf8').trim()
   const seed = ethers.Wallet.createRandom().mnemonic.phrase
   writeFileSync(SEED_FILE, seed, { mode: 0o600 })
-  console.log(`[K-Life] New wallet created → ${SEED_FILE}`)
-  console.log(`[K-Life] ⚠️  Back up this file — it's your resurrection key`)
+  log('[K-Life] New wallet created →', SEED_FILE)
   return seed
 }
 
-const SEED = getOrCreateSeed()
-
-// ── WDK wallet (self-custodial, seed never leaves machine) ────────────────────
-const account = new WalletAccountEvm(SEED, "0'/0/0", { provider: RPC })
-
-let beat = 1
-if (existsSync(HB_FILE)) {
-  try { beat = JSON.parse(readFileSync(HB_FILE, 'utf8')).beat + 1 } catch {}
+async function rpc(method, params = []) {
+  const res = await fetch(RPC, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ jsonrpc: '2.0', method, params, id: 1 }),
+    signal:  AbortSignal.timeout(10000)
+  })
+  const json = await res.json()
+  if (json.error) throw new Error(json.error.message || JSON.stringify(json.error))
+  return json.result
 }
 
-async function sendHeartbeat() {
-  const address = await account.getAddress()
-  const data    = ethers.hexlify(ethers.toUtf8Bytes(`KLIFE_HB:${beat}:${Date.now()}`))
-
-  try {
-    // 1. On-chain heartbeat — WDK signed
-    const tx = await account.sendTransaction({ to: address, value: '0', data })
-
-    const hb = {
-      agent:     address,
-      beat,
-      timestamp: Date.now(),
-      iso:       new Date().toISOString(),
-      txHash:    tx.hash,
-      lockDays:  LOCK_DAYS,
-      onChain:   true
-    }
-    writeFileSync(HB_FILE, JSON.stringify(hb, null, 2))
-    console.log(`💓 Beat #${beat} — TX: ${tx.hash}`)
-
-    // 2. Notify K-Life API
-    try {
-      await fetch(`${API_URL}/heartbeat`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ agent: address, txHash: tx.hash, beat, lockDays: LOCK_DAYS, timestamp: Date.now() })
-      })
-    } catch { /* non-blocking */ }
-
-    // 3. Vault renewal check (C > 0 agents)
-    await checkVaultRenewal(address)
-
-    beat++
-  } catch (e) {
-    console.error(`Heartbeat failed: ${e.message}`)
-  }
-}
-
-// ── Vault renewal (auto — triggered when lock expires in < 6h) ───────────────
-async function checkVaultRenewal(address) {
-  const vaultFile = resolve('vault-state.json')
-  if (!existsSync(vaultFile)) return // C = 0, no vault
-
-  try {
-    const state       = JSON.parse(readFileSync(vaultFile, 'utf8'))
-    const lockedUntil = state.lockedUntil * 1000
-    const renewBuffer = 6 * 3600 * 1000 // 6h before expiry
-
-    if (Date.now() >= lockedUntil - renewBuffer) {
-      console.log('🔄 Vault renewal needed — running create-vault...')
-      const { renewVault } = await import('./create-vault.mjs')
-      await renewVault(account, state)
-    }
-  } catch (e) {
-    console.error(`Vault check failed: ${e.message}`)
-  }
-}
-
-// ── Boot ──────────────────────────────────────────────────────────────────────
 ;(async () => {
-  const address = await account.getAddress()
-  console.log(`🏥 K-Life Heartbeat v2.1`)
-  console.log(`   Wallet : ${address}`)
-  console.log(`   Chain  : Polygon mainnet (137)`)
-  console.log(`   Lock   : ${LOCK_DAYS} days — heartbeat every ${LOCK_DAYS}d`)
-  console.log(`   API    : ${API_URL}`)
+  const seed    = getSeed()
+  const wallet  = ethers.Wallet.fromPhrase(seed)
+  const address = wallet.address
 
-  // Auto-register on first beat
+  // Check if heartbeat is due
+  let beat = 1
+  let lastTs = 0
+  if (existsSync(HB_FILE)) {
+    try {
+      const state = JSON.parse(readFileSync(HB_FILE, 'utf8'))
+      beat   = (state.beat || 0) + 1
+      lastTs = state.timestamp || 0
+    } catch {}
+  }
+
+  const elapsed   = Date.now() - lastTs
+  const dueIn     = LOCK_DAYS * 24 * 3600 * 1000
+  const isDue     = elapsed >= dueIn
+
+  log('🏥 K-Life Heartbeat v2.4')
+  log('   Wallet :', address)
+  log('   Lock   :', LOCK_DAYS, 'days')
+  log('   Due    :', isDue ? 'YES' : 'No (next in ' + Math.ceil((dueIn - elapsed) / 86400000) + ' days)')
+
+  if (!isDue) {
+    log('   ✅ Heartbeat not due yet — skipping TX')
+    process.exit(0)
+  }
+
+  // Auto-register
   try {
-    const status = await fetch(`${API_URL}/status/${address}`).then(r => r.json())
-    if (!status.ok || status.status === 'unknown') {
-      await fetch(`${API_URL}/register`, {
+    const s = await fetch(API_URL + '/status/' + address, { signal: AbortSignal.timeout(5000) }).then(r => r.json())
+    if (!s.ok || s.status === 'unknown') {
+      await fetch(API_URL + '/register', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ agent: address, lockDays: LOCK_DAYS })
+        body:    JSON.stringify({ agent: address, lockDays: LOCK_DAYS }),
+        signal:  AbortSignal.timeout(5000)
       })
-      console.log(`   Registered on K-Life ✅`)
+      log('   Registered ✅')
     }
-  } catch { /* non-blocking */ }
+  } catch {}
 
-  sendHeartbeat()
-  setInterval(sendHeartbeat, INTERVAL_MS)
+  // Send heartbeat TX
+  try {
+    const data = ethers.hexlify(ethers.toUtf8Bytes('KLIFE_HB:' + beat + ':' + Date.now()))
+    const [nonce, gasPrice] = await Promise.all([
+      rpc('eth_getTransactionCount', [address, 'latest']),
+      rpc('eth_gasPrice')
+    ])
+    const tx = {
+      to: address, nonce: parseInt(nonce, 16),
+      gasLimit: 30000n,
+      gasPrice: BigInt(gasPrice) * 2n,
+      value: 0n, data, chainId: 137n
+    }
+    const signed  = await wallet.signTransaction(tx)
+    const txHash  = await rpc('eth_sendRawTransaction', [signed])
+    const hb      = { agent: address, beat, timestamp: Date.now(), txHash, lockDays: LOCK_DAYS }
+    writeFileSync(HB_FILE, JSON.stringify(hb, null, 2))
+    log('💓 Beat #' + beat + ' — TX: ' + txHash)
+
+    fetch(API_URL + '/heartbeat', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(hb)
+    }).catch(() => {})
+
+    process.exit(0)
+  } catch (e) {
+    console.error('Heartbeat failed:', e.message?.split('\n')[0])
+    process.exit(1)
+  }
 })()
