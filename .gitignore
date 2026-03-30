@@ -7,3 +7,9 @@ cache/
 *.log
 vault-state.json
 heartbeat.json
+agent.js
+demo*.js
+monitor.js
+vault.js
+wallet-executor.js
+heartbeat.json

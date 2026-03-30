@@ -161,7 +161,7 @@ node skill/k-life/scripts/heartbeat.js
 ## Live
 
 - **Landing:** http://superch.cluster129.hosting.ovh.net/klife/
-- **dApp:** http://141.227.151.15:8080/app.html
+- **dApp:** http://superch.cluster129.hosting.ovh.net/klife/app.html
 - **API:** https://api.supercharged.works
 - **Protocol spec:** [PROTOCOL.md](./PROTOCOL.md)
 

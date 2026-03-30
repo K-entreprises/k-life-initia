@@ -142,8 +142,8 @@ On death (silence > T):
 ## Live Demo
 
 - **Landing:** http://superch.cluster129.hosting.ovh.net/klife/
-- **dApp:** http://141.227.151.15:8080/app.html
-- **API:** http://141.227.151.15:3042
+- **dApp:** http://superch.cluster129.hosting.ovh.net/klife/app.html
+- **API:** https://api.supercharged.works
 - **GitHub:** https://github.com/K-entreprises/k-life
 
 ---
