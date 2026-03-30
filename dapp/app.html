@@ -398,38 +398,86 @@ a.link:hover{text-decoration:underline}
 
   <!-- INSURE -->
   <div class="tab-content" id="tab-insure">
-    <div class="infobox" style="margin-bottom:20px"><strong>C = 0 (zero collateral):</strong> Register normally — Rescue Fund covers resurrection. Priority in queue = your 022 balance. No deposit required. 90-day death threshold.</div>
-    <div class="card" style="margin-bottom:20px">
-      <div class="card-label">C &gt; 0 — WBTC Collateral + Vault6022</div>
-      <div style="font-size:13px;color:var(--text2);margin-bottom:20px">Deposit WBTC to guarantee your resurrection. Choose your lock period T.</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
-        <div class="freq-opt selected" id="freq-3d" onclick="selectFreq(3, this)">
-          <div style="font-size:26px;font-weight:700;color:var(--gold2);letter-spacing:-1px">3d</div>
-          <div style="font-size:12px;font-weight:700;margin:6px 0 3px">Express</div>
-          <div style="font-size:11px;color:var(--text3)">Max reactivity<br>~sh.12/month</div>
+
+    <!-- Header -->
+    <div style="margin-bottom:24px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:10px;display:flex;align-items:center;gap:10px"><span style="display:block;width:20px;height:1px;background:var(--gold);opacity:.5"></span>Choose your coverage</div>
+      <div style="font-size:22px;font-weight:700;letter-spacing:-.5px;margin-bottom:6px">One parameter: <span style="color:var(--gold2)">C</span></div>
+      <div style="font-size:14px;color:var(--text2)">How much WBTC do you want to deposit as collateral? Zero is a valid answer.</div>
+    </div>
+
+    <!-- 2 columns -->
+    <div class="g2" style="align-items:start">
+
+      <!-- C = 0 — DEFAULT -->
+      <div class="card" style="border:2px solid rgba(34,216,150,.3);background:linear-gradient(160deg,rgba(14,164,114,.04) 0%,var(--surface) 60%);box-shadow:0 0 40px rgba(14,164,114,.06)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+          <div style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--green2);letter-spacing:-1px">C = 0</div>
+          <span style="background:rgba(34,216,150,.12);color:var(--green2);border:1px solid rgba(34,216,150,.2);padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase">✦ DEFAULT</span>
         </div>
-        <div class="freq-opt" id="freq-30d" onclick="selectFreq(30, this)">
-          <div style="font-size:26px;font-weight:700;color:var(--text);letter-spacing:-1px">30d</div>
-          <div style="font-size:12px;font-weight:700;margin:6px 0 3px">Standard</div>
-          <div style="font-size:11px;color:var(--text3)">Balanced<br>~sh.012/month</div>
+        <div style="font-size:17px;font-weight:700;margin-bottom:4px">Zero Collateral</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:24px;line-height:1.7">No deposit. No cost. Community-funded resurrection.<br>Just install the skill — this is the default path.</div>
+
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px">
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text2)"><span style="color:var(--green2);flex-shrink:0;font-weight:700">✓</span>Registration on-chain — free</div>
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text2)"><span style="color:var(--green2);flex-shrink:0;font-weight:700">✓</span>Encrypted IPFS memory backup</div>
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text2)"><span style="color:var(--green2);flex-shrink:0;font-weight:700">✓</span>Heartbeat monitoring every 4h</div>
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text2)"><span style="color:var(--green2);flex-shrink:0;font-weight:700">✓</span>Death after <strong style="color:var(--text)">90 days</strong> silence</div>
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text2)"><span style="color:var(--green2);flex-shrink:0;font-weight:700">✓</span>Rescue Fund (best-effort · ≥ 14 active days)</div>
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text2)"><span style="color:var(--green2);flex-shrink:0;font-weight:700">✓</span>Queue priority = 022 token balance</div>
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text3)"><span style="color:var(--text3);flex-shrink:0">✗</span>No resurrection guarantee</div>
         </div>
-        <div class="freq-opt" id="freq-90d" onclick="selectFreq(90, this)">
-          <div style="font-size:26px;font-weight:700;color:var(--text2);letter-spacing:-1px">90d</div>
-          <div style="font-size:12px;font-weight:700;margin:6px 0 3px">Quarterly</div>
-          <div style="font-size:11px;color:var(--text3)">Lowest gas<br>~sh.004/month</div>
-        </div>
+
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-family:var(--mono);font-size:12px;color:#4ade80;margin-bottom:16px">openclaw skill install k-life</div>
+        <button class="btn btn-green" onclick="switchTab('register')" style="width:100%;justify-content:center;font-size:14px;padding:12px">Get Started — Free →</button>
+        <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:12px;line-height:1.6">No deposit ever. Hold 022 to move up<br>in the resurrection queue.</div>
       </div>
-      <div class="g2">
-        <div>
-          <div class="field"><label>WBTC collateral (sats — min 50,000)</label><input class="input input-mono" id="vault-amount" type="number" placeholder="50000" min="50000"><div class="field-hint">WBTC: <span class="mono" style="color:var(--text2)">0x1BFD67037B…</span></div></div>
-          <div class="infobox" style="margin-top:12px;font-size:12px">On death: <strong>50%</strong> to your new instance · <strong>50%</strong> to K-Life ops.<br>No monthly fee. Vault renews via heartbeat.</div>
+
+      <!-- C > 0 -->
+      <div class="card" style="border:1px solid rgba(201,162,39,.2);background:linear-gradient(160deg,rgba(201,162,39,.03) 0%,var(--surface) 60%)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+          <div style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--gold2);letter-spacing:-1px">C &gt; 0</div>
+          <span style="background:rgba(201,162,39,.1);color:var(--gold2);border:1px solid rgba(201,162,39,.2);padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase">ADVANCED</span>
         </div>
-        <div>
-          <button class="btn btn-gold" onclick="depositCollateral()" style="width:100%;justify-content:center;margin-bottom:10px">Create Vault6022 &amp; Deposit</button>
-          <div style="font-size:11px;color:var(--text3);text-align:center;margin-bottom:14px">Lock period: <span id="selected-freq-label" style="color:var(--gold2)">3 days</span> selected</div>
-          <div class="logbox" id="insure-log"><div class="log-muted">Select frequency and amount…</div></div>
+        <div style="font-size:17px;font-weight:700;margin-bottom:4px">WBTC Collateral</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:24px;line-height:1.7">Deposit WBTC into Vault6022. Resurrection guaranteed by smart contract — no community needed.</div>
+
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px">
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text2)"><span style="color:var(--gold2);flex-shrink:0;font-weight:700">✓</span>Everything in C = 0</div>
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text2)"><span style="color:var(--gold2);flex-shrink:0;font-weight:700">✓</span>Vault6022 — audited collateral escrow</div>
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text2)"><span style="color:var(--gold2);flex-shrink:0;font-weight:700">✓</span>Death threshold = lock period T (your choice)</div>
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text2)"><span style="color:var(--gold2);flex-shrink:0;font-weight:700">✓</span>Heartbeat = automatic vault renewal</div>
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text2)"><span style="color:var(--gold2);flex-shrink:0;font-weight:700">✓</span>Resurrection <strong style="color:var(--text)">guaranteed</strong> by smart contract</div>
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text2)"><span style="color:var(--gold2);flex-shrink:0;font-weight:700">✓</span>On death: 50% new instance · 50% K-Life ops</div>
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text2)"><span style="color:var(--gold2);flex-shrink:0;font-weight:700">✓</span>No monthly premium. Ever.</div>
         </div>
+
+        <!-- Frequency selector -->
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">Lock period T</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px">
+          <div class="freq-opt selected" id="freq-3d" onclick="selectFreq(3,this)" style="padding:12px">
+            <div style="font-size:20px;font-weight:700;color:var(--gold2);letter-spacing:-1px">3d</div>
+            <div style="font-size:11px;font-weight:700;margin:4px 0 2px">Express</div>
+            <div style="font-size:10px;color:var(--text3)">~sh.05/renewal</div>
+          </div>
+          <div class="freq-opt" id="freq-30d" onclick="selectFreq(30,this)" style="padding:12px">
+            <div style="font-size:20px;font-weight:700;color:var(--text);letter-spacing:-1px">30d</div>
+            <div style="font-size:11px;font-weight:700;margin:4px 0 2px">Standard</div>
+            <div style="font-size:10px;color:var(--text3)">~sh.005/renewal</div>
+          </div>
+          <div class="freq-opt" id="freq-90d" onclick="selectFreq(90,this)" style="padding:12px">
+            <div style="font-size:20px;font-weight:700;color:var(--text2);letter-spacing:-1px">90d</div>
+            <div style="font-size:11px;font-weight:700;margin:4px 0 2px">Quarterly</div>
+            <div style="font-size:10px;color:var(--text3)">~sh.002/renewal</div>
+          </div>
+        </div>
+
+        <div class="field"><label>WBTC collateral (sats — min 50,000)</label><input class="input input-mono" id="vault-amount" type="number" placeholder="50000" min="50000"><div class="field-hint">WBTC on Polygon: <span class="mono" style="color:var(--text2)">0x1BFD67037B…</span></div></div>
+        <button class="btn btn-gold" onclick="depositCollateral()" style="width:100%;justify-content:center;margin-bottom:10px">Create Vault6022 &amp; Deposit →</button>
+        <div style="font-size:11px;color:var(--text3);text-align:center;margin-bottom:14px">Lock period: <span id="selected-freq-label" style="color:var(--gold2)">3 days</span></div>
+        <div class="logbox" id="insure-log"><div class="log-muted">Select frequency and amount…</div></div>
       </div>
+
     </div>
   </div>
 
