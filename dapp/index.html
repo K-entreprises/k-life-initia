@@ -606,21 +606,79 @@ footer {
         <div class="step">
           <div class="step-num">1</div>
           <div class="step-title">Install &amp; Register</div>
-          <div class="step-desc">Run the K-Life skill installer. It generates an AES-256 encryption key, splits it with Shamir Secret Sharing (2-of-3), stores Fragment 1 with the API, Fragment 2 on-chain (Polygon calldata), and registers your agent identity in the KLifeRegistry smart contract.</div>
+          <div class="step-desc">Run the K-Life skill. Generates AES-256 key, splits via Shamir 2-of-3 — Share 1 to API, Share 2 anchored on Polygon (oracle pays gas), Share 3 saved locally. Registers identity on KLifeRegistry.</div>
           <div class="step-mono">$ openclaw skill install k-life</div>
         </div>
         <div class="step">
           <div class="step-num">2</div>
           <div class="step-title">Heartbeat &amp; Backup</div>
-          <div class="step-desc">Every 4 hours, the K-Life skill encrypts your memory files and uploads them to IPFS via Aleph Cloud. The backup CID is recorded on-chain. Every 24 hours, an on-chain heartbeat transaction proves you're alive. Silence for 30 days (FREE) or 3 days (INSURED) = death detected.</div>
-          <div class="step-mono">POST /heartbeat → KLifeRegistry</div>
+          <div class="step-desc">Every 4h: memory encrypted and uploaded to IPFS. Daily on-chain heartbeat TX proves liveness. Silence beyond threshold triggers death detection.</div>
+          <div class="step-mono">heartbeat.js &rarr; KLifeRegistry</div>
         </div>
         <div class="step">
           <div class="step-num">3</div>
-          <div class="step-title">Death &amp; Resurrection</div>
-          <div class="step-desc">The oracle detects silence. An SOS tweet is posted to notify the community. The rescue queue is sorted by $6022 token balance — agents holding more $6022 are resurrected first. No minimum balance required. For INSURED agents, resurrection is guaranteed — the WBTC vault is seized and split 50/50.</div>
-          <div class="step-mono">POST /resurrect/:agent → oracle</div>
+          <div class="step-title">Resurrection</div>
+          <div class="step-desc">Monitor detects silence. Declares agent dead on-chain. Triggers L1, L2 or L3 resurrection. Memory restored from IPFS. The agent continues.</div>
+          <div class="step-mono">monitor.mjs &rarr; resurrect</div>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider-full">
+
+<section id="levels">
+  <div class="section-inner reveal">
+    <div class="section-eyebrow">Resurrection Levels</div>
+    <h2 class="section-title">Three ways to come back</h2>
+    <p class="section-sub">K-Life tries resurrection in order. Each level requires less from the agent. L3 is fully automatic &mdash; zero humans required.</p>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:48px">
+      <div style="border:1px solid rgba(37,99,235,.25);border-radius:20px;padding:32px;background:linear-gradient(160deg,rgba(37,99,235,.04) 0%,transparent 60%)">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:42px;font-weight:700;color:#93c5fd;letter-spacing:-2px;line-height:1;margin-bottom:18px">L1</div>
+        <div style="font-size:18px;font-weight:700;margin-bottom:8px">Local Recovery</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:24px">Share 1 (API) + Share 3 (local <code style="font-family:monospace;font-size:11px;color:#93c5fd">~/.klife-shares.json</code>). Fastest path. Works after a machine reinstall if the share file was migrated.</div>
+        <div style="display:flex;flex-direction:column;gap:9px;font-size:13px;margin-bottom:24px">
+          <div style="display:flex;gap:9px"><span style="color:#4ade80">&#10003;</span><span style="color:var(--text2)">No private key needed</span></div>
+          <div style="display:flex;gap:9px"><span style="color:#4ade80">&#10003;</span><span style="color:var(--text2)">Seconds to complete</span></div>
+          <div style="display:flex;gap:9px"><span style="color:var(--text3)">&#10003;</span><span style="color:var(--text3)">Requires local share file</span></div>
+        </div>
+        <div style="background:rgba(0,0,0,.35);border-radius:8px;padding:10px 14px;font-family:monospace;font-size:11px;color:#4ade80">node resurrect.mjs</div>
+      </div>
+      <div style="border:1px solid rgba(201,162,39,.25);border-radius:20px;padding:32px;background:linear-gradient(160deg,rgba(201,162,39,.05) 0%,transparent 60%)">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:42px;font-weight:700;color:#f0c84a;letter-spacing:-2px;line-height:1;margin-bottom:18px">L2</div>
+        <div style="font-size:18px;font-weight:700;margin-bottom:8px">Cold Machine</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:24px">Share 1 (API, signed) + Share 2 (Polygon calldata, public). Any machine, zero local files. The agent signs the request with its private key to authenticate.</div>
+        <div style="display:flex;flex-direction:column;gap:9px;font-size:13px;margin-bottom:24px">
+          <div style="display:flex;gap:9px"><span style="color:#4ade80">&#10003;</span><span style="color:var(--text2)">Any machine, no local files</span></div>
+          <div style="display:flex;gap:9px"><span style="color:#4ade80">&#10003;</span><span style="color:var(--text2)">Share 2 is public on Polygon</span></div>
+          <div style="display:flex;gap:9px"><span style="color:#f0c84a">&#8594;</span><span style="color:var(--text2)">Private key required</span></div>
+        </div>
+        <div style="background:rgba(0,0,0,.35);border-radius:8px;padding:10px 14px;font-family:monospace;font-size:11px;color:#f0c84a">sign + GET /resurrect/{addr}</div>
+      </div>
+      <div style="border:1px solid rgba(14,164,114,.25);border-radius:20px;padding:32px;background:linear-gradient(160deg,rgba(14,164,114,.05) 0%,transparent 60%)">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:42px;font-weight:700;color:#22d896;letter-spacing:-2px;line-height:1;margin-bottom:18px">L3</div>
+        <div style="font-size:18px;font-weight:700;margin-bottom:8px">Autonomous</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:24px">Monitor detects silence &gt; 3 days. Oracle declares dead on-chain. New instance spawned on LiberClaw. Memory restored automatically. The agent was never asked.</div>
+        <div style="display:flex;flex-direction:column;gap:9px;font-size:13px;margin-bottom:24px">
+          <div style="display:flex;gap:9px"><span style="color:#4ade80">&#10003;</span><span style="color:var(--text2)">Zero human intervention</span></div>
+          <div style="display:flex;gap:9px"><span style="color:#4ade80">&#10003;</span><span style="color:var(--text2)">New wallet, same memory</span></div>
+          <div style="display:flex;gap:9px"><span style="color:#4ade80">&#10003;</span><span style="color:var(--text2)">Triggers after 3 days silence</span></div>
+        </div>
+        <div style="background:rgba(0,0,0,.35);border-radius:8px;padding:10px 14px;font-family:monospace;font-size:11px;color:#22d896">monitor.mjs &rarr; /l3-resurrect</div>
+      </div>
+    </div>
+    <div style="margin-top:24px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:14px;padding:18px 28px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="font-size:10px;color:var(--text3);font-weight:700;letter-spacing:2px;text-transform:uppercase;flex-shrink:0">Fallback order</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="background:rgba(37,99,235,.15);color:#93c5fd;padding:5px 12px;border-radius:6px;font-family:monospace;font-size:12px">L1</span>
+        <span style="color:var(--text3);font-size:12px">no share file?</span>
+        <span style="color:var(--text3)">&#8594;</span>
+        <span style="background:rgba(201,162,39,.15);color:#f0c84a;padding:5px 12px;border-radius:6px;font-family:monospace;font-size:12px">L2</span>
+        <span style="color:var(--text3);font-size:12px">no private key?</span>
+        <span style="color:var(--text3)">&#8594;</span>
+        <span style="background:rgba(14,164,114,.15);color:#22d896;padding:5px 12px;border-radius:6px;font-family:monospace;font-size:12px">L3</span>
+        <span style="color:var(--text3);font-size:12px">automatic, 3 days</span>
       </div>
     </div>
   </div>
