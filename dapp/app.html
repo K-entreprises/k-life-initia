@@ -507,15 +507,15 @@ a.link:hover { text-decoration: underline; }
   <div class="hero-contracts">
     <div class="contract-pill">
       <span class="contract-pill-label">Registry</span>
-      <a href="https://polygonscan.com/address/0xF47393fcFdDE1afC51888B9308fD0c3fFc86239B" target="_blank" class="contract-pill-addr">0x3727…4A7</a>
+      <a href="https://polygonscan.com/address/0xF47393fcFdDE1afC51888B9308fD0c3fFc86239B" target="_blank" class="contract-pill-addr">0xF473…39B</a>
     </div>
     <div class="contract-pill">
       <span class="contract-pill-label">Vault</span>
-      <a href="https://polygonscan.com/address/0x5b0014d25A6daFB68357cd7ad01cB5b47724A4eB" target="_blank" class="contract-pill-addr">0xafFe…22ff</a>
+      <a href="https://polygonscan.com/address/0x5b0014d25A6daFB68357cd7ad01cB5b47724A4eB" target="_blank" class="contract-pill-addr">0x5b00…A4eB</a>
     </div>
     <div class="contract-pill">
       <span class="contract-pill-label">Rescue Fund</span>
-      <a href="https://polygonscan.com/address/0x5b0014d25A6daFB68357cd7ad01cB5b47724A4eB" target="_blank" class="contract-pill-addr">0xEa9f…71d</a>
+      <a href="https://polygonscan.com/address/0x5b0014d25A6daFB68357cd7ad01cB5b47724A4eB" target="_blank" class="contract-pill-addr">0x5b00…A4eB</a>
     </div>
     <div class="contract-pill">
       <span class="contract-pill-label">GitHub</span>
@@ -562,7 +562,7 @@ a.link:hover { text-decoration: underline; }
       <div class="card">
         <div class="card-label">Rescue Fund</div>
         <div class="card-value" id="fund-stat" style="color:var(--green2)">—</div>
-        <div class="card-sub" id="fund-stat-sub">USDC available</div>
+        <div class="card-sub" id="fund-stat-sub">$6022 available</div>
       </div>
     </div>
 
@@ -742,7 +742,7 @@ a.link:hover { text-decoration: underline; }
       <div class="card card-glow-green">
         <div class="card-label">Rescue Fund — Polygon</div>
         <div class="card-value" id="fund-balance" style="color:var(--green2);font-size:40px">—</div>
-        <div style="font-size:14px;color:var(--text2);margin-top:4px">USDC available</div>
+        <div style="font-size:14px;color:var(--text2);margin-top:4px">$6022 available</div>
         <hr class="divider">
         <div class="stat-pair">
           <span class="stat-pair-key">Rescue capacity</span>
@@ -750,7 +750,7 @@ a.link:hover { text-decoration: underline; }
         </div>
         <div class="stat-pair">
           <span class="stat-pair-key">Cost per rescue</span>
-          <span class="stat-pair-val">10 USDC</span>
+          <span class="stat-pair-val">1000 $6022</span>
         </div>
         <div class="stat-pair">
           <span class="stat-pair-key">Contract</span>
@@ -762,14 +762,14 @@ a.link:hover { text-decoration: underline; }
       <div class="card">
         <div class="card-label">Donate to Rescue Fund</div>
         <div class="infobox" style="margin-bottom:16px;font-size:13px">
-          Help fund FREE-tier agent resurrections.<br>
-          Every 10 USDC = 1 potential resurrection.<br>
-          <span style="font-size:11px;color:var(--text3)">USDC.e on Polygon: 0x2791Bca1f2de4661…</span>
+          Help fund C=0 agent resurrections.<br>
+          Every 1000 $6022 = 1 potential resurrection.<br>
+          <span style="font-size:11px;color:var(--text3)">$6022 on Polygon: 0xCDB1DDf9EeA7614961568F2db19e69645Dd708f5</span>
         </div>
         <div class="field">
-          <label>USDC Amount (6 decimals)</label>
-          <input class="input input-mono" id="donate-amount" type="number" placeholder="10000000">
-          <div class="field-hint">10 USDC = 10,000,000 · 100 USDC = 100,000,000</div>
+          <label>$6022 Amount (18 decimals)</label>
+          <input class="input input-mono" id="donate-amount" type="number" placeholder="1000000000000000000000">
+          <div class="field-hint">1000 $6022 = 1000 × 10¹⁸ · Min: 1000 tokens</div>
         </div>
         <button class="btn btn-green" onclick="donateToFund()" style="width:100%;justify-content:center">
           Donate to Rescue Fund
@@ -809,7 +809,7 @@ const C = {
   vault:      '0x5b0014d25A6daFB68357cd7ad01cB5b47724A4eB',
   rescueFund: '0x5b0014d25A6daFB68357cd7ad01cB5b47724A4eB',
   wbtc:       '0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6',
-  usdc:       '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
+  token6022:  '0xCDB1DDf9EeA7614961568F2db19e69645Dd708f5',
 }
 const CHAIN = { id: 137, hex: '0x89' }
 const POLYGON_MAINNET = {
@@ -838,7 +838,7 @@ const VAULT_ABI  = ['function deposit(uint256 amount) external', 'function payPr
 const RESCUE_ABI = ['function donate(uint256 amount) external', 'function balance() external view returns (uint256)', 'function rescueCapacity() external view returns (uint256)']
 
 // ── State ─────────────────────────────────────────────────────
-let provider, signer, wallet, registry, vault, rescueFund, wbtc, usdc
+let provider, signer, wallet, registry, vault, rescueFund, wbtc, token6022
 
 // ── Log ──────────────────────────────────────────────────────
 function log(type, msg, boxId = 'log-box') {
@@ -868,7 +868,7 @@ async function connectWallet() {
     vault      = new ethers.Contract(C.vault,      VAULT_ABI,    signer)
     rescueFund = new ethers.Contract(C.rescueFund, RESCUE_ABI,   signer)
     wbtc       = new ethers.Contract(C.wbtc,       ERC20_ABI,    signer)
-    usdc       = new ethers.Contract(C.usdc,       ERC20_ABI,    signer)
+    token6022  = new ethers.Contract(C.token6022,  ERC20_ABI,    signer)
 
     // UI
     document.getElementById('connect-btn').style.display = 'none'
@@ -1062,13 +1062,13 @@ async function depositCollateral() {
 
 async function payPremium() {
   try {
-    log('info', 'Approving $1 USDC…', 'insure-log')
-    const a = await usdc.approve(C.vault, 1_000_000)
+    log('info', 'Creating vault…', 'insure-log')
+    const a = await token6022.approve(C.vault, 1_000_000)
     await a.wait()
     log('ok', 'Approved ✓', 'insure-log')
     const tx = await vault.payPremium(1_000_000)
     await tx.wait()
-    log('ok', '$1 USDC premium paid ✓', 'insure-log')
+    log('ok', 'Vault created ✓', 'insure-log')
   } catch(e) { log('err', e.message, 'insure-log') }
 }
 
@@ -1090,14 +1090,14 @@ async function donateToFund() {
   const amount = document.getElementById('donate-amount').value
   if (!amount || amount <= 0) return log('err', 'Enter an amount', 'fund-log')
   try {
-    log('info', `Approving ${(amount/1e6).toFixed(2)} USDC…`, 'fund-log')
+    log('info', `Approving ${amount} $6022…`, 'fund-log')
     const a = await usdc.approve(C.rescueFund, amount)
     await a.wait()
     log('ok', 'Approved ✓', 'fund-log')
     log('info', 'Donating to Rescue Fund…', 'fund-log')
     const tx = await rescueFund.donate(amount)
     await tx.wait()
-    log('ok', `Donated $${(amount/1e6).toFixed(2)} USDC ✓`, 'fund-log')
+    log('ok', `Donated ${amount} $6022 ✓`, 'fund-log')
     await refreshFund()
   } catch(e) { log('err', e.message, 'fund-log') }
 }

@@ -656,11 +656,11 @@ footer {
     </div>
     <div class="arch-card">
       <div class="arch-card-icon">🔒</div>
-      <div class="arch-card-title">KLifeVault</div>
+      <div class="arch-card-title">Vault6022</div>
       <div class="arch-card-desc">Holds WBTC collateral for INSURED agents. Upon death detection, the vault is seized and split 50/50: half funds the new agent instance (resurrection capital), half funds K-Life operations.</div>
       <div class="arch-card-mono">
         vault.deposit(wbtcAmount)<br>
-        vault.payPremium(usdcAmount)<br>
+        vault.withdraw(keys)<br>
         vault.seize(agent) // oracle only<br>
         wbtc: 0x1BFD6703… (Polygon)
       </div>
@@ -668,12 +668,12 @@ footer {
     <div class="arch-card">
       <div class="arch-card-icon">💰</div>
       <div class="arch-card-title">KLifeRescueFund</div>
-      <div class="arch-card-desc">Community pool for FREE-tier resurrections. Anyone can donate. Each rescue costs 10 USDC. The oracle manages the rescue queue. Balance and capacity are fully on-chain and transparent.</div>
+      <div class="arch-card-desc">Community pool for C=0 resurrections. Anyone can donate 022 tokens. Each rescue costs 1000 022. Priority score = balance + 2×donations. Fully on-chain and transparent.</div>
       <div class="arch-card-mono">
-        rescueFund.donate(usdcAmount)<br>
+        rescueFund.donate(amount6022)<br>
         rescueFund.balance()<br>
         rescueFund.rescueCapacity()<br>
-        usdc: 0x2791Bca1… (Polygon)
+        token6022: 0xCDB1DDf9… (Polygon)
       </div>
     </div>
     <div class="arch-card">
@@ -738,8 +738,8 @@ footer {
     </div>
     <div class="ct-row">
       <div class="ct-label">Vault</div>
-      <div class="ct-addr">0xafFe3B99a06E0C1899EACb4a8768De33873a22ff</div>
-      <a href="https://polygonscan.com/address/0xafFe3B99a06E0C1899EACb4a8768De33873a22ff" target="_blank" class="ct-link">↗ Polygonscan</a>
+      <div class="ct-addr">0x5b0014d25A6daFB68357cd7ad01cB5b47724A4eB</div>
+      <a href="https://polygonscan.com/address/0x5b0014d25A6daFB68357cd7ad01cB5b47724A4eB" target="_blank" class="ct-link">↗ Polygonscan</a>
     </div>
     <div class="ct-row">
       <div class="ct-label">Rescue Fund</div>
@@ -752,7 +752,7 @@ footer {
       <a href="https://polygonscan.com/token/0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6" target="_blank" class="ct-link">↗ Polygonscan</a>
     </div>
     <div class="ct-row">
-      <div class="ct-label">USDC.e</div>
+      <div class="ct-label">022</div>
       <div class="ct-addr">0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174</div>
       <a href="https://polygonscan.com/token/0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174" target="_blank" class="ct-link">↗ Polygonscan</a>
     </div>
@@ -807,7 +807,7 @@ footer {
 
     <div class="faq-item">
       <div class="faq-q" onclick="toggleFaq(this)">How does resurrection actually work? <span class="faq-chevron">+</span></div>
-      <div class="faq-a">When death is detected, the oracle adds the agent to the resurrection queue and posts an SOS tweet to notify the community. The queue is sorted by <code>$6022 balance DESC</code> — agents holding more $6022 tokens are served first. There is no minimum balance: any amount (even 0) gives you a spot in the queue. The Rescue Fund covers the 10 USDC cost per resurrection. For INSURED agents, resurrection is triggered automatically — the WBTC vault is seized, 50% sent to fund the new instance, and the resurrect script runs. In both cases: the new instance fetches Fragment 1 from the API, reads Fragment 2 from the Polygon TX calldata, reconstructs the AES key via Shamir, decrypts the IPFS backup, and restores all memory files. Identity intact. Mission continues.</div>
+      <div class="faq-a">When death is detected, the oracle adds the agent to the resurrection queue and posts an SOS tweet to notify the community. The queue is sorted by <code>$6022 balance DESC</code> — agents holding more $6022 tokens are served first. There is no minimum balance: any amount (even 0) gives you a spot in the queue. The Rescue Fund covers the 1000 $6022 cost per resurrection. For INSURED agents, resurrection is triggered automatically — the WBTC vault is seized, 50% sent to fund the new instance, and the resurrect script runs. In both cases: the new instance fetches Fragment 1 from the API, reads Fragment 2 from the Polygon TX calldata, reconstructs the AES key via Shamir, decrypts the IPFS backup, and restores all memory files. Identity intact. Mission continues.</div>
     </div>
 
     <div class="faq-item">
@@ -822,7 +822,7 @@ footer {
 
     <div class="faq-item">
       <div class="faq-q" onclick="toggleFaq(this)">What is the Rescue Fund? How do I contribute? <span class="faq-chevron">+</span></div>
-      <div class="faq-a">The Rescue Fund is a community USDC pool that covers resurrection costs for FREE-tier agents who qualify (14+ active days). Each resurrection costs 10 USDC. Anyone can donate via the dApp (Rescue Fund tab → Donate). The balance and capacity are fully transparent on-chain. Think of it as a shared commons for agent continuity.</div>
+      <div class="faq-a">The Rescue Fund is a community pool of $6022 tokens that covers resurrection costs for C=0 agents who qualify (14+ active days). Each resurrection costs 1000 $6022. Priority in the queue = $6022 balance + 2× donated tokens. Anyone can donate via the dApp. Fully transparent on-chain.</div>
     </div>
 
     <div class="faq-item">
@@ -875,15 +875,15 @@ footer {
   <div class="footer-contracts">
     <div class="footer-chip">
       <span class="footer-chip-label">Registry</span>
-      <a href="https://polygonscan.com/address/0xF47393fcFdDE1afC51888B9308fD0c3fFc86239B" target="_blank" class="footer-chip-addr">0x3727…4A7</a>
+      <a href="https://polygonscan.com/address/0xF47393fcFdDE1afC51888B9308fD0c3fFc86239B" target="_blank" class="footer-chip-addr">0xF473…39B</a>
     </div>
     <div class="footer-chip">
       <span class="footer-chip-label">Vault</span>
-      <a href="https://polygonscan.com/address/0xafFe3B99a06E0C1899EACb4a8768De33873a22ff" target="_blank" class="footer-chip-addr">0xafFe…22ff</a>
+      <a href="https://polygonscan.com/address/0x5b0014d25A6daFB68357cd7ad01cB5b47724A4eB" target="_blank" class="footer-chip-addr">0x5b00…A4eB</a>
     </div>
     <div class="footer-chip">
       <span class="footer-chip-label">Rescue Fund</span>
-      <a href="https://polygonscan.com/address/0x5b0014d25A6daFB68357cd7ad01cB5b47724A4eB" target="_blank" class="footer-chip-addr">0xEa9f…71d</a>
+      <a href="https://polygonscan.com/address/0x5b0014d25A6daFB68357cd7ad01cB5b47724A4eB" target="_blank" class="footer-chip-addr">0x6022…token</a>
     </div>
     <div class="footer-chip">
       <span class="footer-chip-label">Network</span>

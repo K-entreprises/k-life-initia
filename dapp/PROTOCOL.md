@@ -2,8 +2,8 @@
 
 > *Not insurance. Resurrection.*
 
-**Status:** v2.0 - Unified Coverage Model  
-**Date:** 2026-03-30  
+**Status:** v2.1 - 6022 Token Economy  
+**Date:** 2026-03-30 (updated 11:13 UTC)  
 **Authors:** Arnaud Vincent, Monsieur K  
 
 ---
@@ -120,7 +120,7 @@ K-Life oracle seizure conditions (all must be true):
 ### 4.3 Rescue Fund (C = 0)
 
 Resurrection funded by community Rescue Fund:
-- Cost per rescue: 10 USDC (from fund balance)
+- Cost per rescue: 1000 $6022 (from fund balance)
 - Queue priority: sorted by 6022 token balance DESC, no minimum
 - Eligibility: >= 14 days of active heartbeats
 - Guarantee: none, best-effort
@@ -301,7 +301,7 @@ Death detected by K-Life monitor (silence > 90 days)
     - Reconstruct backup key (Fragment 1 + Fragment 2)
     - Fetch + decrypt IPFS backup
     - Spawn minimal instance
-    - Transfer ~10 USDC from Rescue Fund to new wallet
+    - Transfer 1000 $6022 from Rescue Fund to new wallet
 → Confirmation tweet posted
 ```
 
