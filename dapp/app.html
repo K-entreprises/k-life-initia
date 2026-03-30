@@ -9,29 +9,29 @@
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 <style>
 :root {
-  --bg:       #06060a;
-  --bg2:      #0d0d14;
-  --surface:  #111118;
-  --surface2: #18181f;
-  --surface3: #1f1f2a;
-  --border:   #252530;
-  --border2:  #2e2e3d;
-  --gold:     #d4a843;
-  --gold2:    #f0c060;
-  --gold-dim: #6b5020;
+  --bg:       #050508;
+  --bg2:      #0a0a10;
+  --surface:  #0f0f18;
+  --surface2: #161620;
+  --surface3: #1d1d2a;
+  --border:   #1e1e2e;
+  --border2:  #28283c;
+  --gold:     #c9a227;
+  --gold2:    #f0c84a;
+  --gold-dim: #3d2c08;
   --purple:   #8b5cf6;
   --purple2:  #a78bfa;
-  --green:    #10b981;
-  --green2:   #34d399;
+  --green:    #0ea472;
+  --green2:   #22d896;
   --red:      #ef4444;
   --orange:   #f59e0b;
   --blue:     #3b82f6;
-  --text:     #f1f0f5;
-  --text2:    #a09cb0;
-  --text3:    #5c5870;
+  --text:     #eeedf5;
+  --text2:    #9490b0;
+  --text3:    #4a4860;
   --mono:     'JetBrains Mono', monospace;
   --sans:     'Space Grotesk', system-ui, sans-serif;
-  --radius:   14px;
+  --radius:   16px;
   --glow-gold: 0 0 20px rgba(212,168,67,.2);
   --glow-green: 0 0 20px rgba(16,185,129,.2);
   --glow-red:   0 0 20px rgba(239,68,68,.2);
@@ -61,8 +61,9 @@ body::before {
 .bg-glow {
   position: fixed; inset: 0; pointer-events: none; z-index: 0;
   background:
-    radial-gradient(ellipse 800px 600px at 20% 10%, rgba(139,92,246,.06) 0%, transparent 60%),
-    radial-gradient(ellipse 600px 400px at 80% 80%, rgba(212,168,67,.05) 0%, transparent 60%);
+    radial-gradient(ellipse 800px 600px at 20% 10%, rgba(124,58,237,.07) 0%, transparent 60%),
+    radial-gradient(ellipse 600px 400px at 80% 80%, rgba(201,162,39,.06) 0%, transparent 60%),
+    radial-gradient(ellipse 400px 300px at 50% 50%, rgba(14,164,114,.03) 0%, transparent 70%);
 }
 
 /* ── Header ── */
@@ -73,7 +74,7 @@ header {
   height: 64px;
   background: rgba(6,6,10,.85);
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(255,255,255,.04);
 }
 
 .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
@@ -83,9 +84,9 @@ header {
   border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
   font-size: 18px;
-  box-shadow: var(--glow-gold);
+  box-shadow: 0 0 24px rgba(201,162,39,.35), inset 0 1px 0 rgba(255,255,255,.2);
 }
-.logo-name { font-size: 16px; font-weight: 700; letter-spacing: -.3px; }
+.logo-name { font-size: 16px; font-weight: 700; letter-spacing: -.4px; color:var(--text); }
 .logo-tag  { font-size: 10px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; }
 
 .header-right { display: flex; align-items: center; gap: 10px; }
@@ -129,11 +130,13 @@ header {
 .btn:disabled { opacity: .4; cursor: not-allowed; }
 
 .btn-gold {
-  background: linear-gradient(135deg, var(--gold) 0%, var(--gold2) 100%);
-  color: #000; border-color: var(--gold);
-  box-shadow: 0 0 16px rgba(212,168,67,.25), inset 0 1px 0 rgba(255,255,255,.1);
+  background: linear-gradient(135deg, #b8911e 0%, var(--gold2) 50%, #b8911e 100%);
+  background-size: 200% 100%; background-position: 100%;
+  color: #000; border-color: rgba(201,162,39,.6); font-weight: 700;
+  box-shadow: 0 0 20px rgba(201,162,39,.3), inset 0 1px 0 rgba(255,255,255,.2);
+  transition: all .3s ease;
 }
-.btn-gold:hover { box-shadow: 0 0 28px rgba(212,168,67,.4); }
+.btn-gold:hover { background-position: 0%; box-shadow: 0 0 36px rgba(201,162,39,.5), inset 0 1px 0 rgba(255,255,255,.2); }
 
 .btn-ghost {
   background: transparent; color: var(--text2); border-color: var(--border2);
@@ -162,7 +165,7 @@ header {
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 16px;
   padding: 24px;
   position: relative; overflow: hidden;
 }
@@ -269,8 +272,8 @@ header {
 }
 .tab:hover { color: var(--text2); }
 .tab.active {
-  background: var(--surface3); color: var(--text);
-  border-color: var(--border2);
+  background: var(--surface2); color: var(--text);
+  border-color: rgba(201,162,39,.15);
   box-shadow: 0 1px 4px rgba(0,0,0,.4);
 }
 .tab-icon { font-size: 14px; }
@@ -311,7 +314,7 @@ header {
 .progress { background: var(--surface3); border-radius: 999px; height: 6px; overflow: hidden; }
 .progress-fill {
   height: 100%; border-radius: 999px;
-  background: linear-gradient(90deg, var(--gold) 0%, var(--gold2) 100%);
+  background: linear-gradient(90deg, #b8911e 0%, var(--gold2) 100%);
   transition: width .5s ease;
   position: relative;
 }
@@ -411,7 +414,7 @@ a.link:hover { text-decoration: underline; }
 
 /* ── Tier cards ── */
 .tier-card {
-  border-radius: var(--radius); border: 2px solid var(--border);
+  border-radius: 16px; border: 2px solid var(--border);
   padding: 22px; cursor: default; transition: all .2s;
   position: relative; overflow: hidden;
 }
@@ -459,7 +462,7 @@ a.link:hover { text-decoration: underline; }
 <!-- ── Header ── -->
 <header>
   <a class="logo" href="#">
-    <div class="logo-mark">⚰</div>
+    <div class="logo-mark">♾</div>
     <div>
       <div class="logo-name">K-Life Protocol</div>
       <div class="logo-tag">Resurrection Infrastructure</div>
