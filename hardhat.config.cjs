@@ -48,3 +48,6 @@ module.exports = {
     currency: "USD",
   },
 }
+
+// Sourcify support
+module.exports.sourcify = { enabled: true }
