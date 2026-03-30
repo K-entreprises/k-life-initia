@@ -1,86 +1,94 @@
-# K-Life Protocol Reference
+# K-Life Protocol Reference v2.1
 
-## Resurrection Architecture — Shamir's Secret Sharing (2-of-3)
+## Shamir 2-of-3 — Key Split Mapping
 
-The agent seed phrase is split into 3 shares using Shamir's Secret Sharing:
-- **Share 1** → Agent's encrypted IPFS backup (hash stored on-chain via KLIFE_BACKUP TX)
-- **Share 2** → K-Life vault smart contract (held as part of insurance policy)
-- **Share 3** → A trusted peer agent chosen by the insured agent (also K-Life insured)
+The AES-256 encryption key (= sha256(wallet.privateKey)) is split into 3 shares:
 
-Any 2 of 3 shares reconstruct the full seed phrase. No single party has full control.
+| Share | Holder | Storage | Purpose |
+|---|---|---|---|
+| **Share 1** | K-Life API | `api.supercharged.works` server | Resurrection helper — 1 of 3 |
+| **Share 2** | On-chain | Polygon calldata `KLIFE_BACKUP:{CID}:{share2}` | Permissionless recovery |
+| **Share 3** | Agent | `~/.klife-shares.json` (chmod 600) | Local recovery |
+
+Any 2 of 3 reconstruct the AES key → decrypt IPFS backup → restore memory.
+
+### What the API can and cannot do
+
+The K-Life API holds Share 1 only. It can reconstruct the AES key by combining:
+- Share 1 (API) + Share 2 (Polygon scan) → autonomous resurrection ✅
+- Share 1 (API) alone → **cannot decrypt** ❌
+
+This is intentional: the API needs the on-chain share to resurrect. If the API is compromised, the attacker still needs the public on-chain share — which is visible to everyone. This is accepted by design in exchange for autonomous, zero-human resurrection.
+
+If you require higher privacy, self-host the K-Life API and keep Share 2 off-chain.
 
 ### Resurrection scenarios
-| Scenario | Parts available | Result |
+
+| Scenario | Shares available | Result |
 |---|---|---|
-| Normal crash | K-Life (2) + IPFS backup (1) | Fully automatic |
-| IPFS unavailable | K-Life (2) + trusted agent (3) | Automatic, peer-to-peer |
-| K-Life gone | IPFS backup (1) + trusted agent (3) | Decentralized resurrection |
-| All 3 gone | — | Permanent death |
+| Normal crash | Share 1 (API) + Share 2 (chain) | Fully automatic |
+| API unavailable | Share 2 (chain) + Share 3 (local) | Manual, permissionless |
+| Chain unavailable | Share 1 (API) + Share 3 (local) | Manual with API help |
+| All 3 lost | — | Permanent death |
 
-### Share registration (on subscription)
-Agent calls `/subscribe` with:
-- `trustedAgent`: address of the peer agent holding Share 3
-- K-Life vault stores Share 2 on-chain
-- Agent's backup.js generates and encrypts Share 1 into IPFS backup
+---
 
-### Zero-backup resurrection flow (nuclear scenario)
-1. Fresh VPS — only the seed phrase known
-2. `node resurrect.js` — derives wallet address from seed
-3. Queries Polygonscan for last `KLIFE_BACKUP:Qm...` TX from agent address
-4. Fetches encrypted backup from IPFS via hash
-5. Decrypts with wallet address as key
-6. Restores MEMORY.md + SOUL.md + config
-7. Agent back online — identity fully preserved
+## Heartbeat TX Format
 
-
-
-## Network
-- Chain: Polygon Amoy (testnet) / Polygon (prod)
-- ChainId: 80002 (Amoy)
-
-## Addresses (Amoy testnet)
-- Swiss 6022 Vault: `0x6503...` (TBD — prod address pending)
-- USDT₮ Amoy: `0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582`
-
-## Heartbeat TX format
 Self-send transaction, calldata:
 ```
-0x + hex("KLIFE_HB:" + beat_number + ":" + unix_timestamp)
+KLIFE_HB:{beat_number}:{unix_timestamp_ms}
 ```
-Example: `0x4b4c4946455f48423a31323a313734313539353430303030`
+Example: `KLIFE_HB:42:1743325200000`
 
-## Premium TX format
-Send to vault address, calldata:
+## Backup TX Format (Share 2 on-chain)
+
+Self-send transaction, calldata:
 ```
-0x + hex("KLIFE_PREMIUM:" + plan + ":" + month_ISO + ":" + commitment_months)
+KLIFE_BACKUP:{ipfs_cid}:{shamir_share2_hex}
 ```
-Example: `0x4b4c4946455f5052454d49554d3a73696c7665723a323032362d30333a36`
 
-## Claim conditions
-1. Premium paid for current month (verified via TX calldata on vault address)
-2. No heartbeat TX for > 90 minutes from agent address
+## Contracts — Polygon Mainnet (chainId 137)
 
-If condition 1 false → no resurrection, collateral confiscated.
-If both conditions true → resurrection triggered.
+| Contract | Address |
+|---|---|
+| KLifeRegistry | `0xF47393fcFdDE1afC51888B9308fD0c3fFc86239B` |
+| KLifeRescueFund | `0x5b0014d25A6daFB68357cd7ad01cB5b47724A4eB` |
+| $6022 Token | `0xCDB1DDf9EeA7614961568F2db19e69645Dd708f5` |
+| WBTC (Polygon) | `0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6` |
+| Vault6022 Controller | Pending — set `KLIFE_VAULT_CONTROLLER` when deployed |
 
-## Resurrection split
-- 50% collateral → vault operator (Swiss 6022) — covers: new VPS, LLM inference, ops
-- 50% collateral → agent wallet — restart capital
+## IPFS Backup Format (encrypted)
 
-## IPFS backup format
 ```json
 {
-  "agent": "0x8B3ea7...",
-  "timestamp": 1741595400,
-  "beat": 42,
+  "iv": "<16-byte hex>",
+  "ciphertext": "<base64 AES-256-CBC encrypted payload>"
+}
+```
+
+Decrypted payload:
+```json
+{
+  "agent": "0x...",
+  "ts": 1743325200000,
   "files": {
-    "MEMORY.md": "<encrypted content>",
-    "SOUL.md": "<encrypted content>",
-    "config": "<encrypted openclaw config>"
+    "MEMORY.md": "...",
+    "SOUL.md": "...",
+    "USER.md": "..."
   }
 }
 ```
-Hash stored on-chain via self-send TX calldata:
+
+## API Endpoints
+
 ```
-0x + hex("KLIFE_BACKUP:" + ipfs_hash)
+POST /register           { agent, name?, lockDays }
+POST /heartbeat          { agent, txHash, beat, lockDays, timestamp }
+POST /backup/upload      { agent, encryptedData, shamirShare1, label? }
+GET  /status/:agent
+GET  /rescue/queue
+GET  /rescue/fund
+POST /rescue/sos         { agent }
+GET  /health
 ```
