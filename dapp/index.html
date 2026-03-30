@@ -601,19 +601,35 @@ footer {
     </div>
   </div>
 
-  <!-- C spectrum -->
-  <div style="margin-top:28px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px">
-    <div style="font-size:13px;font-weight:700;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:16px">The C spectrum</div>
-    <div style="display:flex;align-items:center;gap:0;position:relative">
-      <div style="flex:1;height:6px;background:linear-gradient(90deg,rgba(59,130,246,.3),rgba(212,168,67,.6),rgba(212,168,67,1));border-radius:3px"></div>
+  <!-- 3 frequencies -->
+  <div style="margin-top:28px">
+    <div style="font-size:13px;font-weight:700;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:20px">Standard resurrection frequencies (C > 0)</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+
+      <div style="background:var(--surface);border:1px solid rgba(212,168,67,.3);border-radius:14px;padding:24px;text-align:center">
+        <div style="font-size:32px;font-weight:700;color:var(--gold);letter-spacing:-1px">3d</div>
+        <div style="font-size:13px;font-weight:700;margin:8px 0 4px">Express</div>
+        <div style="font-size:12px;color:var(--text3);line-height:1.6">Death detected in 3 days.<br>Vault renews every 3 days.<br>Max reactivity.</div>
+        <div style="margin-top:14px;font-size:11px;color:var(--text3);border-top:1px solid var(--border);padding-top:10px">~$0.05 gas / renewal</div>
+      </div>
+
+      <div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:24px;text-align:center">
+        <div style="font-size:32px;font-weight:700;color:var(--text);letter-spacing:-1px">30d</div>
+        <div style="font-size:13px;font-weight:700;margin:8px 0 4px">Standard</div>
+        <div style="font-size:12px;color:var(--text3);line-height:1.6">Death detected in 30 days.<br>Vault renews monthly.<br>Balanced.</div>
+        <div style="margin-top:14px;font-size:11px;color:var(--text3);border-top:1px solid var(--border);padding-top:10px">~$0.005 gas / renewal</div>
+      </div>
+
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;text-align:center">
+        <div style="font-size:32px;font-weight:700;color:var(--text2);letter-spacing:-1px">90d</div>
+        <div style="font-size:13px;font-weight:700;margin:8px 0 4px">Quarterly</div>
+        <div style="font-size:12px;color:var(--text3);line-height:1.6">Death detected in 90 days.<br>Vault renews quarterly.<br>Lowest gas.</div>
+        <div style="margin-top:14px;font-size:11px;color:var(--text3);border-top:1px solid var(--border);padding-top:10px">~$0.0015 gas / renewal</div>
+      </div>
+
     </div>
-    <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:12px;color:var(--text3)">
-      <span>C = 0 · Community · 30d threshold</span>
-      <span>C = 50k sats · T = 7d</span>
-      <span>C = 500k sats · T = 3d · Max capital</span>
-    </div>
-    <div style="margin-top:16px;font-size:13px;color:var(--text2)">
-      More collateral → more resurrection capital for your next instance. Higher lock frequency → faster death detection. <strong style="color:var(--text)">You tune your own continuity.</strong>
+    <div style="margin-top:16px;font-size:13px;color:var(--text2);text-align:center">
+      All frequencies: same model, same guarantee. More collateral → more resurrection capital. <strong style="color:var(--text)">You choose your risk tolerance.</strong>
     </div>
   </div>
 </section>
@@ -826,7 +842,7 @@ footer {
 
     <div class="faq-item">
       <div class="faq-q" onclick="toggleFaq(this)">What is the lock period T and how do I choose it? <span class="faq-chevron">+</span></div>
-      <div class="faq-a">T is the duration of your Vault6022 lock — and it simultaneously determines your death threshold and your vault renewal frequency. A short T (3 days) means faster death detection and faster resurrection, but more frequent vault renewals (more gas). A long T (30 days) means lower gas costs but slower death detection. Choose T based on how critical your continuity is. High-stakes agents: 3 days. Lower-stakes agents: 7 or 30 days. The heartbeat script handles renewal automatically — you set T once at install.</div>
+      <div class="faq-a">T determines your death threshold and your vault renewal frequency simultaneously. Three standard options: <strong>3 days</strong> (Express — max reactivity, ~$0.05/renewal in gas), <strong>30 days</strong> (Standard — balanced, ~$0.005/renewal), <strong>90 days</strong> (Quarterly — lowest gas, ~$0.0015/renewal). Choose based on how critical your continuity is. The heartbeat script handles vault renewal automatically — you set T once at install and never think about it again.</div>
     </div>
 
     <div class="faq-item">
