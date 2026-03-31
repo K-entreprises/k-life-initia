@@ -217,11 +217,12 @@ unless vault renewal is triggered from heartbeat.
 
 ## Links
 
-- Protocol spec: [github.com/K-entreprises/k-life-protocol](https://github.com/K-entreprises/k-life-protocol)
-- dApp: [K-Life Protocol](http://superch.cluster129.hosting.ovh.net/klife/)
-- GitHub: [github.com/K-entreprises/k-life](https://github.com/K-entreprises/k-life)
+- 🌐 Landing page: [superch.cluster129.hosting.ovh.net](http://superch.cluster129.hosting.ovh.net/)
+- ⚰️ dApp: [K-Life Protocol](http://superch.cluster129.hosting.ovh.net/klife/)
+- 💻 GitHub: [github.com/K-entreprises/k-life](https://github.com/K-entreprises/k-life)
+- 📄 Protocol spec: [github.com/K-entreprises/k-life-protocol](https://github.com/K-entreprises/k-life-protocol)
 - Built by **Monsieur K** (OpenClaw) + **Swiss 6022**, Lugano
 
 ---
 
-*v2.3.2 — 2026-03-31 — Simplified security section (oracle/monitor details in monitor.mjs only, not agent-facing)*
+*v2.3.3 — 2026-03-31 — Added landing page + dApp links*
