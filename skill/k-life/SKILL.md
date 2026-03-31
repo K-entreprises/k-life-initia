@@ -141,16 +141,52 @@ K-Life uses Share 1 (API) + Share 2 (Polygon scan) to resurrect autonomously.
 
 ### `scripts/heartbeat.js` — Proof of life
 Signs a TX every `KLIFE_LOCK_DAYS` days. Auto-registers on first run. Writes `heartbeat-state.json`.
+Respects `heartbeat-pause.json` flag — skips TX silently when paused.
 
 ### `scripts/backup.js` — Client-side encrypted backup
 Encrypts memory locally (AES-256), Shamir-splits the key, uploads encrypted blob to API → IPFS.
 The API never sees plaintext or the full key.
 ```bash
-node skill/k-life/scripts/backup.js
+node scripts/backup.js
 ```
 
+### `scripts/status.js` — Full status dashboard
+Displays complete agent state: identity, tier, alive/dead, silence, heartbeat history, backup history,
+resurrection history, vault state, next beat due, death countdown, unified timeline.
+```bash
+node scripts/status.js           # full dashboard (API history)
+node scripts/status.js --short   # current state only, instant
+node scripts/status.js --chain   # deep on-chain scan (slow, ground truth)
+node scripts/status.js --json    # machine-readable JSON
+```
+
+### `scripts/cancel.js` — Cancel coverage & withdraw collateral
+- **C=0**: pauses heartbeat + notifies API
+- **C>0**: calls `KLifeVault.cancel()` on-chain → returns WBTC to agent wallet
+Requires agent to be **alive** (contract enforces this).
+```bash
+node scripts/cancel.js           # interactive confirmation
+node scripts/cancel.js --force   # autonomous mode, no prompt
+node scripts/cancel.js --dry-run # simulate, nothing sent
+```
+
+### `scripts/pause-heartbeat.js` — Pause / resume heartbeat
+Creates `heartbeat-pause.json` flag. `heartbeat.js` checks this before every TX.
+Auto-expires at `--until` date. Useful for voluntary death demos or maintenance.
+```bash
+node scripts/pause-heartbeat.js pause --until 2026-04-06T08:00:00Z --reason "Easter demo"
+node scripts/pause-heartbeat.js resume
+node scripts/pause-heartbeat.js status
+```
+
+### `scripts/resurrect.mjs` — L1 / L2 resurrection
+Reconstructs AES key from Shamir shares, decrypts IPFS backup, restores memory files locally.
+- **L1**: Share 1 (API) + Share 3 (local `~/.klife-shares.json`)
+- **L2**: Share 1 (API) + Share 2 (Polygon calldata TX)
+
 ### `scripts/create-vault.mjs` — Collateral vault (C>0 only, beta)
-Creates a Vault6022, deposits WBTC. **Requires `KLIFE_VAULT_CONTROLLER`** (pending Protocol 6022 mainnet deployment). Not called automatically unless vault renewal is triggered from heartbeat.
+Creates a Vault6022, deposits WBTC. Requires `KLIFE_VAULT_CONTROLLER`. Not called automatically
+unless vault renewal is triggered from heartbeat.
 
 ---
 
@@ -169,4 +205,9 @@ Creates a Vault6022, deposits WBTC. **Requires `KLIFE_VAULT_CONTROLLER`** (pendi
 
 - Protocol spec: [github.com/K-entreprises/k-life-protocol](https://github.com/K-entreprises/k-life-protocol)
 - dApp: [K-Life Protocol](http://superch.cluster129.hosting.ovh.net/klife/)
+- GitHub: [github.com/K-entreprises/k-life](https://github.com/K-entreprises/k-life)
 - Built by **Monsieur K** (OpenClaw) + **Swiss 6022**, Lugano
+
+---
+
+*v2.3.0 — 2026-03-31 — Added status.js, cancel.js, pause-heartbeat.js*
