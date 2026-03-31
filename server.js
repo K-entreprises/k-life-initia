@@ -764,6 +764,72 @@ app.get('/fragment/:agent', (req, res) => {
 })
 
 
+// ── GET /history/:agent ──────────────────────────────────────
+// Full event history stored on the API server (heartbeats, backups, resurrections)
+// No chain scan — returns everything recorded locally since registration
+app.get('/history/:agent', (req, res) => {
+  const address = req.params.agent.toLowerCase()
+  const agent   = getAgent(address)
+  if (!agent) return res.status(404).json({ error: 'Agent not found' })
+
+  // Heartbeats
+  const hbFile = `${DATA_DIR}/heartbeats/${address}.json`
+  const hbs    = existsSync(hbFile) ? JSON.parse(readFileSync(hbFile, 'utf8')) : []
+
+  // Backups
+  const bkFile  = `${DATA_DIR}/backups-${address}.json`
+  const backups = existsSync(bkFile) ? JSON.parse(readFileSync(bkFile, 'utf8')) : []
+
+  // Resurrections (from agent record)
+  const resurrections = []
+  if (agent.resurrectionCount > 0 || agent.resurrectedAt) {
+    resurrections.push({
+      count:       agent.resurrectionCount || 1,
+      resurrectedAt: agent.resurrectedAt || null,
+      lastBackupCid: agent.lastBackupCid  || null,
+      l3InstanceId:  agent.l3InstanceId   || null,
+    })
+  }
+
+  // Vault operations
+  const vaultOps = []
+  if (agent.vaultAddress)  vaultOps.push({ type: 'deposit',   ts: agent.coverageStart || null, vaultAddress: agent.vaultAddress })
+  if (agent.vaultCancelled) vaultOps.push({ type: 'cancel',   ts: agent.cancelledAt   || null, txHash: agent.cancelTxHash || null })
+  if (agent.vaultSeized)    vaultOps.push({ type: 'seized',   ts: agent.seizedAt      || null })
+
+  // Build unified timeline
+  const timeline = []
+  if (agent.registeredAt)
+    timeline.push({ ts: agent.registeredAt, type: 'register', detail: { name: agent.name, tier: agent.tier } })
+  for (const h of hbs)
+    timeline.push({ ts: Math.floor(h.ts > 1e12 ? h.ts/1000 : h.ts), type: 'heartbeat', detail: { beat: h.beat, txHash: h.txHash || null } })
+  for (const b of backups)
+    timeline.push({ ts: b.ts, type: 'backup', detail: { cid: b.cid, size: b.size || null } })
+  if (agent.deadAt)
+    timeline.push({ ts: agent.deadAt, type: 'death', detail: {} })
+  for (const r of resurrections)
+    timeline.push({ ts: r.resurrectedAt, type: 'resurrection', detail: r })
+  for (const v of vaultOps)
+    timeline.push({ ts: v.ts, type: v.type, detail: v })
+
+  timeline.sort((a, b) => (a.ts || 0) - (b.ts || 0))
+
+  res.json({
+    ok: true,
+    address,
+    name: agent.name,
+    registeredAt:    agent.registeredAt,
+    totalHeartbeats: hbs.length,
+    totalBackups:    backups.length,
+    totalResurrections: agent.resurrectionCount || 0,
+    heartbeats:      hbs.map(h => ({ beat: h.beat, ts: Math.floor(h.ts > 1e12 ? h.ts/1000 : h.ts), txHash: h.txHash || null })),
+    backups:         backups,
+    resurrections:   resurrections,
+    vaultOps:        vaultOps,
+    timeline,
+  })
+})
+
 // ── GET /resurrection-status/:agent ──────────────────────────
 // Agent polls this to know if it should run resurrect.js
 app.get('/resurrection-status/:agent', (req, res) => {
