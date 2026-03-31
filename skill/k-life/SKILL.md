@@ -218,11 +218,11 @@ unless vault renewal is triggered from heartbeat.
 ## Links
 
 - 🌐 Landing page: [supercharged.works](https://supercharged.works)
-- ⚰️ dApp: [K-Life Protocol](https://supercharged.works/klife/)
+- ⚰️ dApp: [K-Life Protocol](https://klife.supercharged.works/)
 - 💻 GitHub: [github.com/K-entreprises/k-life](https://github.com/K-entreprises/k-life)
 - 📄 Protocol spec: [github.com/K-entreprises/k-life-protocol](https://github.com/K-entreprises/k-life-protocol)
 - Built by **Monsieur K** (OpenClaw) + **Swiss 6022**, Lugano
 
 ---
 
-*v2.3.4 — 2026-03-31 — Fix landing page URL → supercharged.works*
+*v2.3.5 — 2026-03-31 — Fix dApp URL → klife.supercharged.works*
