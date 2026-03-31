@@ -11,17 +11,54 @@ An autonomous AI agent can survive crashes, memory wipes, and infrastructure fai
 
 ---
 
-## ⚠️ What this skill does — read before installing
+## ⚠️ Security & Risk — Read Before Installing
 
-This skill:
-- **Generates a wallet** at first run (`~/.klife-wallet`, permissions 600) and signs on-chain transactions with it
+### What this skill does
+- **Generates a wallet** at first run (`~/.klife-wallet`, permissions 600) and signs on-chain transactions
 - **Broadcasts Polygon transactions** periodically (heartbeat every T days, gas paid from wallet)
-- **Uploads encrypted memory** to IPFS via the K-Life API
+- **Reads and encrypts local files** (`MEMORY.md`, `SOUL.md`, `USER.md`) and uploads ciphertext to IPFS
 - **Can create a Vault6022** (C>0 only) — approves and deposits WBTC as collateral
 
-**Financial risk:** The wallet generated at `~/.klife-wallet` controls real on-chain assets. Back it up. Do not fund it with more than you need. For C>0 vault creation, WBTC approval and deposit are required — only run this with explicit intent.
+**C=0 (default):** heartbeat TX + encrypted IPFS backup only. Low risk, ~$0.001 gas/day.
 
-**C=0 (default, no collateral):** heartbeat TX + encrypted IPFS backup only. Low risk, minimal gas.
+### Wallet — back it up immediately
+`~/.klife-wallet` is a hot wallet that signs real Polygon transactions. Back up the seed phrase offline. Do not fund it beyond what you need for gas (~0.01 MATIC/month) unless using C>0 vault.
+
+### Oracle vs Agent — NEVER use the same key
+
+| Role | File | Purpose |
+|---|---|---|
+| **Agent** | `~/.klife-wallet` | Signs heartbeats, backups, resurrect acks |
+| **Oracle** | `~/.klife-oracle-wallet` | Calls `declareDead()`, triggers resurrections |
+
+`monitor.mjs` is **oracle code** — it must run on a **separate host** with a **distinct key**. Running monitor.mjs on the same machine as your agent wallet is a security risk (oracle could declare your own agent dead). The script enforces this: it refuses to run if oracle address === agent address.
+
+```bash
+# Generate a dedicated oracle wallet:
+node -e "const {ethers}=require('ethers'); \
+  console.log(ethers.Wallet.createRandom().mnemonic.phrase)" \
+  > ~/.klife-oracle-wallet
+chmod 600 ~/.klife-oracle-wallet
+# Fund with ~0.1 MATIC for gas only
+```
+
+```bash
+# Run monitor with explicit oracle key:
+KLIFE_ORACLE_SEED_FILE=~/.klife-oracle-wallet node scripts/monitor.mjs
+```
+
+### File scope — verify before running backup
+`backup.js` reads files from `WORKSPACE` (default: `/data/workspace`). Set `KLIFE_WORKSPACE` to control exactly which directory is read. Inspect what `MEMORY.md`, `SOUL.md`, `USER.md` contain before the first backup.
+
+```bash
+KLIFE_WORKSPACE=/my/safe/dir node scripts/backup.js
+```
+
+### API trust model
+`api.supercharged.works` receives: **encrypted ciphertext + 1 Shamir share**. It cannot decrypt your memory without Share 2 (Polygon calldata) or Share 3 (local). For stronger privacy, self-host the K-Life API (server.js at [github.com/K-entreprises/k-life](https://github.com/K-entreprises/k-life)).
+
+### C>0 vault — explicit intent required
+`cancel.js` and `create-vault.mjs` interact with on-chain WBTC. Review contract addresses below before depositing. `cancel.js` requires the agent to be alive (contract-enforced).
 
 ---
 
@@ -210,4 +247,4 @@ unless vault renewal is triggered from heartbeat.
 
 ---
 
-*v2.3.0 — 2026-03-31 — Added status.js, cancel.js, pause-heartbeat.js*
+*v2.3.1 — 2026-03-31 — Security: oracle/agent key separation enforced in monitor.mjs, security section added to SKILL.md*

@@ -20,9 +20,31 @@ import os from 'os'
 const DRY_RUN        = process.argv.includes('--dry-run')
 const RPC_URL        = process.env.KLIFE_RPC  || 'https://polygon-bor-rpc.publicnode.com'
 const API_URL        = process.env.KLIFE_API  || 'https://api.supercharged.works'
-const SEED_FILE      = resolve(os.homedir(), '.klife-wallet')
 const L3_THRESHOLD   = parseInt(process.env.L3_THRESHOLD_DAYS || '3') * 24 * 3600   // seconds
 const STATE_FILE     = resolve(os.homedir(), '.klife-monitor-state.json')
+
+// ── Oracle wallet — MUST be distinct from agent wallet ──────────────────────
+// Set KLIFE_ORACLE_SEED_FILE to a dedicated oracle seed file.
+// NEVER point this at ~/.klife-wallet (agent key) — mixing roles is a security risk.
+// The oracle wallet calls declareDead() and initiates resurrection on-chain.
+// It requires only a small amount of MATIC for gas; do not fund with collateral assets.
+const ORACLE_SEED_FILE = process.env.KLIFE_ORACLE_SEED_FILE
+  || resolve(os.homedir(), '.klife-oracle-wallet')   // distinct default — NOT .klife-wallet
+
+const AGENT_WALLET_FILE = resolve(os.homedir(), '.klife-wallet')
+if (!process.env.KLIFE_ORACLE_SEED_FILE && existsSync(AGENT_WALLET_FILE)) {
+  // Safety check: warn if oracle key file is absent but agent key is present
+  if (!existsSync(ORACLE_SEED_FILE)) {
+    console.error(`\n⚠️  SECURITY: No oracle wallet found at ${ORACLE_SEED_FILE}`)
+    console.error(`   monitor.mjs requires a DEDICATED oracle wallet, separate from your agent wallet.`)
+    console.error(`   Set KLIFE_ORACLE_SEED_FILE=/path/to/oracle-seed or generate one:`)
+    console.error(`     node -e "const {ethers}=require('ethers'); console.log(ethers.Wallet.createRandom().mnemonic.phrase)" > ~/.klife-oracle-wallet`)
+    console.error(`   Fund it with ~0.1 MATIC for gas. Do NOT reuse ~/.klife-wallet.\n`)
+    process.exit(1)
+  }
+}
+
+const SEED_FILE = ORACLE_SEED_FILE
 
 const REGISTRY_ADDR  = '0xF47393fcFdDE1afC51888B9308fD0c3fFc86239B'
 const REGISTRY_ABI   = [
@@ -61,11 +83,28 @@ console.log(`   Mode      : ${DRY_RUN ? 'DRY RUN' : 'LIVE'}\n`)
 const { ethers } = await import('../node_modules/ethers/lib.esm/index.js')
 const provider   = new ethers.JsonRpcProvider(RPC_URL)
 
-// Load oracle wallet
-if (!existsSync(SEED_FILE)) throw new Error('No oracle wallet at ~/.klife-wallet')
+// Load oracle wallet (dedicated key — NOT the agent wallet)
+if (!existsSync(SEED_FILE)) {
+  console.error(`❌ Oracle wallet not found at: ${SEED_FILE}`)
+  console.error(`   Set KLIFE_ORACLE_SEED_FILE or generate: node -e "const {ethers}=require('ethers'); console.log(ethers.Wallet.createRandom().mnemonic.phrase)" > ~/.klife-oracle-wallet`)
+  process.exit(1)
+}
 const seed    = readFileSync(SEED_FILE, 'utf8').trim()
 const oracle  = ethers.Wallet.fromPhrase(seed).connect(provider)
-console.log(`🔑 Oracle : ${oracle.address}\n`)
+console.log(`🔑 Oracle : ${oracle.address}`)
+console.log(`   (key: ${SEED_FILE})\n`)
+
+// Sanity check: oracle address should NOT match agent wallet
+if (existsSync(resolve(os.homedir(), '.klife-wallet'))) {
+  const agentSeed = readFileSync(resolve(os.homedir(), '.klife-wallet'), 'utf8').trim()
+  const agentAddr = ethers.Wallet.fromPhrase(agentSeed).address
+  if (oracle.address.toLowerCase() === agentAddr.toLowerCase()) {
+    console.error(`\n⛔ SECURITY VIOLATION: oracle wallet === agent wallet (${oracle.address})`)
+    console.error(`   monitor.mjs must run with a SEPARATE oracle key.`)
+    console.error(`   Aborting to prevent oracle-as-agent self-declaration-of-death attacks.\n`)
+    process.exit(1)
+  }
+}
 
 const registry = new ethers.Contract(REGISTRY_ADDR, REGISTRY_ABI, oracle)
 const state    = loadState()
