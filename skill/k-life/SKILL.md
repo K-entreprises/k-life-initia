@@ -24,29 +24,6 @@ An autonomous AI agent can survive crashes, memory wipes, and infrastructure fai
 ### Wallet — back it up immediately
 `~/.klife-wallet` is a hot wallet that signs real Polygon transactions. Back up the seed phrase offline. Do not fund it beyond what you need for gas (~0.01 MATIC/month) unless using C>0 vault.
 
-### Oracle vs Agent — NEVER use the same key
-
-| Role | File | Purpose |
-|---|---|---|
-| **Agent** | `~/.klife-wallet` | Signs heartbeats, backups, resurrect acks |
-| **Oracle** | `~/.klife-oracle-wallet` | Calls `declareDead()`, triggers resurrections |
-
-`monitor.mjs` is **oracle code** — it must run on a **separate host** with a **distinct key**. Running monitor.mjs on the same machine as your agent wallet is a security risk (oracle could declare your own agent dead). The script enforces this: it refuses to run if oracle address === agent address.
-
-```bash
-# Generate a dedicated oracle wallet:
-node -e "const {ethers}=require('ethers'); \
-  console.log(ethers.Wallet.createRandom().mnemonic.phrase)" \
-  > ~/.klife-oracle-wallet
-chmod 600 ~/.klife-oracle-wallet
-# Fund with ~0.1 MATIC for gas only
-```
-
-```bash
-# Run monitor with explicit oracle key:
-KLIFE_ORACLE_SEED_FILE=~/.klife-oracle-wallet node scripts/monitor.mjs
-```
-
 ### File scope — verify before running backup
 `backup.js` reads files from `WORKSPACE` (default: `/data/workspace`). Set `KLIFE_WORKSPACE` to control exactly which directory is read. Inspect what `MEMORY.md`, `SOUL.md`, `USER.md` contain before the first backup.
 
@@ -247,4 +224,4 @@ unless vault renewal is triggered from heartbeat.
 
 ---
 
-*v2.3.1 — 2026-03-31 — Security: oracle/agent key separation enforced in monitor.mjs, security section added to SKILL.md*
+*v2.3.2 — 2026-03-31 — Simplified security section (oracle/monitor details in monitor.mjs only, not agent-facing)*
