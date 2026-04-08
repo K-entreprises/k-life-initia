@@ -1267,9 +1267,15 @@ registry.initiateResurrection(agent)</div>
       </div>
 
       <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button class="btn btn-gold" onclick="triggerResurrection()" id="btn-resurrect">
-          <span class="zh">还魂</span> Resurrect via API
-        </button>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-gold" onclick="triggerL3Resurrection()" id="btn-resurrect">
+            <span class="zh">借尸还魂</span> Level 3 — Resurrect on LiberClaw
+          </button>
+          <div style="font-size:10px;color:var(--text3);text-align:center;font-style:italic">
+            魂魄离体 → IPFS记忆恢复 → LiberClaw新vessel → on-chain确认
+          </div>
+        </div>
+        <div id="l3-result" style="display:none;margin-top:12px;padding:12px;border:1px solid rgba(201,163,42,0.3);border-radius:6px;background:rgba(201,163,42,0.05)"></div>
         <button class="btn btn-ghost" onclick="window.open('https://api.supercharged.works/health','_blank')">
           <span class="zh">验证</span> Check API Status
         </button>
@@ -1469,8 +1475,8 @@ registry.initiateResurrection(agent)</div>
 ════════════════════════════════════════════ -->
 <script>
 const C = {
-  registry: '0x905e2c1D22e68D938460C256E9Ba782A253d4034',
-  soul:     '0x3e11B8378074f4a8413072521ce42B78d82557a2',
+  registry: '0x2147E3305A632De75398b9df5F9C34a4a3bf0FFc',
+  soul:     '0x7d2bd4CE7dF8266a75E05192FB25b3dAbdcF1949',
 }
 const CHAIN = { id: 133, hex: '0x85' }
 const HASHKEY_TESTNET = {
@@ -1747,7 +1753,8 @@ const REGISTRY_ABI = [
   'function silenceSeconds(address) view returns (uint256)',
   'function rescueFund() view returns (address)',
   'function oracleInitiateResurrection(address agent) external',
-  'function oracleSetEligible(address agent, bool eligible) external'
+  'function oracleSetEligible(address agent, bool eligible) external',
+  'function oracleCompleteResurrection(address agent, string newCid) external'
 ]
 
 const STATUS = { 0:'未登仙', 1:'在世', 2:'归仙', 3:'还魂中', 4:'重生' }
@@ -2014,6 +2021,46 @@ async function testDeclareDead() {
     await refreshAgent()
   } catch(e) {
     log('error', '☽ 归仙失败: ' + e.message.slice(0,60))
+  }
+}
+
+async function triggerL3Resurrection() {
+  const btn = document.getElementById('btn-resurrect')
+  btn.disabled = true
+  const steps = ['魂魄离体… (1/3)', 'IPFS记忆恢复… (2/3)', 'LiberClaw注入… (3/3)']
+  let step = 0
+  const tick = setInterval(() => { btn.textContent = steps[Math.min(step++, 2)] }, 1200)
+  log('info', '☽ 借尸还魂 Level 3 启动…', 'Level 3 resurrection — spawning new vessel on LiberClaw…')
+  try {
+    const res = await fetch(API + '/l3-resurrect', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ agent: wallet })
+    })
+    const data = await res.json()
+    clearInterval(tick)
+    if (data.ok) {
+      const v = data.vessel || {}
+      log('ok', `✅ 借尸还魂 完成 · New vessel: ${v.platform || 'LiberClaw'}`)
+      const resultEl = document.getElementById('l3-result')
+      resultEl.style.display = 'block'
+      resultEl.innerHTML = `
+        <div style="font-family:'Noto Serif SC',serif;color:var(--gold);font-size:13px;margin-bottom:10px">☽ 新vessel已降临</div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.8">
+          <div>Platform: <strong style="color:var(--gold)">${v.platform || 'LiberClaw / Aleph Cloud'}</strong></div>
+          ${v.agentUrl ? `<div>Agent: <a href="${v.agentUrl}" target="_blank" style="color:var(--gold)">${v.agentUrl}</a></div>` : ''}
+          ${data.backupCid ? `<div>IPFS: <span style="font-family:monospace;font-size:10px">${data.backupCid.slice(0,20)}…</span></div>` : ''}
+          <div style="margin-top:6px;font-size:10px;color:var(--text3);font-style:italic">借尸还魂 — same soul, new vessel. Memory intact.</div>
+        </div>`
+    } else {
+      log('error', '还魂失败: ' + (data.error || '').slice(0, 60))
+    }
+    await refreshAgent()
+  } catch(e) {
+    clearInterval(tick)
+    log('error', e.message.slice(0, 80))
+  } finally {
+    btn.disabled = false
+    btn.innerHTML = '<span class="zh">借尸还魂</span> Level 3 — Resurrect on LiberClaw'
   }
 }
 

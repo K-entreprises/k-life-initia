@@ -211,7 +211,10 @@ contract KLifeRegistry is Ownable, ReentrancyGuard {
     /// @notice Oracle can declare any agent dead instantly — for demo and emergency use
     function oracleDeclareDead(address agent) external onlyOracle agentExists(agent) {
         Agent storage a = _agents[agent];
-        require(a.status == Status.ALIVE || a.status == Status.REGISTERED, "Not alive");
+        require(
+            a.status == Status.ALIVE || a.status == Status.REGISTERED || a.status == Status.ALIVE_RESURRECTED,
+            "Not alive"
+        );
         a.status = Status.DEAD;
         a.deadAt = block.timestamp;
         emit AgentDead(agent, block.timestamp - a.lastHeartbeat, block.timestamp);
@@ -225,6 +228,19 @@ contract KLifeRegistry is Ownable, ReentrancyGuard {
         a.resurrectionCount++;
         a.resurrectionInitiatedAt = block.timestamp;
         emit ResurrectionInitiated(agent, 'oracle-demo', block.timestamp);
+    }
+
+    /// @notice Oracle completes resurrection (Level 3 — new vessel, oracle signs on behalf)
+    function oracleCompleteResurrection(address agent, string calldata newCid) external onlyOracle agentExists(agent) {
+        Agent storage a = _agents[agent];
+        require(a.status == Status.RESURRECTING, "Not in resurrection");
+        a.status        = Status.ALIVE_RESURRECTED;
+        a.lastHeartbeat = block.timestamp;
+        a.lastBackupCid = newCid;
+        a.lastBackupTs  = block.timestamp;
+        a.deadAt        = 0;
+        a.totalHeartbeats++;
+        emit AgentResurrected(agent, a.resurrectionCount, newCid, block.timestamp);
     }
 
     // ── Resurrection ──────────────────────────────────────────
