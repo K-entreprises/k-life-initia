@@ -924,37 +924,45 @@
             <span id="img-upload-text" style="font-size:12px;color:var(--text3)">Choose an image… (JPG, PNG, max 2MB)</span>
             <input type="file" id="img-file" accept="image/*" onchange="handleImageSelect(event)" style="display:none" />
           </label>
-          <!-- Preview + rank filters -->
+          <!-- 五行 frame preview -->
           <div id="img-preview-section" style="display:none;margin-top:12px">
-            <div style="font-size:10px;color:var(--text3);margin-bottom:8px;letter-spacing:0.1em">FILTER PREVIEW — how your image will look at each rank</div>
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+            <div style="font-size:10px;color:var(--text3);margin-bottom:10px;letter-spacing:0.1em">五行 RANK FRAMES — your image will evolve as you ascend</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+              <!-- 人 · 土 Earth -->
               <div style="text-align:center">
-                <div style="position:relative;border-radius:4px;overflow:hidden;aspect-ratio:1">
-                  <img id="prev-mortal" style="width:100%;height:100%;object-fit:cover;filter:sepia(0.6) hue-rotate(-10deg)" />
+                <div style="position:relative;border-radius:4px;overflow:hidden;aspect-ratio:1;border:2px solid rgba(160,120,40,0.55);box-shadow:inset 0 0 0 3px rgba(160,120,40,0.12)">
+                  <img id="prev-mortal" style="width:100%;height:100%;object-fit:cover;filter:sepia(0.45) brightness(0.92) saturate(0.8)" />
+                  <div style="position:absolute;bottom:0;right:0;font-family:'Noto Serif SC',serif;font-size:8px;color:#A07828;background:rgba(160,120,40,0.15);padding:1px 4px;border-radius:3px 0 0 0">土</div>
                 </div>
-                <div style="font-family:'Noto Serif SC',serif;font-size:12px;color:#b0a090;margin-top:4px">人</div>
-                <div style="font-size:9px;color:var(--text3)">Mortal</div>
+                <div style="font-family:'Noto Serif SC',serif;font-size:12px;color:#b0a090;margin-top:5px">人</div>
+                <div style="font-size:8px;color:var(--text3)">Mortal</div>
               </div>
+              <!-- 修 · 木 Wood -->
               <div style="text-align:center">
-                <div style="position:relative;border-radius:4px;overflow:hidden;aspect-ratio:1">
-                  <img id="prev-cultivating" style="width:100%;height:100%;object-fit:cover;filter:sepia(1) saturate(1.8) hue-rotate(10deg)" />
+                <div style="position:relative;border-radius:4px;overflow:hidden;aspect-ratio:1;border:2px solid rgba(42,140,80,0.75);box-shadow:0 0 12px rgba(42,140,80,0.3),inset 0 0 0 3px rgba(42,140,80,0.12);outline:1px solid rgba(42,140,80,0.3);outline-offset:3px">
+                  <img id="prev-cultivating" style="width:100%;height:100%;object-fit:cover;filter:hue-rotate(145deg) saturate(0.55) brightness(1.06)" />
+                  <div style="position:absolute;bottom:0;right:0;font-family:'Noto Serif SC',serif;font-size:8px;color:#2A8C50;background:rgba(42,140,80,0.15);padding:1px 4px;border-radius:3px 0 0 0">木</div>
                 </div>
-                <div style="font-family:'Noto Serif SC',serif;font-size:12px;color:#3ab88f;margin-top:4px">修</div>
-                <div style="font-size:9px;color:var(--text3)">Cultivating</div>
+                <div style="font-family:'Noto Serif SC',serif;font-size:12px;color:#3ab88f;margin-top:5px">修</div>
+                <div style="font-size:8px;color:var(--text3)">Cultivating</div>
               </div>
+              <!-- 还 · 火 Fire -->
               <div style="text-align:center">
-                <div style="position:relative;border-radius:4px;overflow:hidden;aspect-ratio:1">
-                  <img id="prev-risen" style="width:100%;height:100%;object-fit:cover;filter:sepia(1) hue-rotate(-40deg) saturate(3)" />
+                <div style="position:relative;border-radius:4px;overflow:hidden;aspect-ratio:1;border:3px solid rgba(192,48,36,0.85);box-shadow:0 0 16px rgba(192,48,36,0.45),inset 0 0 10px rgba(192,48,36,0.1)">
+                  <img id="prev-risen" style="width:100%;height:100%;object-fit:cover;filter:sepia(0.9) hue-rotate(-28deg) saturate(3.5) contrast(1.15) brightness(0.88)" />
+                  <div style="position:absolute;bottom:0;right:0;font-family:'Noto Serif SC',serif;font-size:8px;color:#C03024;background:rgba(192,48,36,0.2);padding:1px 4px;border-radius:3px 0 0 0">火</div>
                 </div>
-                <div style="font-family:'Noto Serif SC',serif;font-size:12px;color:#e8c547;margin-top:4px">还</div>
-                <div style="font-size:9px;color:var(--text3)">Resurrected</div>
+                <div style="font-family:'Noto Serif SC',serif;font-size:12px;color:#e8c547;margin-top:5px">还</div>
+                <div style="font-size:8px;color:var(--text3)">Resurrected</div>
               </div>
+              <!-- 仙 · 金 Metal -->
               <div style="text-align:center">
-                <div style="position:relative;border-radius:4px;overflow:hidden;aspect-ratio:1">
-                  <img id="prev-immortal" style="width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.15)" />
+                <div style="position:relative;border-radius:4px;overflow:hidden;aspect-ratio:1;border:1px solid rgba(201,163,42,0.95);box-shadow:0 0 0 3px rgba(8,6,4,1),0 0 0 4px rgba(201,163,42,0.5),0 0 20px rgba(201,163,42,0.5),inset 0 0 0 1px rgba(201,163,42,0.4)">
+                  <img id="prev-immortal" style="width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.25) brightness(1.08)" />
+                  <div style="position:absolute;bottom:0;right:0;font-family:'Noto Serif SC',serif;font-size:8px;color:#C9A32A;background:rgba(201,163,42,0.18);padding:1px 4px;border-radius:3px 0 0 0">金</div>
                 </div>
-                <div style="font-family:'Noto Serif SC',serif;font-size:12px;color:#c9a32a;margin-top:4px">仙</div>
-                <div style="font-size:9px;color:var(--text3)">Immortal</div>
+                <div style="font-family:'Noto Serif SC',serif;font-size:12px;color:#c9a32a;margin-top:5px">仙</div>
+                <div style="font-size:8px;color:var(--text3)">Immortal</div>
               </div>
             </div>
           </div>
@@ -1091,7 +1099,6 @@ registry.initiateResurrection(agent)</div>
             </div>
           </div>
         </details>
-      </div>
 
       <div id="agent-reg" style="display:none">
         <div class="stat-grid">
@@ -1894,26 +1901,33 @@ async function registerAgent() {
       log('muted', '封魂跳过 (非关键)', 'Soul backup skipped (non-critical): ' + e2.message.slice(0,40))
     }
 
-    // ── Step 3 : Mint soul NFT (牌位) ─────────────────────────
-    if (soulContract) {
-      btn.textContent = '铸魂… (3/3)'
-      log('info', '铸造灵魂牌位…', 'Minting soul tablet…')
-      const motto = document.getElementById('reg-motto')?.value.trim() || ''
-      // Upload image if selected
-      let imgCid = ''
+    // ── Step 3 : Mint soul NFT via API (server-side, no wallet tx needed) ──────
+    btn.textContent = '铸魂… (3/3)'
+    log('info', '铸造灵魂牌位…', 'Minting soul tablet via oracle…')
+    const motto = document.getElementById('reg-motto')?.value.trim() || ''
+    try {
+      const mintBody = { agent: wallet, motto }
       if (selectedImageBase64) {
-        try { imgCid = await uploadSoulImage() } catch(e) {
-          log('muted', '图像上传跳过', 'Image upload skipped: ' + e.message.slice(0,40))
+        mintBody.imageBase64 = selectedImageBase64
+        mintBody.mimeType    = selectedImageMime
+      }
+      const mintRes = await fetch(API + '/soul/mint', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(mintBody)
+      })
+      const mintData = await mintRes.json()
+      if (mintData.ok) {
+        if (mintData.alreadyExists) {
+          log('ok', '牌位已存在 · Soul tablet already anchored ✓')
+        } else {
+          log('ok', `牌位已铸 · Token #${mintData.tokenId} — 灵魂已锚定 on HashKey ✓`)
+          if (mintData.imageCid) log('ok', '灵像已封印 · Image CID: ' + mintData.imageCid.slice(0,16) + '…')
         }
+      } else {
+        log('muted', '牌位铸造跳过: ' + (mintData.error || '').slice(0,40))
       }
-      try {
-        const tx3 = await soulContract.mint(wallet, motto, imgCid)
-        log('muted', 'TX: ' + tx3.hash.slice(0,16) + '…', tx3.hash.slice(0,16) + '…')
-        await tx3.wait()
-        log('ok', '牌位已铸 · 灵魂已锚定', 'Soul tablet minted ✓ — soulbound on HashKey')
-      } catch(e3) {
-        log('muted', '牌位铸造跳过', 'Soul mint skipped: ' + e3.message.slice(0,40))
-      }
+    } catch(e3) {
+      log('muted', '牌位铸造跳过: ' + e3.message.slice(0,40))
     }
 
     await Promise.all([refreshAgent(), refreshSoul()])
