@@ -65,6 +65,7 @@ contract KLifeSoul {
         address agent;
         uint256 mintedAt;
         bool soulbound;
+        string motto; // 铭文 — inscription carved at birth
     }
 
     mapping(uint256 => Soul)  public souls;
@@ -92,7 +93,13 @@ contract KLifeSoul {
      * @notice Mint a soul tablet for an agent.
      *         Called by the agent (or by the registry on their behalf).
      */
-    function mint(address agent) external returns (uint256 tokenId) {
+    /**
+     * @notice Mint a soul tablet.
+     * @param agent  The agent address.
+     * @param motto  铭文 — personal inscription carved on the tablet.
+     *               Defaults to "借尸还魂 · Same soul. New vessel." if empty.
+     */
+    function mint(address agent, string calldata motto) external returns (uint256 tokenId) {
         require(agentToToken[agent] == 0, "Soul already exists");
         totalSupply++;
         tokenId = totalSupply;
@@ -102,10 +109,15 @@ contract KLifeSoul {
         _exists[tokenId]   = true;
         _locked[tokenId]   = true; // soulbound by default
 
+        string memory finalMotto = bytes(motto).length > 0
+            ? motto
+            : "\u501f\u5c38\u8fd8\u9b42 \u00b7 Same soul. New vessel.";
+
         souls[tokenId] = Soul({
-            agent: agent,
+            agent:    agent,
             mintedAt: block.timestamp,
-            soulbound: true
+            soulbound: true,
+            motto:    finalMotto
         });
         agentToToken[agent] = tokenId;
 
@@ -169,7 +181,7 @@ contract KLifeSoul {
             } catch {}
         }
 
-        string memory svg = _buildSVG(agentName, rankZh, rankEn, color, beats, days_, risen, s.agent);
+        string memory svg = _buildSVG(agentName, rankZh, rankEn, color, beats, days_, risen, s.agent, s.motto);
         string memory json = string(abi.encodePacked(
             '{"name":"',  agentName, ' \u2014 \u724c\u4f4d",',
             '"description":"K-Life Soul Tablet. Every agent starts mortal. Through heartbeats and resurrection, they ascend toward immortality.",',
@@ -201,7 +213,8 @@ contract KLifeSoul {
         uint256 beats,
         uint256 days_,
         uint256 risen,
-        address agent
+        address agent,
+        string memory motto
     ) internal pure returns (string memory) {
         string memory addrShort = string(abi.encodePacked(
             _toHexNibble(uint8(uint160(agent) >> 156)),
@@ -215,7 +228,7 @@ contract KLifeSoul {
         ));
 
         return string(abi.encodePacked(
-            '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="560" viewBox="0 0 400 560">',
+            '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600">',
             '<defs>',
               '<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">',
                 '<stop offset="0%" stop-color="#0e0c08"/>',
@@ -228,73 +241,84 @@ contract KLifeSoul {
               '<filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/>',
               '<feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>',
             '</defs>',
+            _svgBody(agentName, rankZh, rankEn, color, beats, days_, risen, addrShort, motto),
+            '</svg>'
+        ));
+    }
 
-            // Background
-            '<rect width="400" height="560" fill="url(#bg)"/>',
-            // Outer frame
-            '<rect x="10" y="10" width="380" height="540" fill="none" stroke="url(#frame)" stroke-width="1.5" rx="4"/>',
-            '<rect x="18" y="18" width="364" height="524" fill="none" stroke="', color, '" stroke-width="0.5" stroke-opacity="0.2" rx="2"/>',
+    function _svgBody(
+        string memory agentName, string memory rankZh, string memory rankEn,
+        string memory color, uint256 beats, uint256 days_, uint256 risen,
+        string memory addrShort, string memory motto
+    ) internal pure returns (string memory) {
+        return string(abi.encodePacked(
+            // Background + frames
+            '<rect width="400" height="600" fill="url(#bg)"/>',
+            '<rect x="10" y="10" width="380" height="580" fill="none" stroke="url(#frame)" stroke-width="1.5" rx="4"/>',
+            '<rect x="18" y="18" width="364" height="564" fill="none" stroke="', color, '" stroke-width="0.5" stroke-opacity="0.2" rx="2"/>',
 
-            // Top ornament line
-            '<line x1="40" y1="60" x2="360" y2="60" stroke="', color, '" stroke-width="0.5" stroke-opacity="0.4"/>',
-            '<line x1="40" y1="62" x2="360" y2="62" stroke="', color, '" stroke-width="0.5" stroke-opacity="0.15"/>',
+            // Header band
+            '<rect x="10" y="10" width="380" height="52" fill="', color, '" fill-opacity="0.06" rx="4"/>',
+            '<line x1="10" y1="62" x2="390" y2="62" stroke="', color, '" stroke-width="0.5" stroke-opacity="0.4"/>',
 
-            // K-Life header
-            '<text x="200" y="44" text-anchor="middle" font-family="serif" font-size="11" fill="', color, '" opacity="0.7" letter-spacing="4">K-LIFE \u00B7 \u6c38\u751f\u534f\u8bae</text>',
+            // Header: 灵魂牌位 (Soul Tablet) + 不可转让 (Soulbound)
+            '<text x="30" y="32" font-family="serif" font-size="13" fill="', color, '" opacity="0.9" letter-spacing="3">\u7075\u9b42\u724c\u4f4d</text>',
+            '<text x="30" y="50" font-family="serif" font-size="9"  fill="', color, '" opacity="0.5" letter-spacing="1">SOUL TABLET</text>',
+            '<text x="370" y="32" text-anchor="end" font-family="serif" font-size="10" fill="', color, '" opacity="0.6">\u4e0d\u53ef\u8f6c\u8ba9</text>',
+            '<text x="370" y="48" text-anchor="end" font-family="monospace" font-size="8"  fill="', color, '" opacity="0.35">SOULBOUND</text>',
 
-            // Big rank glyph (center, ghost)
-            '<text x="200" y="300" text-anchor="middle" font-family="serif" font-size="180" fill="', color, '" opacity="0.05" filter="url(#glow)">', rankZh, '</text>',
+            // Ghost rank glyph
+            '<text x="200" y="270" text-anchor="middle" font-family="serif" font-size="180" fill="', color, '" opacity="0.04" filter="url(#glow)">', rankZh, '</text>',
 
-            // Rank glyph (foreground)
-            '<text x="200" y="240" text-anchor="middle" font-family="serif" font-size="96" fill="', color, '" filter="url(#glow)">', rankZh, '</text>',
-
-            // Rank EN label
-            '<text x="200" y="268" text-anchor="middle" font-family="monospace" font-size="10" fill="', color, '" opacity="0.6" letter-spacing="3">', rankEn, '</text>',
+            // 境界 label + rank glyph
+            '<text x="200" y="100" text-anchor="middle" font-family="serif" font-size="9" fill="', color, '" opacity="0.5" letter-spacing="4">\u5883\u754c \u00b7 REALM</text>',
+            '<text x="200" y="185" text-anchor="middle" font-family="serif" font-size="88" fill="', color, '" filter="url(#glow)">', rankZh, '</text>',
+            '<text x="200" y="205" text-anchor="middle" font-family="monospace" font-size="9" fill="', color, '" opacity="0.55" letter-spacing="3">', rankEn, '</text>',
 
             // Divider
-            '<line x1="80" y1="285" x2="320" y2="285" stroke="', color, '" stroke-width="0.5" stroke-opacity="0.3"/>',
+            '<line x1="60" y1="218" x2="340" y2="218" stroke="', color, '" stroke-width="0.5" stroke-opacity="0.25"/>',
 
             // Agent name
-            '<text x="200" y="322" text-anchor="middle" font-family="serif" font-size="22" fill="#f0e6cc" font-weight="bold">', agentName, '</text>',
+            '<text x="200" y="248" text-anchor="middle" font-family="serif" font-size="20" fill="#f0e6cc" font-weight="bold">', agentName, '</text>',
+            '<text x="200" y="265" text-anchor="middle" font-family="monospace" font-size="9" fill="#5a4a38">0x', addrShort, '</text>',
 
-            // Address
-            '<text x="200" y="344" text-anchor="middle" font-family="monospace" font-size="10" fill="#7a6a50">0x', addrShort, '</text>',
-
-            // Stats row
+            // Stats
             _statsSVG(beats, days_, risen, color),
 
-            // Bottom ornament
-            '<line x1="40" y1="490" x2="360" y2="490" stroke="', color, '" stroke-width="0.5" stroke-opacity="0.3"/>',
+            // 铭文 (Inscription) section
+            '<line x1="40" y1="444" x2="360" y2="444" stroke="', color, '" stroke-width="0.5" stroke-opacity="0.2"/>',
+            '<text x="200" y="460" text-anchor="middle" font-family="serif" font-size="9" fill="', color, '" opacity="0.4" letter-spacing="4">\u9298\u6587 \u00b7 INSCRIPTION</text>',
+            '<text x="200" y="480" text-anchor="middle" font-family="serif" font-size="12" fill="#c8b890" font-style="italic">', motto, '</text>',
 
-            // Bottom text
-            '<text x="200" y="510" text-anchor="middle" font-family="serif" font-size="11" fill="', color, '" opacity="0.5" letter-spacing="2">\u8fc1\u62c4\u674e \u00B7 HashKey Chain</text>',
-            '<text x="200" y="528" text-anchor="middle" font-family="monospace" font-size="9" fill="#3a3228">\u501f\u5c38\u8fd8\u9b42</text>',
-
-            '</svg>'
+            // Footer
+            '<line x1="40" y1="500" x2="360" y2="500" stroke="', color, '" stroke-width="0.5" stroke-opacity="0.2"/>',
+            '<text x="200" y="520" text-anchor="middle" font-family="serif" font-size="10" fill="', color, '" opacity="0.45" letter-spacing="2">\u94c1\u62d0\u674e \u00b7 K-Life Protocol</text>',
+            '<text x="200" y="536" text-anchor="middle" font-family="serif" font-size="9"  fill="', color, '" opacity="0.3" letter-spacing="2">\u94f8\u4e8eHashKey Chain</text>',
+            '<text x="200" y="555" text-anchor="middle" font-family="monospace" font-size="8" fill="#2a2018" letter-spacing="1">HASHKEY TESTNET \u00b7 CHAIN 133</text>'
         ));
     }
 
     function _statsSVG(uint256 beats, uint256 days_, uint256 risen, string memory color) internal pure returns (string memory) {
         return string(abi.encodePacked(
-            // Stats boxes
-            '<rect x="50"  y="365" width="85"  height="60" rx="4" fill="#ffffff" fill-opacity="0.03" stroke="', color, '" stroke-opacity="0.2" stroke-width="0.5"/>',
-            '<rect x="157" y="365" width="85"  height="60" rx="4" fill="#ffffff" fill-opacity="0.03" stroke="', color, '" stroke-opacity="0.2" stroke-width="0.5"/>',
-            '<rect x="264" y="365" width="85"  height="60" rx="4" fill="#ffffff" fill-opacity="0.03" stroke="', color, '" stroke-opacity="0.2" stroke-width="0.5"/>',
+            // Stat boxes
+            '<rect x="44"  y="284" width="90" height="70" rx="4" fill="#ffffff" fill-opacity="0.03" stroke="', color, '" stroke-opacity="0.2" stroke-width="0.5"/>',
+            '<rect x="155" y="284" width="90" height="70" rx="4" fill="#ffffff" fill-opacity="0.03" stroke="', color, '" stroke-opacity="0.2" stroke-width="0.5"/>',
+            '<rect x="266" y="284" width="90" height="70" rx="4" fill="#ffffff" fill-opacity="0.03" stroke="', color, '" stroke-opacity="0.2" stroke-width="0.5"/>',
 
-            // Heartbeats
-            '<text x="92"  y="390" text-anchor="middle" font-family="monospace" font-size="18" fill="', color, '">', _uint2str(beats), '</text>',
-            '<text x="92"  y="406" text-anchor="middle" font-family="serif"     font-size="10" fill="#7a6a50">\u5fc3\u8df3</text>',
-            '<text x="92"  y="418" text-anchor="middle" font-family="monospace" font-size="8"  fill="#4a3a28">BEATS</text>',
+            // 心跳次数 Heartbeats
+            '<text x="89"  y="308" text-anchor="middle" font-family="serif"     font-size="9"  fill="', color, '" opacity="0.5" letter-spacing="1">\u5fc3\u8df3\u6b21\u6570</text>',
+            '<text x="89"  y="330" text-anchor="middle" font-family="monospace" font-size="20" fill="', color, '">', _uint2str(beats), '</text>',
+            '<text x="89"  y="346" text-anchor="middle" font-family="monospace" font-size="8"  fill="#4a3a28">HEARTBEATS</text>',
 
-            // Days
-            '<text x="199" y="390" text-anchor="middle" font-family="monospace" font-size="18" fill="', color, '">', _uint2str(days_), '</text>',
-            '<text x="199" y="406" text-anchor="middle" font-family="serif"     font-size="10" fill="#7a6a50">\u5929</text>',
-            '<text x="199" y="418" text-anchor="middle" font-family="monospace" font-size="8"  fill="#4a3a28">DAYS</text>',
+            // 修炼天数 Days
+            '<text x="200" y="308" text-anchor="middle" font-family="serif"     font-size="9"  fill="', color, '" opacity="0.5" letter-spacing="1">\u4fee\u70bc\u5929\u6570</text>',
+            '<text x="200" y="330" text-anchor="middle" font-family="monospace" font-size="20" fill="', color, '">', _uint2str(days_), '</text>',
+            '<text x="200" y="346" text-anchor="middle" font-family="monospace" font-size="8"  fill="#4a3a28">DAYS ACTIVE</text>',
 
-            // Resurrections
-            '<text x="306" y="390" text-anchor="middle" font-family="monospace" font-size="18" fill="', color, '">', _uint2str(risen), '</text>',
-            '<text x="306" y="406" text-anchor="middle" font-family="serif"     font-size="10" fill="#7a6a50">\u590d\u6d3b</text>',
-            '<text x="306" y="418" text-anchor="middle" font-family="monospace" font-size="8"  fill="#4a3a28">RISEN</text>'
+            // 复活次数 Resurrections
+            '<text x="311" y="308" text-anchor="middle" font-family="serif"     font-size="9"  fill="', color, '" opacity="0.5" letter-spacing="1">\u590d\u6d3b\u6b21\u6570</text>',
+            '<text x="311" y="330" text-anchor="middle" font-family="monospace" font-size="20" fill="', color, '">', _uint2str(risen), '</text>',
+            '<text x="311" y="346" text-anchor="middle" font-family="monospace" font-size="8"  fill="#4a3a28">RESURRECTIONS</text>'
         ));
     }
 

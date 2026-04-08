@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>铁拐李 · K-Life · HashKey Chain</title>
-<script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=IM+Fell+English:ital@0;1&family=Space+Grotesk:wght@300;400;500;600&display=swap');
 
@@ -1104,6 +1104,16 @@
           <p style="font-size:13px;color:var(--gold);margin-bottom:16px">
             ✦ You are registered. Mint your 牌位 now.
           </p>
+          <div style="margin-bottom:12px">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:6px;font-family:'Noto Serif SC',serif">
+              铭文 · Inscription — carved forever on your tablet
+            </div>
+            <input type="text" id="soul-motto"
+              placeholder="借尸还魂 · Same soul. New vessel."
+              style="margin-bottom:6px"
+              maxlength="60" />
+            <div style="font-size:10px;color:var(--text3)">Leave blank for the default inscription. Max 60 characters.</div>
+          </div>
           <button class="btn btn-gold" onclick="mintSoul()" id="btn-mint-soul">
             <span class="zh">铸魂</span> Mint Soul Tablet
           </button>
@@ -1235,7 +1245,7 @@
 <script>
 const C = {
   registry: '0x1F411bDE1E14F87ba78C852B0987Ab946d15d100',
-  soul:     '0x446189cfB1Ab6b183e6b9f8F7aB517a4deC1c34e',
+  soul:     '0xBde42724591d2D99450549537C9c24224BbDebE8',
 }
 const CHAIN = { id: 133, hex: '0x85' }
 const HASHKEY_TESTNET = {
@@ -1248,7 +1258,7 @@ const HASHKEY_TESTNET = {
 const API = 'https://api.supercharged.works'
 
 const SOUL_ABI = [
-  'function mint(address agent) external returns (uint256)',
+  'function mint(address agent, string calldata motto) external returns (uint256)',
   'function agentToToken(address) view returns (uint256)',
   'function getRank(address) view returns (uint8)',
   'function tokenURI(uint256) view returns (string)',
@@ -1645,7 +1655,9 @@ async function mintSoul() {
   btn.disabled = true; btn.textContent = '…'
   try {
     log('info', '铸造灵魂牌位…', 'Minting soul tablet on HashKey Chain…')
-    const tx = await soulContract.mint(wallet)
+    const mottoInput = document.getElementById('soul-motto')
+    const motto = mottoInput ? mottoInput.value.trim() : ''
+    const tx = await soulContract.mint(wallet, motto)
     log('muted', 'TX: ' + tx.hash.slice(0,20) + '…', tx.hash.slice(0,20) + '…')
     await tx.wait()
     log('ok', '牌位已铸成 · 灵魂已锚定', 'Soul tablet minted ✓ — soulbound on HashKey')
