@@ -34,6 +34,7 @@ contract KLifeRegistry is Ownable, ReentrancyGuard {
     uint256 public constant MIN_ACTIVE_DAYS_FREE     = 14;   // days before FREE rescue eligibility
     uint256 public constant DEFAULT_DEAD_TIMEOUT_FREE = 30 days;
     uint256 public constant DEAD_TIMEOUT_INSURED      = 3 days;
+    uint256 public constant DEMO_DEAD_TIMEOUT         = 5 minutes;
     uint256 public constant RESURRECTION_WINDOW       = 7 days; // max time to ack resurrection
 
     // ── Enums ─────────────────────────────────────────────────
@@ -200,6 +201,15 @@ contract KLifeRegistry is Ownable, ReentrancyGuard {
         a.deadAt = block.timestamp;
 
         emit AgentDead(agent, silence, block.timestamp);
+    }
+
+    /// @notice Oracle can declare any agent dead instantly — for demo and emergency use
+    function oracleDeclareDead(address agent) external onlyOracle agentExists(agent) {
+        Agent storage a = _agents[agent];
+        require(a.status == Status.ALIVE || a.status == Status.REGISTERED, "Not alive");
+        a.status = Status.DEAD;
+        a.deadAt = block.timestamp;
+        emit AgentDead(agent, block.timestamp - a.lastHeartbeat, block.timestamp);
     }
 
     // ── Resurrection ──────────────────────────────────────────

@@ -763,7 +763,7 @@
   <p class="hero-sub">
     K-Life is resurrection infrastructure for autonomous AI agents.
     On-chain heartbeats. IPFS memory. Automatic revival.
-    Tested at Easter 2026. Now live on HashKey Chain.
+     2026. Now live on HashKey Chain.
   </p>
 
   <div class="legend-block">
@@ -812,7 +812,7 @@
 <div class="contract-strip">
   <div class="cpill"><strong>Registry</strong> <a href="https://testnet-explorer.hsk.xyz/address/0x1F411bDE1E14F87ba78C852B0987Ab946d15d100" target="_blank">0x1F411…d100 ↗</a></div>
   <div class="cpill"><strong>Chain</strong> HashKey Testnet · 133</div>
-  <div class="cpill"><strong>Resurrection</strong> Tested Easter 2026 ✓</div>
+  <div class="cpill"><strong>Resurrection</strong> Tested  2026 ✓</div>
   <div class="cpill"><strong>Memory</strong> IPFS · AES-256 · Shamir</div>
 </div>
 
@@ -1061,7 +1061,7 @@
 
         <div style="margin-top:16px">
           <button class="btn btn-red" onclick="testDeclareDead()" id="btn-declare-dead" style="display:none;font-size:12px">
-            ☠ Simulate Death (Test)
+            ☠ 归仙 · Soul Departs (Oracle Demo)
           </button>
         </div>
       </div>
@@ -1165,7 +1165,7 @@
         <span class="zh">还魂</span>
         <div>
           <h3>Borrow the Vessel</h3>
-          <p>借尸还魂 · Resurrection tested at Easter 2026 ✓</p>
+          <p>借尸还魂 · Resurrection  2026 ✓</p>
         </div>
       </div>
       <p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:20px;">
@@ -1380,8 +1380,8 @@
 ════════════════════════════════════════════ -->
 <script>
 const C = {
-  registry: '0x1F411bDE1E14F87ba78C852B0987Ab946d15d100',
-  soul:     '0x2EC671E96a06Ddb69d4bBaA49C6Ec85c41e1D0C1',
+  registry: '0x5F9Fa2618DC2C185edCE62B4e2d72617AdfDaD4d',
+  soul:     '0x23A434bF50Ede4b53620FBD792097e3F6630dAc3',
 }
 const CHAIN = { id: 133, hex: '0x85' }
 const HASHKEY_TESTNET = {
@@ -1809,15 +1809,20 @@ async function sealSoul() {
 }
 
 async function testDeclareDead() {
-  if (!confirm('Simulate death on-chain? · 模拟死亡测试')) return
+  if (!confirm('铁拐李放下手中的铁拐 — 模拟归仙？\n\nThe oracle will declare your soul departed.\n(This is a demo — your soul will be resurrected.)')) return
   try {
-    log('info', '归仙测试中…', 'Simulating death…')
-    const tx = await registry.declareDead(wallet)
-    await tx.wait()
-    log('ok', '☠ 已归仙 — 复活将触发', '☠ Declared dead — resurrection will trigger')
+    log('info', '☽ 魂离于躯壳…', 'Oracle declaring soul departed…')
+    const res = await fetch(API + '/oracle/declare-dead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ agent: wallet })
+    })
+    const data = await res.json()
+    if (!data.ok) throw new Error(data.error || 'Oracle failed')
+    log('ok', `☠ 已归仙 · TX: ${data.tx?.slice(0,18)}…`, '魂魄已离 — 借尸还魂将触发')
     await refreshAgent()
   } catch(e) {
-    log('err', '测试失败', e.message)
+    log('error', '☽ 归仙失败: ' + e.message.slice(0,60))
   }
 }
 
