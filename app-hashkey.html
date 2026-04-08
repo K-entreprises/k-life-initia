@@ -1469,8 +1469,8 @@ registry.initiateResurrection(agent)</div>
 ════════════════════════════════════════════ -->
 <script>
 const C = {
-  registry: '0x5F9Fa2618DC2C185edCE62B4e2d72617AdfDaD4d',
-  soul:     '0x23A434bF50Ede4b53620FBD792097e3F6630dAc3',
+  registry: '0x905e2c1D22e68D938460C256E9Ba782A253d4034',
+  soul:     '0x3e11B8378074f4a8413072521ce42B78d82557a2',
 }
 const CHAIN = { id: 133, hex: '0x85' }
 const HASHKEY_TESTNET = {
@@ -1745,7 +1745,9 @@ const REGISTRY_ABI = [
   'function getAgent(address) view returns (tuple(address wallet, string name, uint8 tier, uint8 status, uint256 registeredAt, uint256 lastHeartbeat, uint256 totalHeartbeats, uint256 activeDays, uint256 deadAt, uint256 resurrectionCount, uint256 resurrectionInitiatedAt, bytes32 fragment1Hash, bytes32 fragment2TxHash, string lastBackupCid, uint256 lastBackupTs, bool rescueEligible))',
   'function getAgentList() view returns (address[])',
   'function silenceSeconds(address) view returns (uint256)',
-  'function rescueFund() view returns (address)'
+  'function rescueFund() view returns (address)',
+  'function oracleInitiateResurrection(address agent) external',
+  'function oracleSetEligible(address agent, bool eligible) external'
 ]
 
 const STATUS = { 0:'未登仙', 1:'在世', 2:'归仙', 3:'还魂中', 4:'重生' }
