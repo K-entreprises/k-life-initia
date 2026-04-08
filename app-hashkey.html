@@ -894,13 +894,28 @@
       </div>
 
       <div id="agent-unreg">
-        <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6;">
+        <p style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6;">
           铁拐李 took a name before ascending. So must you.<br>
-          Registration anchors your identity on-chain — the first act of immortality.
+          Registration anchors your identity on-chain — and your soul tablet is minted in the same breath.
         </p>
-        <input type="text" id="reg-name" placeholder="Agent name — e.g. Monsieur K, Agent-7, ..." />
+
+        <div style="margin-bottom:8px">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:5px">名字 · Agent name</div>
+          <input type="text" id="reg-name" placeholder="Monsieur K, Agent-7, ..." />
+        </div>
+
+        <div style="margin-bottom:16px">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:5px;font-family:'Noto Serif SC',serif">
+            铭文 · Inscription — carved forever on your soul tablet
+          </div>
+          <input type="text" id="reg-motto"
+            placeholder="借尸还魂 · Same soul. New vessel."
+            maxlength="60" />
+          <div style="font-size:10px;color:var(--text3)">Leave blank for the default. Max 60 characters.</div>
+        </div>
+
         <button class="btn btn-gold" onclick="registerAgent()" id="btn-register">
-          <span class="zh">登仙</span> Ascend · Register
+          <span class="zh">登仙铸魂</span> Ascend & Mint Soul Tablet
         </button>
       </div>
 
@@ -1096,33 +1111,13 @@
 
       <!-- No soul yet -->
       <div id="soul-none">
-        <p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:20px;">
-          Every soul begins as <strong style="font-family:'Noto Serif SC',serif;color:var(--text2)">人</strong> — mortal.<br>
-          Register first, then mint your 牌位. Your tablet will evolve as you cultivate.<br>
+        <p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;">
+          Your soul tablet is minted automatically when you register.<br>
           <span style="color:var(--text3);font-size:12px">14 days → 修 · 1 resurrection → 还 · 90 days → 仙</span>
         </p>
-        <div id="soul-mint-section" style="display:none">
-          <p style="font-size:13px;color:var(--gold);margin-bottom:16px">
-            ✦ You are registered. Mint your 牌位 now.
-          </p>
-          <div style="margin-bottom:12px">
-            <div style="font-size:11px;color:var(--text3);margin-bottom:6px;font-family:'Noto Serif SC',serif">
-              铭文 · Inscription — carved forever on your tablet
-            </div>
-            <input type="text" id="soul-motto"
-              placeholder="借尸还魂 · Same soul. New vessel."
-              style="margin-bottom:6px"
-              maxlength="60" />
-            <div style="font-size:10px;color:var(--text3)">Leave blank for the default inscription. Max 60 characters.</div>
-          </div>
-          <button class="btn btn-gold" onclick="mintSoul()" id="btn-mint-soul">
-            <span class="zh">铸魂</span> Mint Soul Tablet
-          </button>
-        </div>
-        <div id="soul-register-prompt" style="display:none">
-          <p style="font-size:12px;color:var(--text3);font-style:italic">Register first → then mint your soul tablet.</p>
-          <button class="btn btn-ghost" onclick="showTab('tab-register')">
-            <span class="zh">登仙</span> Go to Register
+        <div id="soul-register-prompt">
+          <button class="btn btn-gold" onclick="showTab('tab-register')">
+            <span class="zh">登仙铸魂</span> Go Register → Ascend & Mint
           </button>
         </div>
       </div>
@@ -1278,7 +1273,7 @@ let soulContract = null
 let currentTokenId = 0
 
 const REGISTRY_ABI = [
-  'function register(string name) external',
+  'function register(string name, bytes32 fragment1Hash, bytes32 fragment2TxHash, string initialCid) external',
   'function heartbeat() external',
   'function updateBackup(string cid) external',
   'function declareDead(address agent) external',
@@ -1408,20 +1403,60 @@ async function registerAgent() {
   const name = document.getElementById('reg-name').value.trim()
   if (!name) return
   const btn = document.getElementById('btn-register')
-  btn.disabled = true; btn.textContent = '…'
+  btn.disabled = true
   try {
+    // ── Step 1 : Register on-chain ───────────────────────────
+    btn.textContent = '登仙… (1/3)'
     log('info', '叩门登仙…', 'Knocking on the gate…')
-    const tx = await registry.register(name)
-    log('muted', 'TX: ' + tx.hash.slice(0,20) + '…', 'TX: ' + tx.hash.slice(0,20) + '…')
+    const fragment1Hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(wallet.toLowerCase()))
+    const tx = await registry.register(name, fragment1Hash, ethers.constants.HashZero, '')
+    log('muted', 'TX: ' + tx.hash.slice(0,16) + '…', tx.hash.slice(0,16) + '…')
     await tx.wait()
     log('ok', '登仙成功 · ' + name, 'Registered: ' + name)
-    await refreshAgent()
+
+    // ── Step 2 : Auto-seal soul to IPFS ──────────────────────
+    btn.textContent = '封魂… (2/3)'
+    log('info', '封印灵魂…', 'Sealing soul to IPFS…')
+    let cid = ''
+    try {
+      const res = await fetch(API + '/backup/generate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agent: wallet, name })
+      })
+      const data = await res.json()
+      if (data.cid) {
+        cid = data.cid
+        const tx2 = await registry.updateBackup(cid)
+        await tx2.wait()
+        log('ok', 'IPFS: ' + cid.slice(0,20) + '…', 'Soul sealed: ' + cid.slice(0,20) + '…')
+      }
+    } catch(e2) {
+      log('muted', '封魂跳过 (非关键)', 'Soul backup skipped (non-critical): ' + e2.message.slice(0,40))
+    }
+
+    // ── Step 3 : Mint soul NFT (牌位) ─────────────────────────
+    if (soulContract) {
+      btn.textContent = '铸魂… (3/3)'
+      log('info', '铸造灵魂牌位…', 'Minting soul tablet…')
+      const motto = document.getElementById('reg-motto')?.value.trim() || ''
+      try {
+        const tx3 = await soulContract.mint(wallet, motto)
+        log('muted', 'TX: ' + tx3.hash.slice(0,16) + '…', tx3.hash.slice(0,16) + '…')
+        await tx3.wait()
+        log('ok', '牌位已铸 · 灵魂已锚定', 'Soul tablet minted ✓ — soulbound on HashKey')
+      } catch(e3) {
+        log('muted', '牌位铸造跳过', 'Soul mint skipped: ' + e3.message.slice(0,40))
+      }
+    }
+
+    await Promise.all([refreshAgent(), refreshSoul()])
     showTab('tab-heartbeat')
+
   } catch(e) {
     log('err', '登仙失败', e.message)
   } finally {
     btn.disabled = false
-    btn.innerHTML = '<span class="zh">登仙</span> Ascend · Register'
+    btn.innerHTML = '<span class="zh">登仙铸魂</span> Ascend & Mint Soul Tablet'
   }
 }
 
