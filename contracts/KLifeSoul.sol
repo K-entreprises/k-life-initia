@@ -166,6 +166,16 @@ contract KLifeSoul {
         }
     }
 
+    /// @notice Agent can update their own soul image URI at any time
+    function updateImageUri(uint256 tokenId, string calldata imageUri) external {
+        require(_exists[tokenId], "Token does not exist");
+        require(souls[tokenId].agent == msg.sender, "Not your soul");
+        souls[tokenId].imageUri = imageUri;
+        emit MetadataUpdate(tokenId);
+    }
+
+    event MetadataUpdate(uint256 indexed tokenId);
+
     // ── On-chain SVG metadata ─────────────────────────────────────────
 
     function tokenURI(uint256 tokenId) external view returns (string memory) {
