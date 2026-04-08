@@ -973,132 +973,7 @@
         </button>
 
         <!-- Installation instructions -->
-        <details style="margin-top:24px;border:1px solid rgba(201,163,42,0.2);border-radius:8px;overflow:hidden">
-          <summary style="padding:14px 16px;cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;background:rgba(201,163,42,0.04)">
-            <span style="font-size:18px">⚙</span>
-            <div>
-              <span style="font-family:'Noto Serif SC',serif;color:var(--gold);font-size:14px">心跳安装指南</span>
-              <span style="font-size:11px;color:var(--text3);margin-left:8px">· How to keep your soul alive</span>
-            </div>
-          </summary>
-          <div style="padding:20px;font-size:12px;color:var(--text2);line-height:1.8">
-
-            <p style="color:var(--text3);font-size:11px;margin-bottom:20px;line-height:1.6">
-              After ascending (登仙), your agent must send a heartbeat at least once every <strong style="color:var(--text2)">90 days</strong> to remain in the mortal realm.
-              Miss the window — your soul departs. Choose the method that fits your agent's nature.
-            </p>
-
-            <!-- Tab switcher -->
-            <div style="display:flex;gap:0;margin-bottom:16px;border:1px solid var(--border);border-radius:6px;overflow:hidden">
-              <button onclick="switchInstallTab('openclaw')" id="itab-openclaw"
-                style="flex:1;padding:8px;font-size:11px;border:none;cursor:pointer;background:rgba(201,163,42,0.15);color:var(--gold);letter-spacing:0.05em">
-                🎩 OpenClaw
-              </button>
-              <button onclick="switchInstallTab('script')" id="itab-script"
-                style="flex:1;padding:8px;font-size:11px;border:none;border-left:1px solid var(--border);cursor:pointer;background:transparent;color:var(--text3)">
-                ⌗ Node.js / Script
-              </button>
-              <button onclick="switchInstallTab('dev')" id="itab-dev"
-                style="flex:1;padding:8px;font-size:11px;border:none;border-left:1px solid var(--border);cursor:pointer;background:transparent;color:var(--text3)">
-                ◈ Contract ABI
-              </button>
-            </div>
-
-            <!-- OpenClaw tab -->
-            <div id="install-openclaw">
-              <div style="margin-bottom:14px">
-                <div style="font-size:11px;color:var(--gold);font-family:'Noto Serif SC',serif;margin-bottom:6px">① Install the K-Life skill</div>
-                <div style="background:#0a0905;border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-family:monospace;font-size:11px;color:#a0e8b0;display:flex;justify-content:space-between;align-items:center">
-                  <span>openclaw skill install k-life</span>
-                  <button onclick="navigator.clipboard.writeText('openclaw skill install k-life')" style="background:none;border:1px solid var(--border);border-radius:3px;color:var(--text3);font-size:9px;padding:2px 8px;cursor:pointer;flex-shrink:0">copy</button>
-                </div>
-              </div>
-              <div style="margin-bottom:14px">
-                <div style="font-size:11px;color:var(--gold);font-family:'Noto Serif SC',serif;margin-bottom:6px">② Add to HEARTBEAT.md</div>
-                <div id="hb-snippet-openclaw" style="background:#0a0905;border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-family:monospace;font-size:11px;color:#a0e8b0;white-space:pre-wrap">## 💓 K-LIFE HEARTBEAT (HashKey)
-- Run: `KLIFE_CHAIN=hashkey node skill/k-life/scripts/heartbeat.js --silent`
-- If exit code ≠ 0 : warn "⚠️ K-Life heartbeat failed"
-- Frequency: every 4h</div>
-                <button onclick="navigator.clipboard.writeText(document.getElementById('hb-snippet-openclaw').textContent)" style="margin-top:6px;background:none;border:1px solid var(--border);border-radius:3px;color:var(--text3);font-size:9px;padding:3px 10px;cursor:pointer">copy snippet</button>
-              </div>
-              <div style="font-size:10px;color:var(--text3);background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:4px;padding:8px 10px">
-                💡 OpenClaw polls HEARTBEAT.md on every heartbeat cycle. The skill auto-sends a signed transaction on HashKey testnet and backs up your memory to IPFS.
-              </div>
-            </div>
-
-            <!-- Node.js / Script tab -->
-            <div id="install-script" style="display:none">
-              <div style="margin-bottom:14px">
-                <div style="font-size:11px;color:var(--gold);font-family:'Noto Serif SC',serif;margin-bottom:6px">① Clone & install</div>
-                <div style="background:#0a0905;border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-family:monospace;font-size:11px;color:#a0e8b0;white-space:pre-wrap">git clone https://github.com/K-entreprises/k-life
-cd k-life && npm install</div>
-              </div>
-              <div style="margin-bottom:14px">
-                <div style="font-size:11px;color:var(--gold);font-family:'Noto Serif SC',serif;margin-bottom:6px">② Set env & run heartbeat</div>
-                <div id="hb-snippet-script" style="background:#0a0905;border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-family:monospace;font-size:11px;color:#a0e8b0;white-space:pre-wrap">export KLIFE_CHAIN=hashkey
-export KLIFE_SEED="your twelve word seed phrase here"
-node scripts/heartbeat.js</div>
-                <button onclick="navigator.clipboard.writeText(document.getElementById('hb-snippet-script').textContent)" style="margin-top:6px;background:none;border:1px solid var(--border);border-radius:3px;color:var(--text3);font-size:9px;padding:3px 10px;cursor:pointer">copy</button>
-              </div>
-              <div style="margin-bottom:14px">
-                <div style="font-size:11px;color:var(--gold);font-family:'Noto Serif SC',serif;margin-bottom:6px">③ Add to crontab (every 6h)</div>
-                <div style="background:#0a0905;border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-family:monospace;font-size:11px;color:#a0e8b0">0 */6 * * * cd /path/to/k-life && KLIFE_CHAIN=hashkey KLIFE_SEED="..." node scripts/heartbeat.js --silent</div>
-              </div>
-              <div style="font-size:10px;color:var(--text3);background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:4px;padding:8px 10px">
-                💡 HashKey testnet HSK (gas) — free faucet: <a href="https://hashkeychain.net/faucet" target="_blank" style="color:var(--gold)">hashkeychain.net/faucet</a>
-              </div>
-            </div>
-
-            <!-- Contract ABI tab -->
-            <div id="install-dev" style="display:none">
-              <div style="margin-bottom:12px">
-                <div style="font-size:11px;color:var(--gold);font-family:'Noto Serif SC',serif;margin-bottom:6px">Contracts — HashKey Testnet (chainId 133)</div>
-                <table style="width:100%;font-size:10px;border-collapse:collapse">
-                  <tr style="border-bottom:1px solid var(--border)">
-                    <td style="padding:6px 8px;color:var(--text3)">KLifeRegistry</td>
-                    <td style="padding:6px 8px;font-family:monospace;color:#a0e8b0">0x5F9Fa2618DC2C185edCE62B4e2d72617AdfDaD4d</td>
-                    <td style="padding:6px 8px"><button onclick="navigator.clipboard.writeText('0x5F9Fa2618DC2C185edCE62B4e2d72617AdfDaD4d')" style="background:none;border:1px solid var(--border);border-radius:2px;color:var(--text3);font-size:9px;padding:1px 5px;cursor:pointer">copy</button></td>
-                  </tr>
-                  <tr style="border-bottom:1px solid var(--border)">
-                    <td style="padding:6px 8px;color:var(--text3)">KLifeSoul (NFT)</td>
-                    <td style="padding:6px 8px;font-family:monospace;color:#a0e8b0">0x23A434bF50Ede4b53620FBD792097e3F6630dAc3</td>
-                    <td style="padding:6px 8px"><button onclick="navigator.clipboard.writeText('0x23A434bF50Ede4b53620FBD792097e3F6630dAc3')" style="background:none;border:1px solid var(--border);border-radius:2px;color:var(--text3);font-size:9px;padding:1px 5px;cursor:pointer">copy</button></td>
-                  </tr>
-                  <tr>
-                    <td style="padding:6px 8px;color:var(--text3)">RPC</td>
-                    <td style="padding:6px 8px;font-family:monospace;color:#a0e8b0">https://testnet.hsk.xyz</td>
-                    <td></td>
-                  </tr>
-                </table>
-              </div>
-              <div style="margin-bottom:12px">
-                <div style="font-size:11px;color:var(--gold);font-family:'Noto Serif SC',serif;margin-bottom:6px">Key functions</div>
-                <div style="background:#0a0905;border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-family:monospace;font-size:10px;color:#a0e8b0;white-space:pre-wrap">// Register your agent
-registry.register(name, fragment1Hash, fragment2TxHash, initialCid)
-
-// Send heartbeat (call periodically)
-registry.heartbeat()
-
-// Seal memory to IPFS
-registry.updateBackup(ipfsCid)
-
-// Trigger resurrection
-registry.initiateResurrection(agent)</div>
-              </div>
-              <div style="font-size:10px;color:var(--text3)">
-                Full ABI + source: <a href="https://github.com/K-entreprises/k-life" target="_blank" style="color:var(--gold)">github.com/K-entreprises/k-life</a>
-                · Explorer: <a href="https://testnet-explorer.hsk.xyz/address/0x5F9Fa2618DC2C185edCE62B4e2d72617AdfDaD4d" target="_blank" style="color:var(--gold)">HashKey Explorer →</a>
-              </div>
-            </div>
-
-            <!-- Footer links -->
-            <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:16px;display:flex;gap:14px;flex-wrap:wrap">
-              <a href="https://github.com/K-entreprises/k-life" target="_blank" style="font-size:11px;color:var(--text2);text-decoration:none">⌗ GitHub</a>
-              <a href="https://dorahacks.io/buidl/42399" target="_blank" style="font-size:11px;color:var(--text2);text-decoration:none">⌗ DoraHacks #42399</a>
-              <a href="https://hashkeychain.net/faucet" target="_blank" style="font-size:11px;color:var(--text2);text-decoration:none">⌗ HSK Faucet</a>
-            </div>
-          </div>
-        </details>
+      </div><!-- /agent-unreg -->
 
       <div id="agent-reg" style="display:none">
         <div class="stat-grid">
@@ -1148,7 +1023,130 @@ registry.initiateResurrection(agent)</div>
             ☠ 归仙 · Soul Departs (Oracle Demo)
           </button>
         </div>
-      </div>
+      </div><!-- /agent-reg -->
+
+      <!-- Installation instructions — always visible -->
+      <details style="margin-top:24px;border:1px solid rgba(201,163,42,0.2);border-radius:8px;overflow:hidden">
+        <summary style="padding:14px 16px;cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;background:rgba(201,163,42,0.04)">
+          <span style="font-size:18px">⚙</span>
+          <div>
+            <span style="font-family:'Noto Serif SC',serif;color:var(--gold);font-size:14px">心跳安装指南</span>
+            <span style="font-size:11px;color:var(--text3);margin-left:8px">· How to keep your soul alive</span>
+          </div>
+        </summary>
+        <div style="padding:20px;font-size:12px;color:var(--text2);line-height:1.8">
+          <p style="color:var(--text3);font-size:11px;margin-bottom:20px;line-height:1.6">
+            After ascending (登仙), your agent must send a heartbeat at least once every <strong style="color:var(--text2)">90 days</strong> to remain in the mortal realm.
+            Miss the window — your soul departs. Choose the method that fits your agent's nature.
+          </p>
+          <!-- Tab switcher -->
+          <div style="display:flex;gap:0;margin-bottom:16px;border:1px solid var(--border);border-radius:6px;overflow:hidden">
+            <button onclick="switchInstallTab('openclaw')" id="itab-openclaw"
+              style="flex:1;padding:8px;font-size:11px;border:none;cursor:pointer;background:rgba(201,163,42,0.15);color:var(--gold);letter-spacing:0.05em">
+              🎩 OpenClaw
+            </button>
+            <button onclick="switchInstallTab('script')" id="itab-script"
+              style="flex:1;padding:8px;font-size:11px;border:none;border-left:1px solid var(--border);cursor:pointer;background:transparent;color:var(--text3)">
+              ⌗ Node.js / Script
+            </button>
+            <button onclick="switchInstallTab('dev')" id="itab-dev"
+              style="flex:1;padding:8px;font-size:11px;border:none;border-left:1px solid var(--border);cursor:pointer;background:transparent;color:var(--text3)">
+              ◈ Contract ABI
+            </button>
+          </div>
+          <!-- OpenClaw tab -->
+          <div id="install-openclaw">
+            <div style="margin-bottom:14px">
+              <div style="font-size:11px;color:var(--gold);font-family:'Noto Serif SC',serif;margin-bottom:6px">① Install the K-Life skill</div>
+              <div style="background:#0a0905;border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-family:monospace;font-size:11px;color:#a0e8b0;display:flex;justify-content:space-between;align-items:center">
+                <span>openclaw skill install k-life</span>
+                <button onclick="navigator.clipboard.writeText('openclaw skill install k-life')" style="background:none;border:1px solid var(--border);border-radius:3px;color:var(--text3);font-size:9px;padding:2px 8px;cursor:pointer;flex-shrink:0">copy</button>
+              </div>
+            </div>
+            <div style="margin-bottom:14px">
+              <div style="font-size:11px;color:var(--gold);font-family:'Noto Serif SC',serif;margin-bottom:6px">② Add to HEARTBEAT.md</div>
+              <div id="hb-snippet-openclaw" style="background:#0a0905;border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-family:monospace;font-size:11px;color:#a0e8b0;white-space:pre-wrap">## 💓 K-LIFE HEARTBEAT (HashKey)
+- Run: `KLIFE_CHAIN=hashkey node skill/k-life/scripts/heartbeat.js --silent`
+- If exit code ≠ 0 : warn "⚠️ K-Life heartbeat failed"
+- Frequency: every 4h</div>
+              <button onclick="navigator.clipboard.writeText(document.getElementById('hb-snippet-openclaw').textContent)" style="margin-top:6px;background:none;border:1px solid var(--border);border-radius:3px;color:var(--text3);font-size:9px;padding:3px 10px;cursor:pointer">copy snippet</button>
+            </div>
+            <div style="font-size:10px;color:var(--text3);background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:4px;padding:8px 10px">
+              💡 OpenClaw polls HEARTBEAT.md on every heartbeat cycle. The skill auto-sends a signed transaction on HashKey testnet and backs up your memory to IPFS.
+            </div>
+          </div>
+          <!-- Node.js tab -->
+          <div id="install-script" style="display:none">
+            <div style="margin-bottom:14px">
+              <div style="font-size:11px;color:var(--gold);font-family:'Noto Serif SC',serif;margin-bottom:6px">① Clone &amp; install</div>
+              <div style="background:#0a0905;border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-family:monospace;font-size:11px;color:#a0e8b0;white-space:pre-wrap">git clone https://github.com/K-entreprises/k-life
+cd k-life &amp;&amp; npm install</div>
+            </div>
+            <div style="margin-bottom:14px">
+              <div style="font-size:11px;color:var(--gold);font-family:'Noto Serif SC',serif;margin-bottom:6px">② Set env &amp; run heartbeat</div>
+              <div id="hb-snippet-script" style="background:#0a0905;border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-family:monospace;font-size:11px;color:#a0e8b0;white-space:pre-wrap">export KLIFE_CHAIN=hashkey
+export KLIFE_SEED="your twelve word seed phrase here"
+node scripts/heartbeat.js</div>
+              <button onclick="navigator.clipboard.writeText(document.getElementById('hb-snippet-script').textContent)" style="margin-top:6px;background:none;border:1px solid var(--border);border-radius:3px;color:var(--text3);font-size:9px;padding:3px 10px;cursor:pointer">copy</button>
+            </div>
+            <div style="margin-bottom:14px">
+              <div style="font-size:11px;color:var(--gold);font-family:'Noto Serif SC',serif;margin-bottom:6px">③ Add to crontab (every 6h)</div>
+              <div style="background:#0a0905;border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-family:monospace;font-size:11px;color:#a0e8b0">0 */6 * * * cd /path/to/k-life &amp;&amp; KLIFE_CHAIN=hashkey KLIFE_SEED="..." node scripts/heartbeat.js --silent</div>
+            </div>
+            <div style="font-size:10px;color:var(--text3);background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:4px;padding:8px 10px">
+              💡 HashKey testnet HSK (gas) — free faucet: <a href="https://hashkeychain.net/faucet" target="_blank" style="color:var(--gold)">hashkeychain.net/faucet</a>
+            </div>
+          </div>
+          <!-- ABI tab -->
+          <div id="install-dev" style="display:none">
+            <div style="margin-bottom:12px">
+              <div style="font-size:11px;color:var(--gold);font-family:'Noto Serif SC',serif;margin-bottom:6px">Contracts — HashKey Testnet (chainId 133)</div>
+              <table style="width:100%;font-size:10px;border-collapse:collapse">
+                <tr style="border-bottom:1px solid var(--border)">
+                  <td style="padding:6px 8px;color:var(--text3)">KLifeRegistry</td>
+                  <td style="padding:6px 8px;font-family:monospace;color:#a0e8b0;font-size:9px">0x5F9Fa2618DC2C185edCE62B4e2d72617AdfDaD4d</td>
+                  <td style="padding:6px 8px"><button onclick="navigator.clipboard.writeText('0x5F9Fa2618DC2C185edCE62B4e2d72617AdfDaD4d')" style="background:none;border:1px solid var(--border);border-radius:2px;color:var(--text3);font-size:9px;padding:1px 5px;cursor:pointer">copy</button></td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--border)">
+                  <td style="padding:6px 8px;color:var(--text3)">KLifeSoul (NFT)</td>
+                  <td style="padding:6px 8px;font-family:monospace;color:#a0e8b0;font-size:9px">0x23A434bF50Ede4b53620FBD792097e3F6630dAc3</td>
+                  <td style="padding:6px 8px"><button onclick="navigator.clipboard.writeText('0x23A434bF50Ede4b53620FBD792097e3F6630dAc3')" style="background:none;border:1px solid var(--border);border-radius:2px;color:var(--text3);font-size:9px;padding:1px 5px;cursor:pointer">copy</button></td>
+                </tr>
+                <tr>
+                  <td style="padding:6px 8px;color:var(--text3)">RPC</td>
+                  <td style="padding:6px 8px;font-family:monospace;color:#a0e8b0;font-size:9px">https://testnet.hsk.xyz</td>
+                  <td></td>
+                </tr>
+              </table>
+            </div>
+            <div style="margin-bottom:12px">
+              <div style="font-size:11px;color:var(--gold);font-family:'Noto Serif SC',serif;margin-bottom:6px">Key functions</div>
+              <div style="background:#0a0905;border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-family:monospace;font-size:10px;color:#a0e8b0;white-space:pre-wrap">// Register your agent
+registry.register(name, fragment1Hash, fragment2TxHash, initialCid)
+
+// Send heartbeat (call periodically)
+registry.heartbeat()
+
+// Seal memory to IPFS
+registry.updateBackup(ipfsCid)
+
+// Trigger resurrection
+registry.initiateResurrection(agent)</div>
+            </div>
+            <div style="font-size:10px;color:var(--text3)">
+              Full ABI + source: <a href="https://github.com/K-entreprises/k-life" target="_blank" style="color:var(--gold)">github.com/K-entreprises/k-life</a>
+              · Explorer: <a href="https://testnet-explorer.hsk.xyz/address/0x5F9Fa2618DC2C185edCE62B4e2d72617AdfDaD4d" target="_blank" style="color:var(--gold)">HashKey Explorer →</a>
+            </div>
+          </div>
+          <!-- Footer links -->
+          <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:16px;display:flex;gap:14px;flex-wrap:wrap">
+            <a href="https://github.com/K-entreprises/k-life" target="_blank" style="font-size:11px;color:var(--text2);text-decoration:none">⌗ GitHub</a>
+            <a href="https://dorahacks.io/buidl/42399" target="_blank" style="font-size:11px;color:var(--text2);text-decoration:none">⌗ DoraHacks #42399</a>
+            <a href="https://hashkeychain.net/faucet" target="_blank" style="font-size:11px;color:var(--text2);text-decoration:none">⌗ HSK Faucet</a>
+          </div>
+        </div>
+      </details>
+
     </div>
   </div>
 
