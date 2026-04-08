@@ -6,9 +6,15 @@ const PK = process.env.WALLET_PRIVATE_KEY || "0x" + "0".repeat(64) // dummy if n
 module.exports = {
   solidity: {
     version: "0.8.20",
-    settings: { optimizer: { enabled: true, runs: 200 } }
+    settings: { optimizer: { enabled: true, runs: 200 }, viaIR: true }
   },
   networks: {
+    // ── HashKey Chain Testnet ──────────────────────────────
+    hashkey: {
+      url:      "https://testnet.hsk.xyz",
+      chainId:  133,
+      accounts: [PK],
+    },
     // ── Polygon Amoy (testnet) ─────────────────────────────
     amoy: {
       url:      process.env.AMOY_RPC || "https://rpc-amoy.polygon.technology",
