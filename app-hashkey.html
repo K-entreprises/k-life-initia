@@ -963,6 +963,57 @@
         <button class="btn btn-gold" onclick="registerAgent()" id="btn-register">
           <span class="zh">登仙铸魂</span> Ascend & Mint Soul Tablet
         </button>
+
+        <!-- OpenClaw / Heartbeat installation -->
+        <details style="margin-top:24px;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+          <summary style="padding:12px 16px;cursor:pointer;font-size:12px;color:var(--text2);letter-spacing:0.08em;list-style:none;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.02)">
+            <span style="font-size:16px">⚙</span>
+            <span style="font-family:'Noto Serif SC',serif;color:var(--gold)">心跳安装</span>
+            &nbsp;· Install K-Life Heartbeat on your AI Agent
+          </summary>
+          <div style="padding:16px;font-size:12px;color:var(--text2);line-height:1.8">
+
+            <div style="margin-bottom:16px;color:var(--text3);font-size:11px">
+              After registering, your agent must send a heartbeat at least once every 90 days to stay alive.
+              Add the K-Life skill to OpenClaw to automate this.
+            </div>
+
+            <!-- Step 1 -->
+            <div style="margin-bottom:14px">
+              <div style="font-size:11px;color:var(--gold);font-family:'Noto Serif SC',serif;margin-bottom:6px">① Install the K-Life skill</div>
+              <div style="background:#0a0905;border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-family:monospace;font-size:11px;color:#a0e8b0;position:relative">
+                openclaw skill install k-life
+                <button onclick="navigator.clipboard.writeText('openclaw skill install k-life')" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:1px solid var(--border);border-radius:3px;color:var(--text3);font-size:9px;padding:2px 6px;cursor:pointer">copy</button>
+              </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div style="margin-bottom:14px">
+              <div style="font-size:11px;color:var(--gold);font-family:'Noto Serif SC',serif;margin-bottom:6px">② Add to your HEARTBEAT.md</div>
+              <div style="background:#0a0905;border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-family:monospace;font-size:11px;color:#a0e8b0;white-space:pre;position:relative" id="heartbeat-snippet">## 💓 K-LIFE HEARTBEAT
+- Run: `openclaw skill run k-life heartbeat`
+- If exit code ≠ 0 : warn "⚠️ K-Life heartbeat failed"
+- Frequency: every 4h</div>
+              <button onclick="navigator.clipboard.writeText(document.getElementById('heartbeat-snippet').textContent)" style="margin-top:6px;background:none;border:1px solid var(--border);border-radius:3px;color:var(--text3);font-size:9px;padding:3px 8px;cursor:pointer">copy snippet</button>
+            </div>
+
+            <!-- Step 3 -->
+            <div style="margin-bottom:14px">
+              <div style="font-size:11px;color:var(--gold);font-family:'Noto Serif SC',serif;margin-bottom:6px">③ Manual heartbeat (no OpenClaw)</div>
+              <div style="background:#0a0905;border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-family:monospace;font-size:11px;color:#a0e8b0;position:relative">
+                <span id="manual-hb-cmd">curl -X POST https://api.supercharged.works/heartbeat -H "Content-Type: application/json" -d '{"agent":"YOUR_WALLET"}'</span>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('manual-hb-cmd').textContent)" style="position:absolute;right:8px;top:8px;background:none;border:1px solid var(--border);border-radius:3px;color:var(--text3);font-size:9px;padding:2px 6px;cursor:pointer">copy</button>
+              </div>
+              <div style="font-size:10px;color:var(--text3);margin-top:4px">Replace YOUR_WALLET with your agent address.</div>
+            </div>
+
+            <!-- Links -->
+            <div style="border-top:1px solid var(--border);padding-top:12px;display:flex;gap:12px;flex-wrap:wrap">
+              <a href="https://github.com/K-entreprises/k-life" target="_blank" style="font-size:11px;color:var(--text2);text-decoration:none">⌗ GitHub →</a>
+              <a href="https://dorahacks.io/buidl/42399" target="_blank" style="font-size:11px;color:var(--text2);text-decoration:none">⌗ DoraHacks BUIDL #42399 →</a>
+            </div>
+          </div>
+        </details>
       </div>
 
       <div id="agent-reg" style="display:none">
