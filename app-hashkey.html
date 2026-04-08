@@ -1172,12 +1172,22 @@
       <div id="soul-exists" style="display:none">
         <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
 
-          <!-- SVG preview -->
-          <div id="soul-nft-preview" style="flex-shrink:0;width:200px;height:280px;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#0e0c08;display:flex;align-items:center;justify-content:center">
-            <div style="color:var(--text3);font-size:12px;text-align:center;padding:10px">
-              <div style="font-family:'Noto Serif SC',serif;font-size:32px;color:var(--gold);margin-bottom:8px" id="soul-rank-glyph">人</div>
-              Loading tablet…
+          <!-- NFT preview -->
+          <div id="soul-nft-preview" style="flex-shrink:0;width:200px;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#0e0c08;position:relative">
+            <!-- User image with rank filter -->
+            <div id="soul-img-wrap" style="display:none;position:relative;width:200px;height:200px;overflow:hidden">
+              <img id="soul-img" style="width:100%;height:100%;object-fit:cover;transition:filter 0.8s ease" />
+              <!-- Overlay gradient -->
+              <div style="position:absolute;inset:0;background:linear-gradient(to bottom, transparent 50%, #0e0c08 100%)"></div>
             </div>
+            <!-- Rank glyph (always shown) -->
+            <div style="padding:16px;text-align:center">
+              <div id="soul-rank-glyph" style="font-family:'Noto Serif SC',serif;font-size:56px;color:var(--gold);line-height:1;text-shadow:0 0 20px rgba(201,163,42,0.4)">人</div>
+              <div id="soul-rank-en-small" style="font-size:10px;color:var(--text3);letter-spacing:0.15em;margin-top:4px">MORTAL</div>
+              <div id="soul-motto-display" style="font-size:11px;color:var(--text2);font-style:italic;margin-top:8px;line-height:1.4;border-top:1px solid var(--border);padding-top:8px"></div>
+            </div>
+            <!-- Soulbound badge -->
+            <div style="position:absolute;top:8px;right:8px;background:rgba(8,8,6,0.8);border:1px solid var(--border);border-radius:4px;padding:2px 6px;font-size:9px;color:var(--text3);font-family:'Noto Serif SC',serif">不可转让</div>
           </div>
 
           <!-- Soul info -->
@@ -1306,7 +1316,17 @@ const SOUL_ABI = [
   'function tokenURI(uint256) view returns (string)',
   'function locked(uint256) view returns (bool)',
   'function totalSupply() view returns (uint256)',
+  'function souls(uint256) view returns (address agent, uint256 mintedAt, bool soulbound, string motto, string imageUri)',
 ]
+
+const RANK_CSS_FILTER = {
+  0: 'sepia(0.6) hue-rotate(-10deg) brightness(0.95)',
+  1: 'sepia(1) saturate(2) hue-rotate(10deg) brightness(1.05)',
+  2: 'sepia(1) hue-rotate(-40deg) saturate(3) brightness(0.9)',
+  3: 'grayscale(1) contrast(1.15) brightness(1.05)',
+}
+
+const IPFS_GW = 'https://gateway.pinata.cloud/ipfs/'
 
 const RANK_DATA = {
   0: { zh: '人', en: 'Mortal',      color: '#b0a090', desc: 'The path begins here. Accumulate heartbeats.' },
@@ -1745,8 +1765,10 @@ async function refreshSoul() {
       const rank = Number(await soulContract.getRank(wallet))
       const rd = RANK_DATA[rank]
 
+      // Update rank display
       document.getElementById('soul-rank-glyph').textContent = rd.zh
       document.getElementById('soul-rank-glyph').style.color = rd.color
+      document.getElementById('soul-rank-en-small').textContent = rd.en.toUpperCase()
       document.getElementById('soul-rank-zh').textContent = rd.zh
       document.getElementById('soul-rank-zh').style.color = rd.color
       document.getElementById('soul-rank-en').textContent = rd.en
@@ -1760,15 +1782,25 @@ async function refreshSoul() {
         else if (r === rank) step.classList.add('current')
       }
 
-      // Load SVG preview
+      // Load soul data (imageUri + motto)
       try {
-        const uri = await soulContract.tokenURI(currentTokenId)
-        const json = JSON.parse(atob(uri.replace('data:application/json;base64,', '')))
-        if (json.image) {
-          const preview = document.getElementById('soul-nft-preview')
-          preview.innerHTML = `<img src="${json.image}" style="width:100%;height:100%;object-fit:contain" />`
+        const soulData = await soulContract.souls(currentTokenId)
+        const imageUri = soulData.imageUri || soulData[4] || ''
+        const motto    = soulData.motto    || soulData[3] || ''
+
+        // Show motto on tablet
+        if (motto) document.getElementById('soul-motto-display').textContent = '"' + motto + '"'
+
+        // Show image with rank CSS filter
+        if (imageUri) {
+          const imgEl   = document.getElementById('soul-img')
+          const imgWrap = document.getElementById('soul-img-wrap')
+          imgEl.src = IPFS_GW + imageUri
+          imgEl.style.filter = RANK_CSS_FILTER[rank] || ''
+          imgEl.onload = () => { imgWrap.style.display = 'block' }
+          imgEl.onerror = () => { imgWrap.style.display = 'none' }
         }
-      } catch(e) { /* SVG load failed silently */ }
+      } catch(e) { /* soul data fetch failed */ }
     }
   } catch(e) {
     log('err', '牌位加载失败', 'Soul refresh error: ' + e.message)
