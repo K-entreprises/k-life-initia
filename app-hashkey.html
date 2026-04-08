@@ -1212,6 +1212,28 @@
           Your soul tablet is minted automatically when you register.<br>
           <span style="color:var(--text3);font-size:12px">14 days → 修 · 1 resurrection → 还 · 90 days → 仙</span>
         </p>
+
+        <!-- Already registered but no soul on this contract → offer standalone mint -->
+        <div id="soul-mint-registered" style="display:none;margin-bottom:16px;border:1px solid rgba(201,163,42,0.2);border-radius:8px;padding:16px;background:rgba(201,163,42,0.04)">
+          <p style="font-size:12px;color:var(--gold);margin-bottom:12px">
+            ✦ You are registered. Mint your 牌位 soul tablet now.
+          </p>
+          <div style="margin-bottom:12px">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:5px;font-family:'Noto Serif SC',serif">铭文 · Inscription (optional, max 60 chars)</div>
+            <input type="text" id="late-motto" placeholder="借尸还魂 · Same soul. New vessel." maxlength="60" />
+          </div>
+          <div style="margin-bottom:12px">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;border:1px dashed var(--border);border-radius:6px;background:rgba(255,255,255,0.02)">
+              <span style="font-size:16px">🖼</span>
+              <span id="late-img-text" style="font-size:12px;color:var(--text3)">Choose soul image… (JPG/PNG, max 2MB)</span>
+              <input type="file" id="late-img-file" accept="image/*" onchange="handleLateImageSelect(event)" style="display:none" />
+            </label>
+          </div>
+          <button class="btn btn-gold" onclick="mintSoulLate()" id="btn-mint-late">
+            <span class="zh">铸魂</span> Mint Soul Tablet
+          </button>
+        </div>
+
         <div id="soul-register-prompt">
           <button class="btn btn-gold" onclick="showTab('tab-register')">
             <span class="zh">登仙铸魂</span> Go Register → Ascend & Mint
@@ -1411,6 +1433,52 @@ function handleImageSelect(event) {
     document.getElementById('img-upload-label').style.borderColor = 'rgba(201,163,42,0.4)'
   }
   reader.readAsDataURL(file)
+}
+
+let lateImageBase64 = '', lateImageMime = '', lateImageCid = ''
+
+function handleLateImageSelect(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  if (file.size > 2 * 1024 * 1024) { alert('Image too large — max 2MB'); return }
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    lateImageBase64 = e.target.result.split(',')[1]
+    lateImageMime   = file.type
+    lateImageCid    = ''
+    document.getElementById('late-img-text').textContent = '✓ ' + file.name
+  }
+  reader.readAsDataURL(file)
+}
+
+async function mintSoulLate() {
+  if (!soulContract) return log('error', '合约未连接', 'Soul contract not connected')
+  const btn = document.getElementById('btn-mint-late')
+  btn.disabled = true; btn.textContent = '上传图像…'
+  try {
+    let imgCid = ''
+    if (lateImageBase64) {
+      try {
+        const res = await fetch(API + '/soul/upload-image', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agent: wallet, imageBase64: lateImageBase64, mimeType: lateImageMime })
+        })
+        const d = await res.json(); imgCid = d.cid || ''
+        log('ok', '图像已上传 · Image uploaded: ' + imgCid.slice(0,16) + '…')
+      } catch(e) { log('muted', '图像上传失败 · Upload failed: ' + e.message.slice(0,40)) }
+    }
+    btn.textContent = '铸魂…'
+    const motto = document.getElementById('late-motto')?.value.trim() || ''
+    const tx = await soulContract.mint(wallet, motto, imgCid)
+    log('info', '等待确认… · Waiting for confirmation…')
+    await tx.wait()
+    log('ok', '牌位已铸造 · Soul tablet minted!')
+    await refreshSoul()
+  } catch(e) {
+    log('error', e.message.slice(0,80))
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<span class="zh">铸魂</span> Mint Soul Tablet'
+  }
 }
 
 async function uploadSoulImage() {
@@ -1782,7 +1850,7 @@ async function refreshSoul() {
   if (!soulContract) {
     document.getElementById('soul-none').style.display = 'block'
     document.getElementById('soul-exists').style.display = 'none'
-    document.getElementById('soul-mint-section').style.display = 'none'
+    document.getElementById('soul-mint-registered').style.display = 'none'
     document.getElementById('soul-register-prompt').style.display = 'block'
     document.getElementById('soul-register-prompt').innerHTML = '<p style="font-size:12px;color:var(--text3)">Register first to mint your soul tablet.</p>'
     return
@@ -1801,11 +1869,11 @@ async function refreshSoul() {
       try {
         const a = await registry.getAgent(wallet)
         if (Number(a.registeredAt) > 0) {
-          document.getElementById('soul-mint-section').style.display = 'block'
+          document.getElementById('soul-mint-registered').style.display = 'block'
           document.getElementById('soul-register-prompt').style.display = 'none'
         } else {
           document.getElementById('soul-register-prompt').style.display = 'block'
-          document.getElementById('soul-mint-section').style.display = 'none'
+          document.getElementById('soul-mint-registered').style.display = 'none'
         }
       } catch {}
     } else {
@@ -1846,10 +1914,21 @@ async function refreshSoul() {
         if (imageUri) {
           const imgEl   = document.getElementById('soul-img')
           const imgWrap = document.getElementById('soul-img-wrap')
-          imgEl.src = IPFS_GW + imageUri
+          const imgUrl  = IPFS_GW + imageUri
+          // Show loading state immediately
+          imgWrap.style.display = 'block'
+          imgWrap.style.opacity = '0.4'
           imgEl.style.filter = RANK_CSS_FILTER[rank] || ''
-          imgEl.onload = () => { imgWrap.style.display = 'block' }
-          imgEl.onerror = () => { imgWrap.style.display = 'none' }
+          imgEl.onload  = () => { imgWrap.style.opacity = '1' }
+          imgEl.onerror = () => {
+            // Try alt gateway
+            if (!imgEl.src.includes('cloudflare')) {
+              imgEl.src = 'https://cloudflare-ipfs.com/ipfs/' + imageUri
+            } else {
+              imgWrap.style.display = 'none'
+            }
+          }
+          imgEl.src = imgUrl
         }
       } catch(e) { /* soul data fetch failed */ }
     }
