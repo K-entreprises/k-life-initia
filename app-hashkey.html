@@ -1848,32 +1848,66 @@ async function loadAllAgents() {
       container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);font-style:italic">No immortals yet. Be the first.</div>'
       return
     }
-    const html = []
-    for (const addr of addrs) {
-      let a, silH = 0
+    // Fetch registry + soul data in parallel for all agents
+    const agentData = await Promise.all(addrs.map(async (addr) => {
       try {
-        a = await registry.getAgent(addr)
-        const sil = await registry.silenceSeconds(addr)
-        silH = Math.round(Number(sil) / 3600)
-      } catch(e) { continue }
+        const [a, sil] = await Promise.all([
+          registry.getAgent(addr),
+          registry.silenceSeconds(addr)
+        ])
+        let imageUri = '', rank = 0
+        if (soulContract) {
+          try {
+            const tokenId = await soulContract.agentToToken(addr)
+            if (Number(tokenId) > 0) {
+              const [s, r] = await Promise.all([
+                soulContract.souls(Number(tokenId)),
+                soulContract.getRank(addr)
+              ])
+              imageUri = s.imageUri || s[4] || ''
+              rank = Number(r)
+            }
+          } catch {}
+        }
+        return { addr, a, silH: Math.round(Number(sil) / 3600), imageUri, rank }
+      } catch { return null }
+    }))
 
-      const status = Number(a.status)
-      const beats = Number(a.totalHeartbeats)
-      const days = Number(a.activeDays)
-      const isMe = addr.toLowerCase() === wallet?.toLowerCase()
+    const RANK_GLYPHS = ['人','修','还','仙']
+    const RANK_COLORS = ['#b0a090','#3ab88f','#e8c547','#c9a32a']
+
+    const html = agentData.filter(Boolean).map(({ addr, a, silH, imageUri, rank }) => {
+      const status   = Number(a.status)
+      const beats    = Number(a.totalHeartbeats)
+      const days     = Number(a.activeDays)
+      const isMe     = addr.toLowerCase() === wallet?.toLowerCase()
       const statusZh = STATUS[status] || '—'
-      const alive = status === 1 || status === 4
+      const alive    = status === 1 || status === 4
       const dotColor = alive ? 'var(--jade2)' : status === 2 ? 'var(--red2)' : 'var(--text3)'
+      const cssFilter = RANK_CSS_FILTER[rank] || ''
+      const rankGlyph = RANK_GLYPHS[rank] || '人'
+      const rankColor = RANK_COLORS[rank] || '#b0a090'
 
-      html.push(`
+      const avatarHtml = imageUri
+        ? `<div style="width:52px;height:52px;border-radius:8px;overflow:hidden;flex-shrink:0;border:1px solid rgba(${rank===3?'201,163,42':'80,80,60'},0.3);position:relative">
+            <img src="${IPFS_GW}${imageUri}"
+              style="width:100%;height:100%;object-fit:cover;filter:${cssFilter}"
+              onerror="this.style.display='none';this.nextSibling.style.display='flex'"
+            />
+            <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:#0e0c08;font-family:'Noto Serif SC',serif;font-size:22px;color:${rankColor}">${rankGlyph}</div>
+           </div>`
+        : `<div style="width:52px;height:52px;border-radius:8px;border:1px solid rgba(80,80,60,0.3);background:#0e0c08;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Noto Serif SC',serif;font-size:${isMe?'22px':'20px'};color:${isMe?'var(--gold)':rankColor}">${isMe?'🎩':rankGlyph}</div>`
+
+      return `
         <div class="agent-row">
-          <div class="agent-avatar">${isMe ? '🎩' : '🤖'}</div>
-          <div style="flex:1;min-width:0">
+          ${avatarHtml}
+          <div style="flex:1;min-width:0;margin-left:12px">
             <div class="agent-name">
               ${a.name}
               ${isMe ? '<span class="badge badge-risen" style="font-size:10px;vertical-align:middle;margin-left:6px">YOU · 你</span>' : ''}
+              <span style="font-family:\'Noto Serif SC\',serif;font-size:11px;color:${rankColor};margin-left:6px">${rankGlyph}</span>
             </div>
-            <div class="agent-addr">${addr}</div>
+            <div class="agent-addr">${addr.slice(0,8)}…${addr.slice(-6)}</div>
             <div class="agent-meta">${beats} 心跳 · ${days} 天 · silence: ${silH}h</div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
@@ -1881,11 +1915,11 @@ async function loadAllAgents() {
               <span style="width:7px;height:7px;border-radius:50%;background:${dotColor};box-shadow:0 0 6px ${dotColor}"></span>
               <span class="badge ${STATUS_CLASS[status]}" style="font-family:'Noto Serif SC',serif">${statusZh}</span>
             </div>
-            <a href="https://testnet-explorer.hsk.xyz/address/${addr}" target="_blank" class="explorer-link">↗ HashKey Explorer</a>
+            <a href="https://testnet-explorer.hsk.xyz/address/${addr}" target="_blank" class="explorer-link">↗ Explorer</a>
           </div>
         </div>
-      `)
-    }
+      `
+    })
     container.innerHTML = html.join('')
   } catch(e) {
     container.innerHTML = `<div style="color:var(--red2);padding:20px;font-size:13px">Error: ${e.message}</div>`
