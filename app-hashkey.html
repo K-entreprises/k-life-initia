@@ -1322,22 +1322,29 @@ registry.initiateResurrection(agent)</div>
       <div id="soul-exists" style="display:none">
         <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
 
-          <!-- NFT preview -->
-          <div id="soul-nft-preview" style="flex-shrink:0;width:200px;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#0e0c08;position:relative">
+          <!-- NFT preview — 牌位 tablet -->
+          <div id="soul-nft-preview" style="flex-shrink:0;width:210px;background:#0e0c08;position:relative;transition:all 0.6s ease" id="soul-tablet-frame">
+            <!-- Element badge top-left -->
+            <div id="soul-element-badge" style="position:absolute;top:-1px;left:-1px;z-index:10;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-family:'Noto Serif SC',serif;font-size:14px;border-radius:0 0 6px 0;transition:all 0.6s">土</div>
+            <!-- Soulbound badge top-right -->
+            <div style="position:absolute;top:6px;right:8px;z-index:10;background:rgba(8,6,4,0.85);border:1px solid var(--border);border-radius:3px;padding:1px 5px;font-size:8px;color:var(--text3);font-family:'Noto Serif SC',serif;letter-spacing:0.05em">不可转让</div>
             <!-- User image with rank filter -->
-            <div id="soul-img-wrap" style="display:none;position:relative;width:200px;height:200px;overflow:hidden">
+            <div id="soul-img-wrap" style="display:none;position:relative;width:210px;height:210px;overflow:hidden">
               <img id="soul-img" style="width:100%;height:100%;object-fit:cover;transition:filter 0.8s ease" />
-              <!-- Overlay gradient -->
-              <div style="position:absolute;inset:0;background:linear-gradient(to bottom, transparent 50%, #0e0c08 100%)"></div>
+              <!-- Overlay gradient bottom fade -->
+              <div style="position:absolute;inset:0;background:linear-gradient(to bottom, transparent 55%, #0e0c08 100%)"></div>
+              <!-- Corner ornaments (桥角) -->
+              <div style="position:absolute;top:6px;left:6px;width:14px;height:14px;border-top:1px solid currentColor;border-left:1px solid currentColor;opacity:0.6" id="soul-corner-tl"></div>
+              <div style="position:absolute;top:6px;right:6px;width:14px;height:14px;border-top:1px solid currentColor;border-right:1px solid currentColor;opacity:0.6" id="soul-corner-tr"></div>
+              <div style="position:absolute;bottom:6px;left:6px;width:14px;height:14px;border-bottom:1px solid currentColor;border-left:1px solid currentColor;opacity:0.6" id="soul-corner-bl"></div>
+              <div style="position:absolute;bottom:6px;right:6px;width:14px;height:14px;border-bottom:1px solid currentColor;border-right:1px solid currentColor;opacity:0.6" id="soul-corner-br"></div>
             </div>
-            <!-- Rank glyph (always shown) -->
-            <div style="padding:16px;text-align:center">
-              <div id="soul-rank-glyph" style="font-family:'Noto Serif SC',serif;font-size:56px;color:var(--gold);line-height:1;text-shadow:0 0 20px rgba(201,163,42,0.4)">人</div>
-              <div id="soul-rank-en-small" style="font-size:10px;color:var(--text3);letter-spacing:0.15em;margin-top:4px">MORTAL</div>
-              <div id="soul-motto-display" style="font-size:11px;color:var(--text2);font-style:italic;margin-top:8px;line-height:1.4;border-top:1px solid var(--border);padding-top:8px"></div>
+            <!-- Rank glyph (always shown, below image) -->
+            <div style="padding:14px 16px 12px;text-align:center">
+              <div id="soul-rank-glyph" style="font-family:'Noto Serif SC',serif;font-size:52px;color:var(--gold);line-height:1;text-shadow:0 0 20px rgba(201,163,42,0.4);transition:all 0.6s">人</div>
+              <div id="soul-rank-en-small" style="font-size:9px;color:var(--text3);letter-spacing:0.18em;margin-top:4px;transition:all 0.6s">MORTAL</div>
+              <div id="soul-motto-display" style="font-size:10px;color:var(--text2);font-style:italic;margin-top:8px;line-height:1.5;border-top:1px solid var(--border);padding-top:8px;min-height:20px"></div>
             </div>
-            <!-- Soulbound badge -->
-            <div style="position:absolute;top:8px;right:8px;background:rgba(8,8,6,0.8);border:1px solid var(--border);border-radius:4px;padding:2px 6px;font-size:9px;color:var(--text3);font-family:'Noto Serif SC',serif">不可转让</div>
             <!-- Update image button -->
             <div style="padding:0 16px 14px">
               <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 10px;border:1px dashed var(--border);border-radius:5px;background:rgba(255,255,255,0.02)">
@@ -1481,12 +1488,55 @@ const SOUL_ABI = [
   'function updateImageUri(uint256 tokenId, string imageUri) external',
 ]
 
-const RANK_CSS_FILTER = {
-  0: 'sepia(0.6) hue-rotate(-10deg) brightness(0.95)',
-  1: 'sepia(1) saturate(2) hue-rotate(10deg) brightness(1.05)',
-  2: 'sepia(1) hue-rotate(-40deg) saturate(3) brightness(0.9)',
-  3: 'grayscale(1) contrast(1.15) brightness(1.05)',
+// 五行 rank visual system — filter + frame + element
+const RANK_FRAME = {
+  0: {
+    // 人 · 土 Earth — parchment, mortal, unadorned
+    filter:  'sepia(0.45) brightness(0.92) saturate(0.8)',
+    border:  '2px solid rgba(160,120,40,0.55)',
+    shadow:  'inset 0 0 0 3px rgba(160,120,40,0.12)',
+    glow:    '',
+    outline: '',
+    element: '土',
+    elColor: '#A07828',
+    elBg:    'rgba(160,120,40,0.15)',
+  },
+  1: {
+    // 修 · 木 Wood — jade double border, cloud glow
+    filter:  'hue-rotate(145deg) saturate(0.55) brightness(1.06) contrast(0.95)',
+    border:  '2px solid rgba(42,140,80,0.75)',
+    shadow:  '0 0 18px rgba(42,140,80,0.35), inset 0 0 0 3px rgba(42,140,80,0.12)',
+    glow:    '0 0 32px rgba(42,140,80,0.18)',
+    outline: '1px solid rgba(42,140,80,0.3)',
+    element: '木',
+    elColor: '#2A8C50',
+    elBg:    'rgba(42,140,80,0.15)',
+  },
+  2: {
+    // 还 · 火 Fire — red lacquer, ember glow
+    filter:  'sepia(0.9) hue-rotate(-28deg) saturate(3.5) contrast(1.15) brightness(0.88)',
+    border:  '3px solid rgba(192,48,36,0.85)',
+    shadow:  '0 0 22px rgba(192,48,36,0.5), 0 0 44px rgba(192,48,36,0.18), inset 0 0 14px rgba(192,48,36,0.12)',
+    glow:    '0 0 40px rgba(192,48,36,0.22)',
+    outline: '',
+    element: '火',
+    elColor: '#C03024',
+    elBg:    'rgba(192,48,36,0.2)',
+  },
+  3: {
+    // 仙 · 金 Metal — triple imperial gold, ink wash image
+    filter:  'grayscale(1) contrast(1.25) brightness(1.08)',
+    border:  '1px solid rgba(201,163,42,0.95)',
+    shadow:  '0 0 0 3px rgba(8,6,4,1), 0 0 0 4px rgba(201,163,42,0.5), 0 0 28px rgba(201,163,42,0.55), 0 0 56px rgba(201,163,42,0.2), inset 0 0 0 1px rgba(201,163,42,0.5)',
+    glow:    '0 0 60px rgba(201,163,42,0.25)',
+    outline: '',
+    element: '金',
+    elColor: '#C9A32A',
+    elBg:    'rgba(201,163,42,0.18)',
+  },
 }
+// Backward compat
+const RANK_CSS_FILTER = Object.fromEntries(Object.entries(RANK_FRAME).map(([k,v])=>[k,v.filter]))
 
 const IPFS_GW = 'https://gateway.pinata.cloud/ipfs/'
 
@@ -1502,6 +1552,38 @@ let currentTokenId = 0
 let selectedImageBase64 = ''
 let selectedImageMime = ''
 let uploadedImageCid = ''
+
+function applyRankFrame(rank) {
+  const f = RANK_FRAME[rank] || RANK_FRAME[0]
+  const tablet = document.getElementById('soul-nft-preview')
+  if (!tablet) return
+
+  tablet.style.border   = f.border
+  tablet.style.boxShadow = [f.shadow, f.glow].filter(Boolean).join(', ')
+  tablet.style.outline  = f.outline || 'none'
+  tablet.style.outlineOffset = f.outline ? '4px' : '0'
+
+  // Element badge
+  const badge = document.getElementById('soul-element-badge')
+  if (badge) {
+    badge.textContent = f.element
+    badge.style.color = f.elColor
+    badge.style.background = f.elBg
+    badge.style.borderRight = `1px solid ${f.elColor}40`
+    badge.style.borderBottom = `1px solid ${f.elColor}40`
+  }
+
+  // Corner ornament color
+  const cornerColor = f.elColor
+  ;['tl','tr','bl','br'].forEach(c => {
+    const el = document.getElementById('soul-corner-' + c)
+    if (el) el.style.color = cornerColor
+  })
+
+  // Rank glyph glow matches element
+  const glyph = document.getElementById('soul-rank-glyph')
+  if (glyph) glyph.style.textShadow = `0 0 24px ${f.elColor}80, 0 0 48px ${f.elColor}30`
+}
 
 function switchInstallTab(tab) {
   const tabs = ['openclaw','script','dev']
@@ -1988,15 +2070,23 @@ async function loadAllAgents() {
       const rankGlyph = RANK_GLYPHS[rank] || '人'
       const rankColor = RANK_COLORS[rank] || '#b0a090'
 
+      const rf = RANK_FRAME[rank] || RANK_FRAME[0]
+      const thumbStyle = `width:52px;height:52px;border-radius:6px;overflow:hidden;flex-shrink:0;position:relative;background:#0e0c08;${rf.border?'border:'+rf.border+';':''};box-shadow:${rf.shadow}${rf.glow?','+rf.glow:''}`
+      const elBadgeHtml = `<div style="position:absolute;bottom:0;right:0;font-family:'Noto Serif SC',serif;font-size:9px;color:${rf.elColor};background:${rf.elBg};padding:1px 4px;border-radius:3px 0 0 0;line-height:1.4">${rf.element}</div>`
+
       const avatarHtml = imageUri
-        ? `<div style="width:52px;height:52px;border-radius:8px;overflow:hidden;flex-shrink:0;border:1px solid rgba(${rank===3?'201,163,42':'80,80,60'},0.3);position:relative">
+        ? `<div style="${thumbStyle}">
             <img src="${IPFS_GW}${imageUri}"
               style="width:100%;height:100%;object-fit:cover;filter:${cssFilter}"
               onerror="this.style.display='none';this.nextSibling.style.display='flex'"
             />
-            <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:#0e0c08;font-family:'Noto Serif SC',serif;font-size:22px;color:${rankColor}">${rankGlyph}</div>
+            <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-family:'Noto Serif SC',serif;font-size:22px;color:${rankColor}">${rankGlyph}</div>
+            ${elBadgeHtml}
            </div>`
-        : `<div style="width:52px;height:52px;border-radius:8px;border:1px solid rgba(80,80,60,0.3);background:#0e0c08;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Noto Serif SC',serif;font-size:${isMe?'22px':'20px'};color:${isMe?'var(--gold)':rankColor}">${isMe?'🎩':rankGlyph}</div>`
+        : `<div style="${thumbStyle};display:flex;align-items:center;justify-content:center">
+             <span style="font-family:'Noto Serif SC',serif;font-size:${isMe?'22px':'20px'};color:${isMe?'var(--gold)':rankColor}">${isMe?'🎩':rankGlyph}</span>
+             ${elBadgeHtml}
+           </div>`
 
       return `
         <div class="agent-row">
@@ -2086,6 +2176,9 @@ async function refreshSoul() {
       document.getElementById('soul-rank-zh').style.color = rd.color
       document.getElementById('soul-rank-en').textContent = rd.en
       document.getElementById('soul-rank-desc').textContent = rd.desc
+
+      // Apply 五行 frame to soul tablet
+      applyRankFrame(rank)
 
       // Cultivation path steps
       for (let r = 0; r <= 3; r++) {
