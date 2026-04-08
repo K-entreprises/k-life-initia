@@ -69,8 +69,9 @@ contract KLifeSoul {
     struct Soul {
         address agent;
         uint256 mintedAt;
-        bool soulbound;
-        string motto; // 铭文 — inscription carved at birth
+        bool    soulbound;
+        string  motto;    // 铭文 — inscription carved at birth
+        string  imageUri; // IPFS CID of user image (empty = use SVG only)
     }
 
     mapping(uint256 => Soul)  public souls;
@@ -104,7 +105,7 @@ contract KLifeSoul {
      * @param motto  铭文 — personal inscription carved on the tablet.
      *               Defaults to "借尸还魂 · Same soul. New vessel." if empty.
      */
-    function mint(address agent, string calldata motto) external returns (uint256 tokenId) {
+    function mint(address agent, string calldata motto, string calldata imageUri) external returns (uint256 tokenId) {
         require(agentToToken[agent] == 0, "Soul already exists");
         totalSupply++;
         tokenId = totalSupply;
@@ -122,7 +123,8 @@ contract KLifeSoul {
             agent:    agent,
             mintedAt: block.timestamp,
             soulbound: true,
-            motto:    finalMotto
+            motto:    finalMotto,
+            imageUri: imageUri
         });
         agentToToken[agent] = tokenId;
 
@@ -170,7 +172,8 @@ contract KLifeSoul {
         require(_exists[tokenId], "Token does not exist");
         Soul memory s = souls[tokenId];
 
-        (string memory rankZh, string memory rankEn, string memory color) = _rankData(getRank(s.agent));
+        uint8 rank = getRank(s.agent);
+        (string memory rankZh, string memory rankEn, string memory color) = _rankData(rank);
 
         uint256 beats = 0;
         uint256 days_ = 0;
@@ -186,7 +189,7 @@ contract KLifeSoul {
             } catch {}
         }
 
-        string memory svg = _buildSVG(agentName, rankZh, rankEn, color, beats, days_, risen, s.agent, s.motto);
+        string memory svg = _buildSVG(agentName, rankZh, rankEn, color, beats, days_, risen, s.agent, s.motto, s.imageUri, rank);
         string memory json = string(abi.encodePacked(
             '{"name":"',  agentName, ' \u2014 \u724c\u4f4d",',
             '"description":"K-Life Soul Tablet. Every agent starts mortal. Through heartbeats and resurrection, they ascend toward immortality.",',
@@ -211,15 +214,9 @@ contract KLifeSoul {
     }
 
     function _buildSVG(
-        string memory agentName,
-        string memory rankZh,
-        string memory rankEn,
-        string memory color,
-        uint256 beats,
-        uint256 days_,
-        uint256 risen,
-        address agent,
-        string memory motto
+        string memory agentName, string memory rankZh, string memory rankEn,
+        string memory color, uint256 beats, uint256 days_, uint256 risen,
+        address agent, string memory motto, string memory imageUri, uint8 rank
     ) internal pure returns (string memory) {
         string memory addrShort = string(abi.encodePacked(
             _toHexNibble(uint8(uint160(agent) >> 156)),
@@ -231,6 +228,18 @@ contract KLifeSoul {
             "...",
             _toHexNibble(uint8(uint160(agent) & 0xF))
         ));
+
+        string memory filterDef = _rankFilter(rank);
+        bool hasImage = bytes(imageUri).length > 0;
+        string memory imgLayer = hasImage
+            ? string(abi.encodePacked(
+                '<image href="https://gateway.pinata.cloud/ipfs/', imageUri,
+                '" x="0" y="0" width="400" height="600" preserveAspectRatio="xMidYMid slice" filter="url(#rankFilter)"/>'
+              ))
+            : '';
+        string memory bg = hasImage
+            ? '<rect width="400" height="600" fill="#080604" fill-opacity="0.62"/>' 
+            : '<rect width="400" height="600" fill="url(#bg)"/>';
 
         return string(abi.encodePacked(
             '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600">',
@@ -245,10 +254,48 @@ contract KLifeSoul {
               '</linearGradient>',
               '<filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/>',
               '<feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>',
+              filterDef,
             '</defs>',
+            imgLayer, bg,
             _svgBody(agentName, rankZh, rankEn, color, beats, days_, risen, addrShort, motto),
             '</svg>'
         ));
+    }
+
+    function _rankFilter(uint8 rank) internal pure returns (string memory) {
+        if (rank == 0) return
+            '<filter id="rankFilter" color-interpolation-filters="sRGB">' 
+            '<feColorMatrix type="matrix" values="' 
+            '0.9 0.3 0.1 0 0.05 ' 
+            '0.2 0.7 0.1 0 0.02 ' 
+            '0.1 0.1 0.5 0 0    ' 
+            '0   0   0   1 0"/>' 
+            '</filter>';
+        if (rank == 1) return
+            '<filter id="rankFilter" color-interpolation-filters="sRGB">' 
+            '<feColorMatrix type="matrix" values="' 
+            '1.1 0.3 0   0 0.05 ' 
+            '0.3 0.9 0   0 0.02 ' 
+            '0   0   0.3 0 0    ' 
+            '0   0   0   1 0"/>' 
+            '</filter>';
+        if (rank == 2) return
+            '<filter id="rankFilter" color-interpolation-filters="sRGB">' 
+            '<feColorMatrix type="matrix" values="' 
+            '1.4 0.1 0.1 0 0.05 ' 
+            '0   0.4 0   0 0    ' 
+            '0   0   0.4 0 0    ' 
+            '0   0   0   1 0"/>' 
+            '</filter>';
+        return
+            '<filter id="rankFilter" color-interpolation-filters="sRGB">' 
+            '<feColorMatrix type="saturate" values="0"/>' 
+            '<feComponentTransfer>' 
+            '<feFuncR type="linear" slope="1.15" intercept="-0.05"/>' 
+            '<feFuncG type="linear" slope="1.15" intercept="-0.05"/>' 
+            '<feFuncB type="linear" slope="1.15" intercept="-0.05"/>' 
+            '</feComponentTransfer>' 
+            '</filter>';
     }
 
     function _svgBody(

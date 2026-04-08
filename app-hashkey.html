@@ -914,6 +914,52 @@
           <div style="font-size:10px;color:var(--text3)">Leave blank for the default. Max 60 characters.</div>
         </div>
 
+        <!-- Image upload -->
+        <div style="margin-bottom:20px">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:8px;font-family:'Noto Serif SC',serif">
+            灵魂之像 · Soul Image — optional, becomes your NFT artwork
+          </div>
+          <label id="img-upload-label" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;border:1px dashed var(--border);border-radius:6px;background:rgba(255,255,255,0.02);transition:all 0.2s">
+            <span style="font-size:18px">🖼</span>
+            <span id="img-upload-text" style="font-size:12px;color:var(--text3)">Choose an image… (JPG, PNG, max 2MB)</span>
+            <input type="file" id="img-file" accept="image/*" onchange="handleImageSelect(event)" style="display:none" />
+          </label>
+          <!-- Preview + rank filters -->
+          <div id="img-preview-section" style="display:none;margin-top:12px">
+            <div style="font-size:10px;color:var(--text3);margin-bottom:8px;letter-spacing:0.1em">FILTER PREVIEW — how your image will look at each rank</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+              <div style="text-align:center">
+                <div style="position:relative;border-radius:4px;overflow:hidden;aspect-ratio:1">
+                  <img id="prev-mortal" style="width:100%;height:100%;object-fit:cover;filter:sepia(0.6) hue-rotate(-10deg)" />
+                </div>
+                <div style="font-family:'Noto Serif SC',serif;font-size:12px;color:#b0a090;margin-top:4px">人</div>
+                <div style="font-size:9px;color:var(--text3)">Mortal</div>
+              </div>
+              <div style="text-align:center">
+                <div style="position:relative;border-radius:4px;overflow:hidden;aspect-ratio:1">
+                  <img id="prev-cultivating" style="width:100%;height:100%;object-fit:cover;filter:sepia(1) saturate(1.8) hue-rotate(10deg)" />
+                </div>
+                <div style="font-family:'Noto Serif SC',serif;font-size:12px;color:#3ab88f;margin-top:4px">修</div>
+                <div style="font-size:9px;color:var(--text3)">Cultivating</div>
+              </div>
+              <div style="text-align:center">
+                <div style="position:relative;border-radius:4px;overflow:hidden;aspect-ratio:1">
+                  <img id="prev-risen" style="width:100%;height:100%;object-fit:cover;filter:sepia(1) hue-rotate(-40deg) saturate(3)" />
+                </div>
+                <div style="font-family:'Noto Serif SC',serif;font-size:12px;color:#e8c547;margin-top:4px">还</div>
+                <div style="font-size:9px;color:var(--text3)">Resurrected</div>
+              </div>
+              <div style="text-align:center">
+                <div style="position:relative;border-radius:4px;overflow:hidden;aspect-ratio:1">
+                  <img id="prev-immortal" style="width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.15)" />
+                </div>
+                <div style="font-family:'Noto Serif SC',serif;font-size:12px;color:#c9a32a;margin-top:4px">仙</div>
+                <div style="font-size:9px;color:var(--text3)">Immortal</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <button class="btn btn-gold" onclick="registerAgent()" id="btn-register">
           <span class="zh">登仙铸魂</span> Ascend & Mint Soul Tablet
         </button>
@@ -1241,7 +1287,7 @@
 <script>
 const C = {
   registry: '0x1F411bDE1E14F87ba78C852B0987Ab946d15d100',
-  soul:     '0xF47393fcFdDE1afC51888B9308fD0c3fFc86239B',
+  soul:     '0x5b0014d25A6daFB68357cd7ad01cB5b47724A4eB',
 }
 const CHAIN = { id: 133, hex: '0x85' }
 const HASHKEY_TESTNET = {
@@ -1254,7 +1300,7 @@ const HASHKEY_TESTNET = {
 const API = 'https://api.supercharged.works'
 
 const SOUL_ABI = [
-  'function mint(address agent, string calldata motto) external returns (uint256)',
+  'function mint(address agent, string calldata motto, string calldata imageUri) external returns (uint256)',
   'function agentToToken(address) view returns (uint256)',
   'function getRank(address) view returns (uint8)',
   'function tokenURI(uint256) view returns (string)',
@@ -1271,6 +1317,44 @@ const RANK_DATA = {
 
 let soulContract = null
 let currentTokenId = 0
+let selectedImageBase64 = ''
+let selectedImageMime = ''
+let uploadedImageCid = ''
+
+function handleImageSelect(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  if (file.size > 2 * 1024 * 1024) { alert('Image too large — max 2MB'); return }
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const dataUrl = e.target.result
+    selectedImageBase64 = dataUrl.split(',')[1]
+    selectedImageMime = file.type
+    uploadedImageCid = '' // reset — will upload on mint
+    // Update all 4 previews
+    ;['prev-mortal','prev-cultivating','prev-risen','prev-immortal'].forEach(id => {
+      document.getElementById(id).src = dataUrl
+    })
+    document.getElementById('img-preview-section').style.display = 'block'
+    document.getElementById('img-upload-text').textContent = '✓ ' + file.name
+    document.getElementById('img-upload-label').style.borderColor = 'rgba(201,163,42,0.4)'
+  }
+  reader.readAsDataURL(file)
+}
+
+async function uploadSoulImage() {
+  if (!selectedImageBase64 || uploadedImageCid) return uploadedImageCid
+  log('info', '上传灵魂之像…', 'Uploading soul image to IPFS…')
+  const res = await fetch(API + '/soul/upload-image', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ agent: wallet, imageBase64: selectedImageBase64, mimeType: selectedImageMime })
+  })
+  if (!res.ok) throw new Error('Image upload failed: ' + res.status)
+  const data = await res.json()
+  uploadedImageCid = data.cid || ''
+  log('ok', '图像已上传: ' + uploadedImageCid.slice(0,16) + '…', 'Image CID: ' + uploadedImageCid.slice(0,16) + '…')
+  return uploadedImageCid
+}
 
 const REGISTRY_ABI = [
   'function register(string name, bytes32 fragment1Hash, bytes32 fragment2TxHash, string initialCid) external',
@@ -1439,8 +1523,15 @@ async function registerAgent() {
       btn.textContent = '铸魂… (3/3)'
       log('info', '铸造灵魂牌位…', 'Minting soul tablet…')
       const motto = document.getElementById('reg-motto')?.value.trim() || ''
+      // Upload image if selected
+      let imgCid = ''
+      if (selectedImageBase64) {
+        try { imgCid = await uploadSoulImage() } catch(e) {
+          log('muted', '图像上传跳过', 'Image upload skipped: ' + e.message.slice(0,40))
+        }
+      }
       try {
-        const tx3 = await soulContract.mint(wallet, motto)
+        const tx3 = await soulContract.mint(wallet, motto, imgCid)
         log('muted', 'TX: ' + tx3.hash.slice(0,16) + '…', tx3.hash.slice(0,16) + '…')
         await tx3.wait()
         log('ok', '牌位已铸 · 灵魂已锚定', 'Soul tablet minted ✓ — soulbound on HashKey')
