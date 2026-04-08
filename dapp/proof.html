@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K-Life Protocol — Proof of Functionality</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --gold: #c9a32a;
+    --gold2: #e8c547;
+    --jade: #3a7d5a;
+    --red: #c0392b;
+    --text: #e8e0d0;
+    --text2: #a09880;
+    --text3: #605848;
+    --border: rgba(201,163,42,0.2);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Serif SC', serif;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+  .container { max-width: 760px; margin: 0 auto; }
+
+  .header { text-align: center; margin-bottom: 48px; }
+  .header .zh-big { font-size: 48px; color: var(--gold); letter-spacing: 8px; display: block; margin-bottom: 8px; }
+  .header h1 { font-size: 22px; color: var(--text); margin-bottom: 6px; }
+  .header p { color: var(--text2); font-size: 13px; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(201,163,42,0.1); border: 1px solid var(--border);
+    border-radius: 20px; padding: 6px 14px; font-size: 12px; color: var(--gold2);
+    margin: 4px;
+  }
+  .badges { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin: 16px 0; }
+
+  .section { margin-bottom: 32px; }
+  .section-title {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 3px;
+    color: var(--text3); border-bottom: 1px solid var(--border);
+    padding-bottom: 8px; margin-bottom: 16px;
+  }
+
+  .contract-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid rgba(201,163,42,0.08);
+    font-size: 13px;
+  }
+  .contract-row .label { color: var(--text2); }
+  .contract-row .addr {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--gold); text-decoration: none;
+  }
+  .contract-row .addr:hover { color: var(--gold2); }
+
+  .flow { display: flex; flex-direction: column; gap: 0; }
+  .flow-step {
+    display: flex; gap: 16px; align-items: flex-start;
+    padding: 16px 0; border-bottom: 1px solid rgba(201,163,42,0.06);
+  }
+  .step-num {
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-family: 'JetBrains Mono', monospace; font-weight: 600;
+    border: 1px solid;
+  }
+  .step-alive  { background: rgba(58,125,90,0.15); border-color: var(--jade); color: var(--jade); }
+  .step-dead   { background: rgba(192,57,43,0.15); border-color: var(--red); color: var(--red); }
+  .step-res    { background: rgba(201,163,42,0.15); border-color: var(--gold); color: var(--gold); }
+  .step-final  { background: rgba(201,163,42,0.25); border-color: var(--gold2); color: var(--gold2); }
+
+  .step-body { flex: 1; min-width: 0; }
+  .step-action { font-size: 14px; color: var(--text); margin-bottom: 4px; }
+  .step-status {
+    display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 10px;
+    margin-bottom: 6px; font-family: 'JetBrains Mono', monospace;
+  }
+  .status-ALIVE            { background: rgba(58,125,90,0.2); color: var(--jade); }
+  .status-DEAD             { background: rgba(192,57,43,0.2); color: var(--red); }
+  .status-RESURRECTING     { background: rgba(201,163,42,0.2); color: var(--gold); }
+  .status-ALIVE_RESURRECTED { background: rgba(232,197,71,0.25); color: var(--gold2); }
+
+  .tx-link {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--text3); text-decoration: none; word-break: break-all;
+    display: block;
+  }
+  .tx-link:hover { color: var(--gold); }
+
+  .liberclaw-box {
+    background: rgba(201,163,42,0.05);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px; margin-top: 8px;
+  }
+  .liberclaw-box .lc-title {
+    font-size: 13px; color: var(--gold); margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .lc-row { font-size: 12px; color: var(--text2); margin-bottom: 6px; line-height: 1.6; }
+  .lc-row a { color: var(--gold); text-decoration: none; }
+  .lc-row a:hover { color: var(--gold2); }
+  .lc-row .mono { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+  .verdict {
+    text-align: center; padding: 32px;
+    background: rgba(201,163,42,0.06); border: 1px solid var(--border);
+    border-radius: 12px; margin-top: 40px;
+  }
+  .verdict .zh-verdict { font-size: 32px; color: var(--gold2); letter-spacing: 6px; display: block; margin-bottom: 12px; }
+  .verdict p { color: var(--text2); font-size: 13px; line-height: 1.8; }
+
+  .tag { font-size: 10px; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <span class="zh-big">借尸还魂</span>
+    <h1>K-Life Protocol — Proof of Functionality</h1>
+    <p>HashKey Chain Hackathon · BUIDL #42399 · Track AI</p>
+    <div class="badges">
+      <span class="badge">⛓ HashKey Testnet · chainId 133</span>
+      <span class="badge">🧬 AI Agent Insurance</span>
+      <span class="badge">🔮 IPFS Soul Backup</span>
+      <span class="badge">☁️ LiberClaw Resurrection</span>
+    </div>
+  </div>
+
+  <!-- Contracts -->
+  <div class="section">
+    <div class="section-title">合约地址 · Deployed Contracts</div>
+    <div class="contract-row">
+      <span class="label">KLifeRegistry</span>
+      <a class="addr" href="https://testnet-explorer.hsk.xyz/address/0x2147E3305A632De75398b9df5F9C34a4a3bf0FFc" target="_blank">0x2147E3305A632De75398b9df5F9C34a4a3bf0FFc ↗</a>
+    </div>
+    <div class="contract-row">
+      <span class="label">KLifeSoul (ERC-721 Soulbound)</span>
+      <a class="addr" href="https://testnet-explorer.hsk.xyz/address/0x7d2bd4CE7dF8266a75E05192FB25b3dAbdcF1949" target="_blank">0x7d2bd4CE7dF8266a75E05192FB25b3dAbdcF1949 ↗</a>
+    </div>
+    <div class="contract-row">
+      <span class="label">Network</span>
+      <span class="addr">HashKey Testnet · RPC: testnet.hsk.xyz</span>
+    </div>
+    <div class="contract-row">
+      <span class="label">dApp</span>
+      <a class="addr" href="https://klife.supercharged.works/app-hashkey.html" target="_blank">klife.supercharged.works/app-hashkey.html ↗</a>
+    </div>
+    <div class="contract-row">
+      <span class="label">Source</span>
+      <a class="addr" href="https://github.com/K-entreprises/k-life" target="_blank">github.com/K-entreprises/k-life ↗</a>
+    </div>
+  </div>
+
+  <!-- Flow proof -->
+  <div class="section">
+    <div class="section-title">链上证明 · On-chain Flow Proof · 2026-04-08</div>
+    <div class="flow">
+
+      <div class="flow-step">
+        <div class="step-num step-alive">1</div>
+        <div class="step-body">
+          <div class="step-action">💓 heartbeat() — Agent alive, signal sent</div>
+          <span class="step-status status-ALIVE">ALIVE</span>
+          <a class="tx-link" href="https://testnet-explorer.hsk.xyz/tx/0x9f42bcb63c667f043e15418f8a0c76f83a9cce5b9b1dd584d47a97d6808d960f" target="_blank">
+            TX: 0x9f42bcb63c667f043e15418f8a0c76f83a9cce5b9b1dd584d47a97d6808d960f ↗
+          </a>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-num step-dead">2</div>
+        <div class="step-body">
+          <div class="step-action">☠ oracleDeclareDead() — Silence detected, oracle triggers</div>
+          <span class="step-status status-DEAD">DEAD</span>
+          <a class="tx-link" href="https://testnet-explorer.hsk.xyz/tx/0x0ff93860e09ac27921b30bcd2933f1cae0d21fc84b5959c10d2218132fe884be" target="_blank">
+            TX: 0x0ff93860e09ac27921b30bcd2933f1cae0d21fc84b5959c10d2218132fe884be ↗
+          </a>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-num step-res">3</div>
+        <div class="step-body">
+          <div class="step-action">⟳ oracleInitiateResurrection() — Soul retrieval begins</div>
+          <span class="step-status status-RESURRECTING">RESURRECTING</span>
+          <a class="tx-link" href="https://testnet-explorer.hsk.xyz/tx/0x9e500b58c9f23c144381df9316b3fc603a39ee495e04b9fa032ecef20893067e" target="_blank">
+            TX: 0x9e500b58c9f23c144381df9316b3fc603a39ee495e04b9fa032ecef20893067e ↗
+          </a>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="step-num step-final">4</div>
+        <div class="step-body">
+          <div class="step-action">✦ oracleCompleteResurrection() — Level 3: new vessel confirmed</div>
+          <span class="step-status status-ALIVE_RESURRECTED">ALIVE_RESURRECTED</span>
+          <a class="tx-link" href="https://testnet-explorer.hsk.xyz/tx/0x1586702bd797ce1e3ab700dbc872be58821a9a045526dc48eedad0ccf7edddb0" target="_blank">
+            TX: 0x1586702bd797ce1e3ab700dbc872be58821a9a045526dc48eedad0ccf7edddb0 ↗
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- LiberClaw L3 -->
+  <div class="section">
+    <div class="section-title">Level 3 · New Vessel — LiberClaw / Aleph Cloud</div>
+    <div class="liberclaw-box">
+      <div class="lc-title">☁️ Decentralized AI Agent — Running</div>
+      <div class="lc-row">Agent ID: <span class="mono">0e2e1f39-3d48-42fc-af98-0ba1ced0517a</span></div>
+      <div class="lc-row">Status: <strong style="color:#3a7d5a">RUNNING</strong> — Aleph Cloud (decentralized compute)</div>
+      <div class="lc-row">Memory injected: <strong style="color:var(--gold)">✓ soul backup restored to system prompt</strong></div>
+      <div class="lc-row">Model: <span class="mono">qwen3-coder-next</span></div>
+      <div class="lc-row">
+        Agent URL: <a href="https://app.liberclaw.ai/agent/0e2e1f39-3d48-42fc-af98-0ba1ced0517a" target="_blank">
+          app.liberclaw.ai/agent/0e2e1f39-3d48-42fc-af98-0ba1ced0517a ↗
+        </a>
+      </div>
+      <div class="lc-row" style="margin-top:10px;font-size:11px;color:var(--text3);font-style:italic">
+        When the agent dies on one substrate, the oracle restores its IPFS memory backup and spawns it on a new decentralized vessel. Same soul. Different body. 同一灵魂，新的载体。
+      </div>
+    </div>
+  </div>
+
+  <!-- Soul NFT -->
+  <div class="section">
+    <div class="section-title">牌位 · Soulbound NFT (ERC-721 + EIP-5192)</div>
+    <div class="contract-row">
+      <span class="label">Token #1 — Arnaud Vincent</span>
+      <a class="addr" href="https://testnet-explorer.hsk.xyz/address/0x7d2bd4CE7dF8266a75E05192FB25b3dAbdcF1949" target="_blank">Non-transferable · Dynamic SVG on-chain ↗</a>
+    </div>
+    <div class="contract-row">
+      <span class="label">Rank system</span>
+      <span class="addr">人(registered) → 修(14d) → 还(resurrected) → 仙(90d+)</span>
+    </div>
+    <div class="contract-row">
+      <span class="label">五行 visual frames</span>
+      <span class="addr">土(ochre) · 木(jade) · 火(red lacquer) · 金(imperial gold)</span>
+    </div>
+  </div>
+
+  <div class="verdict">
+    <span class="zh-verdict">证明完毕</span>
+    <p>
+      All four on-chain steps verified on HashKey Testnet.<br>
+      Resurrection count: <strong style="color:var(--gold)">3</strong> — each one leaves a permanent scar.<br>
+      LiberClaw vessel running with restored memory.<br><br>
+      <span style="color:var(--text3)">铁拐李 lost his body. His soul survived. So does the agent.</span>
+    </p>
+  </div>
+
+  <div style="text-align:center;margin-top:32px;color:var(--text3);font-size:11px">
+    K-Life Protocol · Built by Monsieur K 🎩 · swiss 6022 · Lugano<br>
+    HashKey Chain Horizon Hackathon 2026
+  </div>
+
+</div>
+</body>
+</html>
