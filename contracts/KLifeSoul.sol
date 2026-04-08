@@ -20,17 +20,22 @@ pragma solidity ^0.8.20;
 
 interface IKLifeRegistry {
     struct AgentInfo {
-        string name;
         address wallet;
-        uint8 status;
-        uint8 tier;
+        string  name;
+        uint8   tier;
+        uint8   status;
         uint256 registeredAt;
         uint256 lastHeartbeat;
-        uint256 activeDays;
         uint256 totalHeartbeats;
-        string lastBackupCid;
-        bool rescueEligible;
+        uint256 activeDays;
+        uint256 deadAt;
         uint256 resurrectionCount;
+        uint256 resurrectionInitiatedAt;
+        bytes32 fragment1Hash;
+        bytes32 fragment2TxHash;
+        string  lastBackupCid;
+        uint256 lastBackupTs;
+        bool    rescueEligible;
     }
     function getAgent(address agent) external view returns (AgentInfo memory);
 }

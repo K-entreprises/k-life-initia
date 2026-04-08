@@ -1241,7 +1241,7 @@
 <script>
 const C = {
   registry: '0x1F411bDE1E14F87ba78C852B0987Ab946d15d100',
-  soul:     '0xBde42724591d2D99450549537C9c24224BbDebE8',
+  soul:     '0xF47393fcFdDE1afC51888B9308fD0c3fFc86239B',
 }
 const CHAIN = { id: 133, hex: '0x85' }
 const HASHKEY_TESTNET = {
@@ -1277,7 +1277,7 @@ const REGISTRY_ABI = [
   'function heartbeat() external',
   'function updateBackup(string cid) external',
   'function declareDead(address agent) external',
-  'function getAgent(address) view returns (tuple(string name, address wallet, uint8 status, uint8 tier, uint256 registeredAt, uint256 lastHeartbeat, uint256 activeDays, uint256 totalHeartbeats, string lastBackupCid, bool rescueEligible, uint256 resurrectionCount))',
+  'function getAgent(address) view returns (tuple(address wallet, string name, uint8 tier, uint8 status, uint256 registeredAt, uint256 lastHeartbeat, uint256 totalHeartbeats, uint256 activeDays, uint256 deadAt, uint256 resurrectionCount, uint256 resurrectionInitiatedAt, bytes32 fragment1Hash, bytes32 fragment2TxHash, string lastBackupCid, uint256 lastBackupTs, bool rescueEligible))',
   'function getAgentList() view returns (address[])',
   'function silenceSeconds(address) view returns (uint256)',
   'function rescueFund() view returns (address)'

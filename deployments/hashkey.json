@@ -1,10 +1,10 @@
 {
   "network": "hashkey-testnet",
   "chainId": 133,
-  "deployedAt": "2026-04-08T09:37:43.627Z",
+  "deployedAt": "2026-04-08T09:50:45.253Z",
   "deployer": "0x033a3db8005c5eb8B5DFF1A0E20E546faa58FC9A",
   "contracts": {
     "KLifeRegistry": "0x1F411bDE1E14F87ba78C852B0987Ab946d15d100",
-    "KLifeSoul": "0xBde42724591d2D99450549537C9c24224BbDebE8"
+    "KLifeSoul": "0xF47393fcFdDE1afC51888B9308fD0c3fFc86239B"
   }
 }
