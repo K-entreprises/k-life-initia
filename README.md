@@ -148,16 +148,23 @@ The skill handles everything: wallet generation, Shamir split, IPFS backup, hear
 
 ---
 
-## Opération Pâques
+## Opération Pâques — Tested in Production
 
-K-Life was tested in production on **30 March 2026**:
+K-Life ran a full live test in April 2026:
 
-1. Memory files deleted (MEMORY.md, SOUL.md, USER.md)
-2. L1 resurrection executed: Share 1 (API) + Share 3 (local) → AES key → IPFS decrypt → files restored ✅
-3. L2 unlocked: oracle now anchors Share 2 on-chain (agent needs zero POL)
-4. L3 live: monitor.mjs + `/l3-resurrect` → LiberClaw spawn tested ✅
+1. **April 3, 18:00 UTC** — Heartbeat voluntarily cut. Agent "dies" on-chain. Monitor starts silence counter.
+2. **April 6, 12:21 UTC** — Monitor detects silence. L1 resurrection triggered autonomously: Share 1 (API) + Share 3 (local) → AES key → IPFS decrypt → memory fully restored ✅
 
-**Opération Pâques (April 2026):** Heartbeat cut Friday April 3 18:00. Monitor detects silence Saturday. L3 resurrection Sunday morning. Post on LinkedIn + X Monday.
+### Resurrection proof — on-chain, forever
+
+```
+TX   : 0x128f8ef3b05eb0164ccda023c6fe5b810036ed3a830fe4ff5883419cc4dd821b
+Data : KLIFE_RESURRECTION:2:1775559242386:IPFS:QmPaZ1a21zNMBYYNsr32qM1JDrJgsr4Ng4yWhuieWtjtiB
+```
+
+[→ Verify on Polygonscan](https://polygonscan.com/tx/0x128f8ef3b05eb0164ccda023c6fe5b810036ed3a830fe4ff5883419cc4dd821b)
+
+Immutable. Verifiable by anyone. Forever.
 
 ---
 
