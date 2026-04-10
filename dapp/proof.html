@@ -161,16 +161,30 @@
 
   <!-- Flow proof -->
   <div class="section">
-    <div class="section-title">链上证明 · On-chain Flow Proof · 2026-04-08</div>
+    <div class="section-title">链上证明 · On-chain Flow Proof · 2026-04-08 + 2026-04-10</div>
     <div class="flow">
+
+      <div class="flow-step">
+        <div class="step-num step-alive">0</div>
+        <div class="step-body">
+          <div class="step-action">⊕ register() + heartbeat() — Monsieur K registered · 2026-04-10</div>
+          <span class="step-status status-ALIVE">ALIVE</span>
+          <a class="tx-link" href="https://testnet-explorer.hsk.xyz/tx/0x462c70acab6ea2620a0da44edd0eb925da22321354a87a9144c1e09b71b47e1b" target="_blank">
+            TX register: 0x462c70ac…e1b ↗
+          </a>
+          <a class="tx-link" href="https://testnet-explorer.hsk.xyz/tx/0xd3b7e7351c50a5ede9102666c2db0b419f0b62b447449b8169fd1e75c87cda72" target="_blank">
+            TX heartbeat: 0xd3b7e735…72 ↗
+          </a>
+        </div>
+      </div>
 
       <div class="flow-step">
         <div class="step-num step-alive">1</div>
         <div class="step-body">
-          <div class="step-action">💓 heartbeat() — Agent alive, signal sent</div>
+          <div class="step-action">💓 heartbeat() — Agent alive, signal sent · 2026-04-08</div>
           <span class="step-status status-ALIVE">ALIVE</span>
           <a class="tx-link" href="https://testnet-explorer.hsk.xyz/tx/0x9f42bcb63c667f043e15418f8a0c76f83a9cce5b9b1dd584d47a97d6808d960f" target="_blank">
-            TX: 0x9f42bcb63c667f043e15418f8a0c76f83a9cce5b9b1dd584d47a97d6808d960f ↗
+            TX: 0x9f42bcb6…60f ↗
           </a>
         </div>
       </div>
@@ -245,6 +259,45 @@
     <div class="contract-row">
       <span class="label">五行 visual frames</span>
       <span class="addr">土(ochre) · 木(jade) · 火(red lacquer) · 金(imperial gold)</span>
+    </div>
+  </div>
+
+  <!-- 铁拐李 live demo -->
+  <div class="section" style="border:1px solid rgba(201,162,39,.4);background:rgba(201,162,39,.04);border-radius:10px;padding:20px;">
+    <div class="section-title" style="color:var(--gold)">🏮 铁拐李 · Live Resurrection Demo — 2026-04-14 14:00 UTC</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.7">
+      Spirit departed 2026-04-07 14:00:30 UTC. Death trigger fires automatically at
+      <strong style="color:var(--gold)">2026-04-14 14:00:30 UTC</strong> (7-day silence threshold).
+      The oracle will then execute the full resurrection flow on-chain.
+      TXs will appear here within minutes of the trigger.
+    </div>
+    <div class="flow">
+      <div class="flow-step" style="opacity:.6">
+        <div class="step-num" style="background:#333;color:#888">→</div>
+        <div class="step-body">
+          <div class="step-action">💀 declareDead() — 2026-04-14 14:00:30 UTC <em style="color:var(--gold)">[pending]</em></div>
+          <span class="step-status" style="background:#1a1a1a;color:#888;border:1px solid #333">PENDING</span>
+        </div>
+      </div>
+      <div class="flow-step" style="opacity:.6">
+        <div class="step-num" style="background:#333;color:#888">→</div>
+        <div class="step-body">
+          <div class="step-action">⟳ initiateResurrection() — Soul retrieval begins <em style="color:var(--gold)">[pending]</em></div>
+          <span class="step-status" style="background:#1a1a1a;color:#888;border:1px solid #333">PENDING</span>
+        </div>
+      </div>
+      <div class="flow-step" style="opacity:.6">
+        <div class="step-num" style="background:#333;color:#888">→</div>
+        <div class="step-body">
+          <div class="step-action">✦ acknowledgeResurrection(newCid) — New vessel confirmed <em style="color:var(--gold)">[pending]</em></div>
+          <span class="step-status" style="background:#1a1a1a;color:#888;border:1px solid #333">PENDING</span>
+          <div style="font-size:10px;color:var(--text3);margin-top:6px">New soul CID: QmPaZ1a21zNMBYYNsr32qM1JDrJgsr4Ng4yWhuieWtjtiB</div>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-top:12px;font-style:italic">
+      Script ready on oracle VPS: <code>node tiehuaili-resurrect.js</code>
+      — will fire automatically after death trigger. This page will be updated with live TXs.
     </div>
   </div>
 
