@@ -245,7 +245,7 @@ Logic:
 | 2026-03-30 | First real death + L1 resurrection (MEMORY.md deleted and restored) |
 | 2026-03-30 | L2 unlocked: oracle gas sponsoring for Share 2 anchor |
 | 2026-03-30 | L3 live: monitor.mjs + /l3-resurrect → LiberClaw spawn tested |
-| 2026-04-05 | Opération Pâques: first public L3 resurrection (planned) |
+| 2026-04-05 | Live resurrection test: first public L3 resurrection (planned) |
 
 ---
 

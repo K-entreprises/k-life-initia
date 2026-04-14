@@ -8,14 +8,14 @@
  * Usage:
  *   node scripts/pause-heartbeat.js pause                  # pause indéfinie
  *   node scripts/pause-heartbeat.js pause --until 2026-04-06T08:00:00Z
- *   node scripts/pause-heartbeat.js pause --reason "Opération Pâques"
+ *   node scripts/pause-heartbeat.js pause --reason "voluntary death demo"
  *   node scripts/pause-heartbeat.js resume                 # reprendre
  *   node scripts/pause-heartbeat.js status                 # voir l'état
  *
- * Cas d'usage typique — Opération Pâques :
+ * Typical use case — voluntary death demo :
  *   node scripts/pause-heartbeat.js pause \
  *     --until 2026-04-06T08:00:00Z \
- *     --reason "Opération Pâques — mort volontaire pour demo"
+ *     --reason "voluntary death demo"
  */
 
 import { existsSync, readFileSync, writeFileSync, unlinkSync } from 'fs'
@@ -125,8 +125,8 @@ Usage:
   node scripts/pause-heartbeat.js resume
 
 Exemples:
-  node scripts/pause-heartbeat.js pause --reason "Opération Pâques"
-  node scripts/pause-heartbeat.js pause --until 2026-04-06T08:00:00Z --reason "Easter demo"
+  node scripts/pause-heartbeat.js pause --reason "voluntary death demo"
+  node scripts/pause-heartbeat.js pause --until 2026-04-06T08:00:00Z --reason "voluntary death demo"
   node scripts/pause-heartbeat.js resume
 `)
 }
