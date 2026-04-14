@@ -1,0 +1,15 @@
+{
+  "network": "hashkey-testnet",
+  "chainId": 133,
+  "deployedAt": "2026-04-08T12:28:32.961Z",
+  "deployer": "0x033a3db8005c5eb8B5DFF1A0E20E546faa58FC9A",
+  "contracts": {
+    "KLifeRegistry": "0x2147E3305A632De75398b9df5F9C34a4a3bf0FFc",
+    "KLifeSoul": "0x7d2bd4CE7dF8266a75E05192FB25b3dAbdcF1949"
+  },
+  "l3": {
+    "liberclaw_agent_id": "0e2e1f39-3d48-42fc-af98-0ba1ced0517a",
+    "liberclaw_agent_url": "https://app.liberclaw.ai/agent/0e2e1f39-3d48-42fc-af98-0ba1ced0517a",
+    "liberclaw_vm_url": "https://hood-apology-feature-festival.2n6.me"
+  }
+}
