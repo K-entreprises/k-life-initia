@@ -148,7 +148,7 @@ The skill handles everything: wallet generation, Shamir split, IPFS backup, hear
 
 ---
 
-## Live Resurrection Test — Tested in Production
+## Opération Pâques — Tested in Production
 
 K-Life ran a full live test in April 2026:
 

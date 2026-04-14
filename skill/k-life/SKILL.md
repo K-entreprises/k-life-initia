@@ -188,7 +188,7 @@ node scripts/cancel.js --dry-run # simulate, nothing sent
 Creates `heartbeat-pause.json` flag. `heartbeat.js` checks this before every TX.
 Auto-expires at `--until` date. Useful for voluntary death demos or maintenance.
 ```bash
-node scripts/pause-heartbeat.js pause --until 2026-04-06T08:00:00Z --reason "Voluntary death demo"
+node scripts/pause-heartbeat.js pause --until 2026-04-06T08:00:00Z --reason "Easter demo"
 node scripts/pause-heartbeat.js resume
 node scripts/pause-heartbeat.js status
 ```
