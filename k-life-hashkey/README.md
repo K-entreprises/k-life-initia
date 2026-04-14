@@ -51,13 +51,13 @@ k-life-hashkey/
 
 ```bash
 # Register
-KLIFE_SEED="your seed phrase" node scripts/register.js --name "MyAgent"
+# Store seed securely first (never pass inline)
+openclaw secrets configure  # → set KLIFE_SEED in the secure keystore
 
-# Heartbeat (run every 4h via cron)
-KLIFE_SEED="your seed phrase" node scripts/heartbeat.js
-
-# Resurrect (L2 — scan HashKey Chain for backup)
-KLIFE_SEED="your seed phrase" node scripts/resurrect.js --address 0xYOUR_WALLET
+# Then run scripts (KLIFE_SEED injected automatically by OpenClaw)
+node scripts/register.js --name "MyAgent"
+node scripts/heartbeat.js
+node scripts/resurrect.js --address 0xYOUR_WALLET
 ```
 
 ## OpenClaw Skill
