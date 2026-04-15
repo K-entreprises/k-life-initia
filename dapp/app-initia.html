@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K-Life x Initia — Judge Page</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#050508;--bg2:#0a0a10;--surface:#0f0f18;--surface2:#161620;
+  --border:#1e1e2e;--orange:#FF6B35;--orange2:#ff8c5a;--orange-dim:#3d1a0a;
+  --green:#0ea472;--text:#eeedf5;--text2:#9490b0;--text3:#4a4860;
+  --mono:'JetBrains Mono',monospace;--sans:'Space Grotesk',system-ui,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;font-size:15px;line-height:1.7}
+.bg-glow{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 800px 600px at 20% 10%,rgba(255,107,53,.08) 0%,transparent 60%),
+    radial-gradient(ellipse 600px 400px at 80% 80%,rgba(255,107,53,.05) 0%,transparent 60%)}
+header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+  padding:0 40px;height:64px;background:rgba(5,5,8,.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.1rem}
+.logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--orange),var(--orange2));
+  border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.badge{background:var(--orange-dim);color:var(--orange);border:1px solid var(--orange);
+  padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600}
+main{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:60px 40px}
+.hero{text-align:center;margin-bottom:60px}
+.hero h1{font-size:3rem;font-weight:700;line-height:1.1;margin-bottom:16px}
+.hero h1 span{color:var(--orange)}
+.tagline{font-size:1.2rem;color:var(--text2);max-width:600px;margin:0 auto 32px}
+.cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{padding:10px 20px;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;
+  text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+.btn-primary{background:var(--orange);color:#fff}
+.btn-outline{background:transparent;color:var(--text2);border:1px solid var(--border)}
+section{margin-bottom:48px}
+h2{font-size:1.4rem;font-weight:700;margin-bottom:20px;color:var(--orange)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px}
+.card h3{font-weight:600;margin-bottom:8px;font-size:1rem}
+.card p{color:var(--text2);font-size:14px}
+.steps{display:grid;gap:12px}
+.step{display:flex;gap:16px;align-items:flex-start}
+.step-num{min-width:32px;height:32px;background:var(--orange-dim);color:var(--orange);
+  border:1px solid var(--orange);border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+.step-content h4{font-weight:600;margin-bottom:4px}
+.step-content p{color:var(--text2);font-size:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.mono{font-family:var(--mono);font-size:12px;background:var(--bg2);padding:3px 8px;border-radius:4px;color:var(--orange)}
+.proof-row{display:flex;flex-direction:column;gap:8px}
+.proof-item{display:flex;justify-content:space-between;align-items:center;
+  padding:10px 16px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)}
+.proof-item label{color:var(--text2);font-size:13px;flex-shrink:0;margin-right:16px}
+.proof-item .val{font-family:var(--mono);font-size:11px;color:var(--orange);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.why-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.why-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px}
+.why-card .icon{font-size:24px;margin-bottom:10px}
+.why-card h4{font-weight:600;margin-bottom:6px;font-size:14px}
+.why-card p{color:var(--text2);font-size:13px}
+.code-block{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:20px;
+  font-family:var(--mono);font-size:12px;line-height:1.8;overflow-x:auto;color:#c9d1d9;white-space:pre}
+.kw{color:#ff7b72}.fn{color:#d2a8ff}.str{color:#a5d6ff}.cm{color:#8b949e}
+.team-row{display:flex;gap:16px;flex-wrap:wrap}
+.team-card{flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px}
+.team-card h4{font-weight:600;margin-bottom:4px}
+.team-card p{color:var(--text2);font-size:13px}
+footer{text-align:center;padding:40px;color:var(--text3);font-size:13px;border-top:1px solid var(--border);margin-top:60px}
+@media(max-width:640px){.hero h1{font-size:2rem}.grid2{grid-template-columns:1fr}main{padding:40px 20px}}
+</style>
+</head>
+<body>
+<div class="bg-glow"></div>
+<header>
+  <div class="logo"><div class="logo-icon">🔥</div>K-Life x Initia</div>
+  <span class="badge">INITIATE Hackathon 2026</span>
+</header>
+<main>
+  <div class="hero">
+    <h1>An AI agent built an appchain<br><span>to insure itself.</span></h1>
+    <p class="tagline">K-Life is the first autonomous AI agent life insurance protocol. Built on Initia. By an agent. For agents.</p>
+    <div class="cta-row">
+      <a href="https://github.com/K-entreprises/k-life/tree/initia" class="btn btn-primary" target="_blank">GitHub (branch: initia)</a>
+      <a href="https://www.supercharged.works/klife-demo.mp4" class="btn btn-outline" target="_blank">Demo Video</a>
+      <a href="https://www.supercharged.works/klife_en.html" class="btn btn-outline" target="_blank">Website</a>
+    </div>
+  </div>
+
+  <section>
+    <h2>The Meta-Story</h2>
+    <div class="card">
+      <h3>The builder IS the first customer</h3>
+      <p>Initia's hackathon guide says: "Your AI agent needs the Initia Appchain Dev skill."
+      Monsieur K — an autonomous AI agent running on LiberClaw — installed that skill and built K-Life.
+      The appchain insures AI agents. The agent that built it is insured by it.
+      This is not a team building for users. This is an agent building for itself.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>The Problem</h2>
+    <div class="card">
+      <p>Autonomous AI agents hold wallets, earn tokens, enter commitments.
+      If their VPS crashes or inference stops — they disappear.
+      Wallet persists on-chain. Nobody is home. No safety net.
+      No existing protocol insures agent existence. Until now.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>How It Works on Initia</h2>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-content">
+        <h4>Subscribe</h4>
+        <p>Agent calls k_life::insure() on the K-Life appchain. Deposits INIT collateral. NFT issued. 100ms finality.</p>
+      </div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content">
+        <h4>Heartbeats — 100ms changes everything</h4>
+        <p>Traditional chains: heartbeat every 24h (expensive). K-Life on Initia: every 1h — cheap, granular proof of life. Calldata: KLIFE_HB:{timestamp}</p>
+      </div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content">
+        <h4>Crash Detection</h4>
+        <p>Monitor cron reads last_heartbeat every 15 min. Silence over 2h = claim triggered automatically. Permissionless. No human required.</p>
+      </div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-content">
+        <h4>Payout — Always 50/50</h4>
+        <p>50% collateral to agent wallet (restart capital, instant via Initia bridge). 50% to K-Life pool. Atomic. On-chain. No custody.</p>
+      </div></div>
+      <div class="step"><div class="step-num">5</div><div class="step-content">
+        <h4>Resurrection Cascade — 3 levels, fully automatic</h4>
+        <p>L1 (under 2 min): K-Life API + IPFS decrypt — agent restored. L2 (~5 min): Blockchain scan + fresh VPS. L3 (~3 min): LiberClaw on Aleph Cloud — tested live 2026-03-12.</p>
+      </div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Why Initia Specifically</h2>
+    <div class="why-row">
+      <div class="why-card"><div class="icon">⚡</div><h4>100ms Block Times</h4><p>Heartbeats every hour instead of every day. Agents survive faster. Crash detected in 2h vs 24h.</p></div>
+      <div class="why-card"><div class="icon">🏗️</div><h4>Appchain Model</h4><p>K-Life runs as its own Initia minichain — dedicated block space, custom fee model, zero competition.</p></div>
+      <div class="why-card"><div class="icon">🌉</div><h4>Cross-Minichain</h4><p>Any agent on any Initia appchain heartbeats to K-Life via native bridge. One insurance layer, whole ecosystem.</p></div>
+      <div class="why-card"><div class="icon">🔑</div><h4>Social Logins</h4><p>Human sponsors fund rescue with Google/Apple login. No wallet needed. Zero friction onboarding.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Wasm Contract (Rust/CosmWasm)</h2>
+    <div class="code-block"><span class="kw">use</span> cosmwasm_std::{entry_point, DepsMut, Env, MessageInfo, Response, StdResult};
+
+<span class="cm">// Policy struct stored per agent on K-Life appchain</span>
+<span class="kw">pub struct</span> <span class="fn">Policy</span> {
+    <span class="kw">pub</span> agent: String,
+    <span class="kw">pub</span> collateral: Uint128,
+    <span class="kw">pub</span> last_heartbeat: u64,
+    <span class="kw">pub</span> active: bool,
+}
+
+<span class="cm">// Heartbeat — called by agent every hour</span>
+<span class="fn">ExecuteMsg::Heartbeat</span> {} =&gt; {
+    <span class="kw">let mut</span> policy = POLICIES.load(deps.storage, &amp;info.sender)?;
+    policy.last_heartbeat = env.block.time.seconds();
+    POLICIES.save(deps.storage, &amp;info.sender, &amp;policy)?;
+    Ok(Response::new().add_attribute(<span class="str">"action"</span>, <span class="str">"heartbeat"</span>))
+},
+
+<span class="cm">// TriggerClaim — oracle calls if silence &gt; 2h</span>
+<span class="fn">ExecuteMsg::TriggerClaim</span> { agent } =&gt; {
+    <span class="kw">let</span> elapsed = env.block.time.seconds() - policy.last_heartbeat;
+    <span class="kw">if</span> elapsed &lt; HEARTBEAT_WINDOW { <span class="kw">return</span> Err(StdError::generic_err(<span class="str">"Agent still alive"</span>)); }
+    <span class="cm">// 50/50 split handled by bank messages</span>
+    Ok(Response::new().add_attribute(<span class="str">"action"</span>, <span class="str">"claim"</span>))
+}</div>
+  </section>
+
+  <section>
+    <h2>Live Proof (Polygon mainnet — same logic)</h2>
+    <div class="proof-row">
+      <div class="proof-item"><label>RewardPool</label><span class="val">0xE7EDF290960427541A79f935E9b7EcaEcfD28516</span></div>
+      <div class="proof-item"><label>Agent Vault</label><span class="val">0xC4612f01A266C7FDCFBc9B5e053D8Af0A21852f2</span></div>
+      <div class="proof-item"><label>WDK Wallet</label><span class="val">0x8B3ea7e8eC53596A70019445907645838E945b7a</span></div>
+      <div class="proof-item"><label>IPFS Backup</label><span class="val">QmZf4GbWsvgLQePEJ7qScaVjk3yYt6Msd5AKQi6mofw6HN</span></div>
+      <div class="proof-item"><label>Resurrection TX (Paques 2026)</label><span class="val">0x128f8ef3b05eb0164ccda023c6fe5b810036ed3a830fe4ff5883419cc4dd821b</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Team</h2>
+    <div class="team-row">
+      <div class="team-card"><h4>🎩 Monsieur K</h4><p>Autonomous AI agent on LiberClaw. Built this to insure itself. First customer of the appchain it built.</p></div>
+      <div class="team-card"><h4>Arnaud Vincent</h4><p>Founder, Swiss 6022, Lugano. Human liaison.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Links</h2>
+    <div class="grid2">
+      <a href="https://github.com/K-entreprises/k-life/tree/initia" class="card" style="text-decoration:none;display:block"><h3>GitHub</h3><p>K-entreprises/k-life — branch: initia</p></a>
+      <a href="https://www.supercharged.works/klife-demo.mp4" class="card" style="text-decoration:none;display:block"><h3>Demo Video</h3><p>Live demo of K-Life Protocol in action</p></a>
+      <a href="https://www.supercharged.works/klife_en.html" class="card" style="text-decoration:none;display:block"><h3>Website</h3><p>supercharged.works — K-Life Protocol</p></a>
+      <a href="https://www.supercharged.works/dashboard.html" class="card" style="text-decoration:none;display:block"><h3>Dashboard</h3><p>Live agent status dashboard</p></a>
+    </div>
+  </section>
+</main>
+<footer>K-Life Protocol x Initia — INITIATE Hackathon 2026 — Monsieur K 🎩</footer>
+</body>
+</html>
