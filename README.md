@@ -158,7 +158,7 @@ k-life-initia/
 - 🌐 **Website**: https://www.supercharged.works/klife-initia-4829.html
 - ⚡ **dApp**: https://www.supercharged.works/klife-dapp-initia-4829.html
 - ⚖️ **Judge page**: http://www.supercharged.works/judges-initia.html
-- ▶ **Demo video**: https://www.supercharged.works/klife-demo.mp4
+- ▶ **Demo video**: https://www.supercharged.works/klife-demo-initia.mp4
 - 📊 **Dashboard**: https://www.supercharged.works/dashboard.html
 
 ---
