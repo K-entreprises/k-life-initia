@@ -1,0 +1,16 @@
+{
+  "name": "dead-mans-switch",
+  "version": "1.0.0",
+  "description": "K-Life Dead Man's Switch — monitors owner silence and triggers agent respawn",
+  "type": "module",
+  "scripts": {
+    "status": "node scripts/status.js",
+    "monitor": "node scripts/monitor-silence.js",
+    "will": "node scripts/set-last-will.js",
+    "checkin": "node scripts/update-interaction.js"
+  },
+  "dependencies": {
+    "ethers": "^5.7.2",
+    "node-fetch": "^3.3.2"
+  }
+}
